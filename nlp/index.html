@@ -1,0 +1,1152 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>自然语言处理 NLP | agent-nlp-llm</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css" id="hljs-light">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css" id="hljs-dark" disabled>
+    <style>
+        :root {
+            --primary: #0078D4;
+            --bg: #ffffff;
+            --bg-secondary: #f6f8fa;
+            --text: #24292f;
+            --text-secondary: #57606a;
+            --border: #d0d7de;
+            --card-bg: #ffffff;
+            --code-bg: #f6f8fa;
+            --shadow: 0 1px 3px rgba(0,0,0,0.08);
+        }
+        [data-theme="dark"] {
+            --primary: #4da3ff;
+            --bg: #0d1117;
+            --bg-secondary: #161b22;
+            --text: #c9d1d9;
+            --text-secondary: #8b949e;
+            --border: #30363d;
+            --card-bg: #161b22;
+            --code-bg: #161b22;
+            --shadow: 0 1px 3px rgba(0,0,0,0.3);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+        }
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 64px;
+            background: var(--bg);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            padding: 0 24px;
+            z-index: 100;
+        }
+        .nav-brand {
+            font-weight: 700;
+            font-size: 18px;
+            color: var(--text);
+            text-decoration: none;
+            margin-right: 32px;
+        }
+        .nav-links {
+            display: flex;
+            gap: 24px;
+            flex: 1;
+        }
+        .nav-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        .nav-links a:hover, .nav-links a.active { color: var(--primary); }
+        .nav-right { display: flex; gap: 16px; align-items: center; }
+        .theme-toggle {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-size: 18px;
+            padding: 8px;
+            border-radius: 6px;
+        }
+        .theme-toggle:hover { background: var(--bg-secondary); }
+        .github-link {
+            color: var(--text-secondary);
+            font-size: 20px;
+            text-decoration: none;
+        }
+        .container {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 88px 24px 48px;
+            display: flex;
+            gap: 48px;
+        }
+        .main-content { flex: 1; min-width: 0; }
+        .sidebar {
+            width: 240px;
+            flex-shrink: 0;
+            position: sticky;
+            top: 88px;
+            height: fit-content;
+        }
+        .sidebar a {
+            display: block;
+            padding: 6px 12px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 13px;
+            border-left: 2px solid transparent;
+        }
+        .sidebar a.active {
+            color: var(--primary);
+            border-left-color: var(--primary);
+            background: var(--bg-secondary);
+        }
+        h1 { font-size: 32px; margin-bottom: 16px; }
+        h2 {
+            font-size: 24px;
+            margin: 48px 0 24px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border);
+            scroll-margin-top: 80px;
+        }
+        h3 { font-size: 18px; margin: 32px 0 16px; }
+        h4 { font-size: 16px; margin: 24px 0 12px; }
+        p { margin-bottom: 16px; color: var(--text); }
+        ul, ol { margin: 16px 0; padding-left: 24px; }
+        li { margin: 8px 0; }
+        code {
+            background: var(--code-bg);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: ui-monospace, SFMono-Regular, SF Mono, Menlo, monospace;
+            font-size: 0.9em;
+        }
+        pre {
+            background: var(--code-bg);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 16px;
+            overflow-x: auto;
+            margin: 16px 0;
+        }
+        pre code { background: none; padding: 0; font-size: 13px; }
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 24px;
+            margin: 16px 0;
+            box-shadow: var(--shadow);
+        }
+        .four-layer {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin: 24px 0;
+        }
+        .layer-card {
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            padding: 16px;
+            text-align: center;
+        }
+        .layer-card h4 { margin: 0 0 8px; color: var(--primary); }
+        .family-tree { margin: 24px 0; }
+        .branch-group { margin: 16px 0; }
+        .branch-header {
+            font-weight: 600;
+            font-size: 16px;
+            padding: 12px 16px;
+            background: var(--bg-secondary);
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            user-select: none;
+        }
+        .branch-header:hover { background: var(--border); }
+        .branch-header::after {
+            content: "▶";
+            font-size: 12px;
+            transition: transform 0.2s;
+        }
+        .branch-group.open .branch-header::after { transform: rotate(90deg); }
+        .branch-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+            padding-left: 16px;
+        }
+        .branch-group.open .branch-content {
+            max-height: 10000px;
+            padding-top: 12px;
+        }
+        .algo-item {
+            margin: 12px 0;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            overflow: hidden;
+        }
+        .algo-header {
+            padding: 10px 14px;
+            background: var(--bg);
+            cursor: pointer;
+            font-weight: 500;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            user-select: none;
+        }
+        .algo-header::after { content: "▶"; font-size: 10px; transition: transform 0.2s; }
+        .algo-item.open .algo-header::after { transform: rotate(90deg); }
+        .algo-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+            padding: 0 14px;
+        }
+        .algo-item.open .algo-content {
+            max-height: 10000px;
+            padding: 16px 14px;
+            border-top: 1px solid var(--border);
+            background: var(--bg-secondary);
+        }
+        .algo-section { margin: 16px 0; }
+        .algo-section h5 {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--primary);
+            margin-bottom: 8px;
+        }
+        .timeline {
+            position: relative;
+            margin: 24px 0;
+            padding-left: 32px;
+        }
+        .timeline::before {
+            content: "";
+            position: absolute;
+            left: 8px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: var(--border);
+        }
+        .timeline-item {
+            position: relative;
+            margin: 24px 0;
+        }
+        .timeline-item::before {
+            content: "";
+            position: absolute;
+            left: -28px;
+            top: 4px;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--primary);
+        }
+        .timeline-year {
+            font-weight: 700;
+            color: var(--primary);
+            font-size: 16px;
+        }
+        .timeline-content {
+            margin-top: 8px;
+            padding-left: 8px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 16px 0;
+            font-size: 14px;
+        }
+        th, td {
+            border: 1px solid var(--border);
+            padding: 10px 12px;
+            text-align: left;
+        }
+        th {
+            background: var(--bg-secondary);
+            font-weight: 600;
+        }
+        .branch-cards {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+            margin: 24px 0;
+        }
+        .branch-card {
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            padding: 20px;
+        }
+        .lab-card {
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            padding: 24px;
+            margin: 16px 0;
+        }
+        .slider-container { margin: 16px 0; }
+        input[type="range"] { width: 100%; margin: 8px 0; }
+        .lab-result {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 16px;
+            margin-top: 16px;
+            min-height: 80px;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+        .paper-card {
+            border-left: 4px solid var(--primary);
+            background: var(--bg-secondary);
+            padding: 16px 20px;
+            margin: 12px 0;
+            border-radius: 0 6px 6px 0;
+        }
+        .paper-title { font-weight: 600; margin-bottom: 6px; }
+        .paper-meta { font-size: 13px; color: var(--text-secondary); margin-bottom: 8px; }
+        @media (max-width: 1024px) {
+            .four-layer { grid-template-columns: repeat(2, 1fr); }
+            .branch-cards { grid-template-columns: 1fr; }
+        }
+        @media (max-width: 768px) {
+            .container { padding: 72px 16px 32px; flex-direction: column; }
+            .sidebar { display: none; }
+            .nav-links { gap: 12px; }
+            .nav-links a { font-size: 12px; }
+            h1 { font-size: 24px; }
+            .four-layer { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <a href="/agent-nlp-llm/" class="nav-brand">agent-nlp-llm</a>
+        <div class="nav-links">
+            <a href="/agent-nlp-llm/">🏠 首页</a>
+            <a href="/agent-nlp-llm/nlp/" class="active">📝 NLP</a>
+            <a href="/agent-nlp-llm/llm/">🤖 LLM</a>
+        </div>
+        <div class="nav-right">
+            <button class="theme-toggle" onclick="toggleTheme()">🌓</button>
+            <a href="https://github.com/yejinlei/agent-nlp-llm" target="_blank" class="github-link">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+            </a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <main class="main-content">
+            <h1>📝 自然语言处理 NLP 本体论研究站</h1>
+            <p>论文 → 理论 → 实现 → 实战 · 从 1950 到 2017 的传统NLP知识图谱</p>
+
+            <h2 id="what">🎯 这是什么</h2>
+            <p>自然语言处理（Natural Language Processing, NLP）是人工智能领域研究如何让计算机理解和生成人类语言的方向。本模块覆盖传统NLP和深度学习NLP的完整知识体系，从最基础的文本预处理到Transformer预训练模型，每个算法都遵循「论文→理论→实现→实战」四层闭环学习路径。</p>
+            <p>NLP的核心挑战在于：人类语言天生具有歧义性、上下文依赖和常识性，同样的词语在不同语境下含义千差万别。从规则方法到统计方法再到深度学习方法，NLP的发展史就是一部不断缓解这些问题的技术演进史。</p>
+
+            <h2 id="four-layer">🧱 四层闭环</h2>
+            <div class="four-layer">
+                <div class="layer-card">
+                    <h4>📄 论文</h4>
+                    <p style="font-size:13px;color:var(--text-secondary)">每个算法的原始论文出处、核心贡献、解决的问题、当时的技术背景</p>
+                </div>
+                <div class="layer-card">
+                    <h4>📚 理论</h4>
+                    <p style="font-size:13px;color:var(--text-secondary)">数学原理、核心公式、算法流程、优缺点分析、适用场景、关键直觉</p>
+                </div>
+                <div class="layer-card">
+                    <h4>💻 实现</h4>
+                    <p style="font-size:13px;color:var(--text-secondary)">从零手写核心代码，不依赖高层封装，每个步骤加注释，读懂每一行逻辑</p>
+                </div>
+                <div class="layer-card">
+                    <h4>🚀 实战</h4>
+                    <p style="font-size:13px;color:var(--text-secondary)">真实业务场景应用、工程坑点、调参经验、落地效果对比、避坑指南</p>
+                </div>
+            </div>
+
+            <h2 id="family-tree">🌳 全景家族树</h2>
+            <p>点击分支展开算法，点击算法展开完整四层内容</p>
+            <div class="family-tree">
+                <!-- 文本预处理分支 -->
+                <div class="branch-group">
+                    <div class="branch-header" onclick="toggleBranch(this)">① 文本预处理</div>
+                    <div class="branch-content">
+                        <div class="algo-item">
+                            <div class="algo-header" onclick="toggleAlgo(this)">分词算法（最大匹配/BPE/WordPiece）</div>
+                            <div class="algo-content">
+                                <div class="algo-section">
+                                    <h5>📄 论文背景</h5>
+                                    <p>BPE（Byte Pair Encoding）最早是数据压缩算法，2016年Sennrich等人在论文《Neural Machine Translation of Rare Words with Subword Units》中将其引入NLP，解决OOV（未登录词）问题。中文分词经典算法包括正向最大匹配（FMM）、逆向最大匹配（BMM）、双向最大匹配。</p>
+                                </div>
+                                <div class="algo-section">
+                                    <h5>📚 理论原理</h5>
+                                    <p><strong>正向最大匹配（FMM）：</strong>从左到右扫描句子，每次取最长的词典匹配词。</p>
+                                    <p><strong>BPE：</strong>统计语料中相邻字符对的频率，每次合并频率最高的字符对，直到达到预设词表大小。不需要提前训练分词器，天然解决OOV问题。</p>
+                                    <p><strong>WordPiece：</strong>BERT使用的分词算法，类似BPE但基于概率选择合并（合并使语言模型困惑度下降最多的对）。</p>
+                                </div>
+                                <div class="algo-section">
+                                    <h5>💻 核心实现</h5>
+<pre><code class="language-python">def forward_max_match(sentence, word_dict, max_len=5):
+    result = []
+    i = 0
+    while i < len(sentence):
+        matched = False
+        for l in range(min(max_len, len(sentence)-i), 0, -1):
+            word = sentence[i:i+l]
+            if word in word_dict:
+                result.append(word)
+                i += l
+                matched = True
+                break
+        if not matched:
+            result.append(sentence[i])
+            i += 1
+    return result</code></pre>
+                                </div>
+                                <div class="algo-section">
+                                    <h5>🚀 实战要点</h5>
+                                    <ul>
+                                        <li>中文场景：通用领域用jieba，专业领域（医疗/法律）建议自定义词典</li>
+                                        <li>大模型时代：直接用模型自带的tokenizer（BPE/Byte-level BPE），不需要额外分词</li>
+                                        <li>工程坑点：停用词表不要直接用通用表，要根据任务调整（情感分析不要去掉否定词）</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="algo-item">
+                            <div class="algo-header" onclick="toggleAlgo(this)">文本归一化（TF-IDF/去停用词/词干提取）</div>
+                            <div class="algo-content">
+                                <div class="algo-section">
+                                    <h5>📄 论文背景</h5>
+                                    <p>TF-IDF由Jones在1972年《A Statistical Interpretation of Term Specificity and its Application in Retrieval》中提出，是信息检索领域最经典的词权重算法，至今在搜索、关键词提取、文本分类场景仍广泛使用。</p>
+                                </div>
+                                <div class="algo-section">
+                                    <h5>📚 理论原理</h5>
+                                    <p>$$TF-IDF(t,d) = TF(t,d) \times IDF(t)$$</p>
+                                    <p>TF（词频）：词t在文档d中出现的频率；IDF（逆文档频率）：$\log(N/df(t))$，N是总文档数，df(t)是包含词t的文档数。核心思想：一个词在当前文档出现越多，在其他文档出现越少，对这个文档越重要。</p>
+                                </div>
+                                <div class="algo-section">
+                                    <h5>💻 核心实现</h5>
+<pre><code class="language-python">from collections import Counter
+import math
+
+def tf_idf(corpus):
+    N = len(corpus)
+    df = Counter()
+    tf_list = []
+    for doc in corpus:
+        tf = Counter(doc)
+        tf_list.append(tf)
+        for word in set(doc):
+            df[word] += 1
+    idf = {w: math.log(N/(df[w]+1)) for w in df}
+    result = []
+    for tf in tf_list:
+        doc_tfidf = {w: tf[w]/sum(tf.values()) * idf[w] for w in tf}
+        result.append(doc_tfidf)
+    return result</code></pre>
+                                </div>
+                                <div class="algo-section">
+                                    <h5>🚀 实战要点</h5>
+                                    <ul>
+                                        <li>TF-IDF适合短文本关键词提取、简单文本分类基线、搜索引擎初筛</li>
+                                        <li>缺点：无法理解语义，"苹果"手机和"苹果"水果无法区分，不考虑词序</li>
+                                        <li>工程坑点：要做停用词过滤，否则"的""是"这类停用词权重会很高</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 统计NLP分支 -->
+                <div class="branch-group">
+                    <div class="branch-header" onclick="toggleBranch(this)">② 统计NLP</div>
+                    <div class="branch-content">
+                        <div class="algo-item">
+                            <div class="algo-header" onclick="toggleAlgo(this)">N-gram 语言模型</div>
+                            <div class="algo-content">
+                                <div class="algo-section">
+                                    <h5>📄 论文背景</h5>
+                                    <p>N-gram是统计语言模型的基础，由Shannon在1948年《A Mathematical Theory of Communication》中提出，基于马尔可夫假设：下一个词的出现只依赖于前面n-1个词。在深度学习时代之前，N-gram一直是语音识别、机器翻译、输入法的核心技术。</p>
+                                </div>
+                                <div class="algo-section">
+                                    <h5>📚 理论原理</h5>
+                                    <p>$$P(w_1,w_2,...,w_n) = \prod_{i=1}^n P(w_i|w_{i-n+1},...,w_{i-1})$$</p>
+                                    <p>常用的是Bi-gram（n=2）和Tri-gram（n=3）。概率通过最大似然估计从语料中统计：$P(w_i|w_{i-1}) = C(w_{i-1},w_i)/C(w_{i-1})$。需要加平滑（如加1平滑、Good-Turing平滑）解决零概率问题。</p>
+                                </div>
+                                <div class="algo-section">
+                                    <h5>💻 核心实现</h5>
+<pre><code class="language-python">from collections import defaultdict, Counter
+
+def train_bigram(corpus):
+    bigram_counts = defaultdict(Counter)
+    unigram_counts = Counter()
+    for sent in corpus:
+        sent = ['<s>'] + sent + ['</s>']
+        for i in range(1, len(sent)):
+            bigram_counts[sent[i-1]][sent[i]] += 1
+            unigram_counts[sent[i-1]] += 1
+    # 计算概率
+    prob = defaultdict(dict)
+    for w_prev in bigram_counts:
+        total = unigram_counts[w_prev]
+        for w_curr, cnt in bigram_counts[w_prev].items():
+            prob[w_prev][w_curr] = cnt / total
+    return prob</code></pre>
+                                </div>
+                                <div class="algo-section">
+                                    <h5>🚀 实战要点</h5>
+                                    <ul>
+                                        <li>N越大，模型越准但越稀疏，一般n最大到5</li>
+                                        <li>现在仍然在输入法联想、文本纠错、低资源场景基线中使用</li>
+                                        <li>工程坑点：OOV问题严重，必须做平滑，否则未见过的词对会导致概率为0</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="algo-item">
+                            <div class="algo-header" onclick="toggleAlgo(this)">HMM 隐马尔可夫模型</div>
+                            <div class="algo-content">
+                                <div class="algo-section">
+                                    <h5>📄 论文背景</h5>
+                                    <p>HMM是序列标注的经典模型，1980年代被引入NLP用于词性标注、命名实体识别、语音识别。核心假设：观测序列由隐藏的状态序列生成，满足马尔可夫性（当前状态只依赖前一个状态）。</p>
+                                </div>
+                                <div class="algo-section">
+                                    <h5>📚 理论原理</h5>
+                                    <p>HMM有三个核心问题：</p>
+                                    <ol>
+                                        <li><strong>评估问题</strong>：给定模型参数和观测序列，计算出现概率 → 前向算法</li>
+                                        <li><strong>解码问题</strong>：给定模型参数和观测序列，找最可能的隐藏状态序列 → 维特比（Viterbi）算法（NLP最常用）</li>
+                                        <li><strong>学习问题</strong>：给定观测序列，估计模型参数 → Baum-Welch算法（EM算法的特例）</li>
+                                    </ol>
+                                    <p>维特比算法是动态规划：$\delta_t(i) = \max_{j} \delta_{t-1}(j) a_{ji} b_i(o_t)$，记录路径回溯即可得到最优序列。</p>
+                                </div>
+                                <div class="algo-section">
+                                    <h5>💻 核心实现</h5>
+<pre><code class="language-python">def viterbi(obs, states, start_p, trans_p, emit_p):
+    V = [{}]
+    path = {}
+    for s in states:
+        V[0][s] = start_p[s] * emit_p[s][obs[0]]
+        path[s] = [s]
+    for t in range(1, len(obs)):
+        V.append({})
+        newpath = {}
+        for s in states:
+            (prob, state) = max((V[t-1][s0] * trans_p[s0][s] * emit_p[s][obs[t]], s0) for s0 in states)
+            V[t][s] = prob
+            newpath[s] = path[state] + [s]
+        path = newpath
+    (prob, state) = max((V[-1][s], s) for s in states)
+    return prob, path[state]</code></pre>
+                                </div>
+                                <div class="algo-section">
+                                    <h5>🚀 实战要点</h5>
+                                    <ul>
+                                        <li>中文分词、词性标注、简单NER的经典基线，速度极快</li>
+                                        <li>缺点：只能依赖前一个状态，无法捕捉长距离依赖；特征工程需要人工设计</li>
+                                        <li>工程坑点：训练时要做概率平滑，否则会出现0概率导致维特比路径错误</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="algo-item">
+                            <div class="algo-header" onclick="toggleAlgo(this)">CRF 条件随机场</div>
+                            <div class="algo-content">
+                                <div class="algo-section">
+                                    <h5>📄 论文背景</h5>
+                                    <p>2001年Lafferty等人在《Conditional Random Fields: Probabilistic Models for Segmenting and Labeling Sequence Data》中提出，解决了HMM的输出独立假设问题，是序列标注领域在深度学习之前的SOTA，至今在BERT+CRF的组合中仍广泛使用。</p>
+                                </div>
+                                <div class="algo-section">
+                                    <h5>📚 理论原理</h5>
+                                    <p>CRF是判别式模型，直接对条件概率P(Y|X)建模，线性链CRF的概率：</p>
+                                    <p>$$P(y|x) = \frac{1}{Z(x)} \exp\left(\sum_{i,k} \lambda_k t_k(y_{i-1},y_i,x,i) + \sum_{i,l} \mu_l s_l(y_i,x,i)\right)$$</p>
+                                    <p>核心优势：可以加入任意全局特征（比如前后几个词的特征、词的前缀后缀），不需要严格的独立性假设，标签之间有转移约束，不会出现B-PER后面接I-LOC这种不合理标签。解码同样用维特比算法。</p>
+                                </div>
+                                <div class="algo-section">
+                                    <h5>💻 核心实现</h5>
+                                    <p>核心思想：在HMM维特比基础上，加入自定义特征函数，训练用L-BFGS优化对数似然。实战中直接用`crfsuite`或`sklearn-crfsuite`即可，不需要从零实现。</p>
+<pre><code class="language-python">import sklearn_crfsuite
+crf = sklearn_crfsuite.CRF(algorithm='lbfgs', c1=0.1, c2=0.1, max_iterations=100)
+# X是每个词的特征集合：[{'word': '我', 'postag': 'r', 'prefix': '我'}, ...]
+# y是标签序列：['B-PER', 'I-PER', 'O', ...]
+crf.fit(X_train, y_train)</code></pre>
+                                </div>
+                                <div class="algo-section">
+                                    <h5>🚀 实战要点</h5>
+                                    <ul>
+                                        <li>序列标注任务上BERT+CRF比纯BERT效果好，因为CRF可以约束标签转移合法性</li>
+                                        <li>缺点：训练速度慢，特征工程依赖人工，长距离依赖捕捉能力还是有限</li>
+                                        <li>工程坑点：特征工程非常重要，通常要加：当前词、前后词、前后缀、词性、是否大写、是否数字等几十种特征才能出好效果</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 词表示分支 -->
+                <div class="branch-group">
+                    <div class="branch-header" onclick="toggleBranch(this)">③ 词表示与神经网络</div>
+                    <div class="branch-content">
+                        <div class="algo-item">
+                            <div class="algo-header" onclick="toggleAlgo(this)">Word2Vec 词向量</div>
+                            <div class="algo-content">
+                                <div class="algo-section">
+                                    <h5>📄 论文背景</h5>
+                                    <p>2013年Mikolov等人在《Efficient Estimation of Word Representations in Vector Space》中提出，是NLP从稀疏表示转向稠密表示的里程碑。第一次让词向量可以高效在大规模语料上训练，并且向量具有语义线性关系（国王-男人+女人≈女王）。</p>
+                                </div>
+                                <div class="algo-section">
+                                    <h5>📚 理论原理</h5>
+                                    <p>两种架构：</p>
+                                    <ul>
+                                        <li><strong>CBOW</strong>：用上下文词预测中心词，速度快，适合小语料</li>
+                                        <li><strong>Skip-gram</strong>：用中心词预测上下文词，效果好，适合大语料和低频词</li>
+                                    </ul>
+                                    <p>核心优化技巧：负采样（Negative Sampling）和层次Softmax，把原来|V|大小的Softmax变成二分类，训练速度提升几个数量级。</p>
+                                </div>
+                                <div class="algo-section">
+                                    <h5>💻 核心实现（Skip-gram负采样）</h5>
+<pre><code class="language-python"># 简化版Word2Vec Skip-gram + 负采样核心逻辑
+def skip_gram_step(center_word, context_word, neg_words, W_in, W_out, lr=0.025):
+    # center_word: (dim,), 输入向量
+    # 正样本
+    score = W_out[context_word] @ W_in[center_word]
+    grad = sigmoid(score) - 1
+    W_out[context_word] -= lr * grad * W_in[center_word]
+    grad_center = grad * W_out[context_word]
+    # 负样本
+    for nw in neg_words:
+        score = W_out[nw] @ W_in[center_word]
+        grad = sigmoid(score)
+        W_out[nw] -= lr * grad * W_in[center_word]
+        grad_center += grad * W_out[nw]
+    W_in[center_word] -= lr * grad_center</code></pre>
+                                </div>
+                                <div class="algo-section">
+                                    <h5>🚀 实战要点</h5>
+                                    <ul>
+                                        <li>实战直接用`gensim.models.Word2Vec`，不需要自己实现</li>
+                                        <li>参数经验：window=5-10，dim=100-300，min_count=5，负采样数=5-10</li>
+                                        <li>缺点：词和向量一一对应，无法解决一词多义；无法处理OOV；是静态向量，上下文不变</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="algo-item">
+                            <div class="algo-header" onclick="toggleAlgo(this)">RNN/LSTM/GRU 循环神经网络</div>
+                            <div class="algo-content">
+                                <div class="algo-section">
+                                    <h5>📄 论文背景</h5>
+                                    <p>RNN在1990年代被提出，但因为梯度消失问题无法训练长序列；1997年Hochreiter等人提出LSTM（Long Short-Term Memory），通过门控机制解决长距离依赖问题；2014年Cho等人提出GRU，简化了LSTM的门，参数更少速度更快。</p>
+                                </div>
+                                <div class="algo-section">
+                                    <h5>📚 理论原理</h5>
+                                    <p>LSTM三个门：遗忘门$f_t$、输入门$i_t$、输出门$o_t$，以及细胞状态$c_t$：</p>
+                                    <p>$$f_t = \sigma(W_f[h_{t-1},x_t]+b_f)$$</p>
+                                    <p>$$i_t = \sigma(W_i[h_{t-1},x_t]+b_i)$$</p>
+                                    <p>$$o_t = \sigma(W_o[h_{t-1},x_t]+b_o)$$</p>
+                                    <p>$$c_t = f_t c_{t-1} + i_t \tanh(W_c[h_{t-1},x_t]+b_c)$$</p>
+                                    <p>$$h_t = o_t \tanh(c_t)$$</p>
+                                    <p>核心思想：细胞状态像一个传送带，通过门控制哪些信息保留、哪些信息遗忘、哪些信息新增，梯度可以在细胞状态上畅通传播，缓解梯度消失。</p>
+                                </div>
+                                <div class="algo-section">
+                                    <h5>💻 核心实现（LSTM Cell）</h5>
+<pre><code class="language-python">def lstm_cell(x, h_prev, c_prev, Wf, Wi, Wo, Wc, bf, bi, bo, bc):
+    concat = torch.cat([h_prev, x], dim=-1)
+    f = torch.sigmoid(concat @ Wf + bf)  # 遗忘门
+    i = torch.sigmoid(concat @ Wi + bi)  # 输入门
+    o = torch.sigmoid(concat @ Wo + bo)  # 输出门
+    c_tilde = torch.tanh(concat @ Wc + bc) # 候选细胞
+    c = f * c_prev + i * c_tilde
+    h = o * torch.tanh(c)
+    return h, c</code></pre>
+                                </div>
+                                <div class="algo-section">
+                                    <h5>🚀 实战要点</h5>
+                                    <ul>
+                                        <li>在Transformer之前是NLP序列建模标配，现在大部分场景被Transformer取代，但在低资源小模型、实时序列场景仍有使用</li>
+                                        <li>缺点：天生串行无法并行，长距离（>100步）依赖仍然捕捉不好，训练速度慢</li>
+                                        <li>工程坑点：训练时要做梯度裁剪（clip_grad_norm）防止梯度爆炸；多层LSTM要做dropout；双向LSTM（BiLSTM）比单向效果好很多</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 注意力与Transformer分支 -->
+                <div class="branch-group">
+                    <div class="branch-header" onclick="toggleBranch(this)">④ 注意力与Transformer</div>
+                    <div class="branch-content">
+                        <div class="algo-item">
+                            <div class="algo-header" onclick="toggleAlgo(this)">Seq2Seq + Bahdanau注意力</div>
+                            <div class="algo-content">
+                                <div class="algo-section">
+                                    <h5>📄 论文背景</h5>
+                                    <p>2014年Sutskever等人提出Seq2Seq（编码器-解码器）架构用于机器翻译，但固定长度上下文向量成为瓶颈；2015年Bahdanau等人在《Neural Machine Translation by Jointly Learning to Align and Translate》中提出注意力机制，第一次让解码器可以动态关注输入序列的不同位置，大幅提升翻译效果，是Transformer注意力的前身。</p>
+                                </div>
+                                <div class="algo-section">
+                                    <h5>📚 理论原理</h5>
+                                    <p>核心思想：解码器在生成每个词时，计算当前解码器状态和所有编码器输出的相似度，得到注意力权重，加权求和得到上下文向量，再用这个向量生成当前词：</p>
+                                    <p>$$e_{ti} = a(s_{t-1}, h_i)$$</p>
+                                    <p>$$\alpha_{ti} = \text{softmax}(e_{ti})$$</p>
+                                    <p>$$c_t = \sum_i \alpha_{ti} h_i$$</p>
+                                    <p>其中$a$是对齐模型，通常是一个小的前馈神经网络。</p>
+                                </div>
+                                <div class="algo-section">
+                                    <h5>💻 核心实现</h5>
+<pre><code class="language-python">class BahdanauAttention(nn.Module):
+    def __init__(self, hidden_size):
+        super().__init__()
+        self.Wa = nn.Linear(hidden_size, hidden_size)
+        self.Ua = nn.Linear(hidden_size, hidden_size)
+        self.Va = nn.Linear(hidden_size, 1)
+    def forward(self, query, keys):
+        scores = self.Va(torch.tanh(self.Wa(query.unsqueeze(1)) + self.Ua(keys)))
+        weights = torch.softmax(scores.squeeze(-1), dim=-1)
+        context = torch.bmm(weights.unsqueeze(1), keys).squeeze(1)
+        return context, weights</code></pre>
+                                </div>
+                                <div class="algo-section">
+                                    <h5>🚀 实战要点</h5>
+                                    <ul>
+                                        <li>解决了Seq2Seq固定长度瓶颈，长句子翻译效果大幅提升</li>
+                                        <li>注意力权重可视化可以看到词对齐效果，有一定可解释性</li>
+                                        <li>缺点：计算量是序列长度平方级，长序列慢；还是基于RNN无法并行</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="algo-item">
+                            <div class="algo-header" onclick="toggleAlgo(this)">Self-Attention 自注意力</div>
+                            <div class="algo-content">
+                                <div class="algo-section">
+                                    <h5>📄 论文背景</h5>
+                                    <p>2017年Vaswani等人在《Attention Is All You Need》中提出缩放点积自注意力，是Transformer的核心组件，完全抛弃RNN/CNN，仅靠注意力就可以建模序列关系，开启了大模型时代。</p>
+                                </div>
+                                <div class="algo-section">
+                                    <h5>📚 理论原理</h5>
+                                    <p>缩放点积注意力公式：</p>
+                                    <p>$$\text{Attention}(Q,K,V) = \text{softmax}\left(\frac{QK^T}{\sqrt{d_k}}\right)V$$</p>
+                                    <p>其中Q（查询）、K（键）、V（值）都是输入向量通过线性变换得到的。除以$\sqrt{d_k}$是为了防止点积值过大导致softmax饱和梯度消失。多头注意力是把Q/K/V分成多份分别做注意力，再拼接起来，可以捕捉不同类型的关系（语法/语义/共指等）。</p>
+                                </div>
+                                <div class="algo-section">
+                                    <h5>💻 核心实现</h5>
+<pre><code class="language-python">def scaled_dot_product_attention(Q, K, V, mask=None):
+    d_k = Q.size(-1)
+    scores = torch.matmul(Q, K.transpose(-2,-1)) / math.sqrt(d_k)
+    if mask is not None:
+        scores = scores.masked_fill(mask==0, -1e9)
+    attn_weights = torch.softmax(scores, dim=-1)
+    output = torch.matmul(attn_weights, V)
+    return output, attn_weights</code></pre>
+                                </div>
+                                <div class="algo-section">
+                                    <h5>🚀 实战要点</h5>
+                                    <ul>
+                                        <li>优点：可以并行计算，每个位置直接和所有位置交互，长距离依赖捕捉能力极强</li>
+                                        <li>缺点：计算量和显存都是序列长度平方级，长序列（>4k）需要线性注意力、FlashAttention等优化</li>
+                                        <li>工程坑点：Decoder端必须加causal mask防止看到未来信息；数值稳定性很重要，要注意除以根号d_k</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="algo-item">
+                            <div class="algo-header" onclick="toggleAlgo(this)">Transformer 架构</div>
+                            <div class="algo-content">
+                                <div class="algo-section">
+                                    <h5>📄 论文背景</h5>
+                                    <p>同上述《Attention Is All You Need》，完整Transformer架构包含编码器和解码器各6层，由多头自注意力、前馈网络、残差连接、层归一化、位置编码组成。BERT只用编码器，GPT只用解码器。</p>
+                                </div>
+                                <div class="algo-section">
+                                    <h5>📚 理论原理</h5>
+                                    <p>核心组件：</p>
+                                    <ul>
+                                        <li>位置编码：因为注意力没有顺序信息，需要加正弦/余弦位置编码（或可学习位置编码）注入位置信息</li>
+                                        <li>残差连接+LayerNorm：Pre-Norm结构$x + \text{Attention}(\text{LayerNorm}(x))$，稳定深层网络训练</li>
+                                        <li>前馈网络FFN：每个位置独立的两层MLP，通常是升维4倍再降维</li>
+                                    </ul>
+                                </div>
+                                <div class="algo-section">
+                                    <h5>💻 核心实现（Transformer Block）</h5>
+<pre><code class="language-python">class TransformerBlock(nn.Module):
+    def __init__(self, d_model, n_heads, d_ff):
+        super().__init__()
+        self.attn = MultiHeadAttention(d_model, n_heads)
+        self.ffn = nn.Sequential(
+            nn.Linear(d_model, d_ff), nn.GELU(), nn.Linear(d_ff, d_model)
+        )
+        self.ln1 = nn.LayerNorm(d_model)
+        self.ln2 = nn.LayerNorm(d_model)
+        self.dropout = nn.Dropout(0.1)
+    def forward(self, x, mask=None):
+        x = x + self.dropout(self.attn(self.ln1(x), mask=mask))
+        x = x + self.dropout(self.ffn(self.ln2(x)))
+        return x</code></pre>
+                                </div>
+                                <div class="algo-section">
+                                    <h5>🚀 实战要点</h5>
+                                    <ul>
+                                        <li>现在所有大模型都是Transformer的变体，核心架构没有变</li>
+                                        <li>预训练+微调范式取代了之前的任务特定架构，一个架构可以解决所有NLP任务</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 预训练模型分支 -->
+                <div class="branch-group">
+                    <div class="branch-header" onclick="toggleBranch(this)">⑤ 预训练语言模型</div>
+                    <div class="branch-content">
+                        <div class="algo-item">
+                            <div class="algo-header" onclick="toggleAlgo(this)">BERT</div>
+                            <div class="algo-content">
+                                <div class="algo-section">
+                                    <h5>📄 论文背景</h5>
+                                    <p>2018年Google在《BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding》中提出，开启了NLP预训练大模型时代，在11个NLP任务上刷榜SOTA。</p>
+                                </div>
+                                <div class="algo-section">
+                                    <h5>📚 理论原理</h5>
+                                    <p>编码器架构，双向注意力，两个预训练任务：</p>
+                                    <ul>
+                                        <li><strong>MLM（掩码语言模型）</strong>：随机mask 15%的词，预测被mask的词，让模型学习双向上下文表示</li>
+                                        <li><strong>NSP（下一句预测）</strong>：判断两个句子是否是连续的，学习句子间关系（后续证明作用不大，RoBERTa去掉了）</li>
+                                    </ul>
+                                </div>
+                                <div class="algo-section">
+                                    <h5>💻 实战代码</h5>
+<pre><code class="language-python">from transformers import BertTokenizer, BertForSequenceClassification
+tokenizer = BertTokenizer.from_pretrained('bert-base-chinese')
+model = BertForSequenceClassification.from_pretrained('bert-base-chinese', num_labels=2)
+inputs = tokenizer("这个产品质量很好", return_tensors="pt")
+outputs = model(**inputs)</code></pre>
+                                </div>
+                                <div class="algo-section">
+                                    <h5>🚀 实战要点</h5>
+                                    <ul>
+                                        <li>适合自然语言理解任务：分类、NER、匹配、问答等，不适合生成任务</li>
+                                        <li>中文场景直接用bert-base-chinese，垂直领域可以在领域语料上继续预训练</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="algo-item">
+                            <div class="algo-header" onclick="toggleAlgo(this)">GPT 系列</div>
+                            <div class="algo-content">
+                                <div class="algo-section">
+                                    <h5>📄 论文背景</h5>
+                                    <p>2018年OpenAI提出GPT-1，用解码器架构+自回归预训练；2019年GPT-2用更大数据更大模型展示zero-shot能力；2020年GPT-3用175B参数展示in-context learning能力；2022年ChatGPT基于GPT-3.5通过RLHF对齐，开启生成式AI时代。</p>
+                                </div>
+                                <div class="algo-section">
+                                    <h5>📚 理论原理</h5>
+                                    <p>解码器架构，因果注意力（只能看到前面的词），自回归语言模型目标：$P(x) = \prod P(x_i|x_{<i})$，即逐词预测下一个词。随着模型规模增大，涌现出推理、代码、多轮对话等能力。</p>
+                                </div>
+                                <div class="algo-section">
+                                    <h5>🚀 实战要点</h5>
+                                    <ul>
+                                        <li>GPT架构适合生成任务，现在所有通用大模型都是GPT式解码器架构</li>
+                                        <li>中文开源最好的是Qwen2、DeepSeek、Yi、ChatGLM系列</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 核心任务分支 -->
+                <div class="branch-group">
+                    <div class="branch-header" onclick="toggleBranch(this)">⑥ NLP核心任务</div>
+                    <div class="branch-content">
+                        <div class="algo-item">
+                            <div class="algo-header" onclick="toggleAlgo(this)">文本分类 / 序列标注 / 机器翻译 / 信息抽取 / 问答系统</div>
+                            <div class="algo-content">
+                                <p>每个任务都遵循预训练+微调范式，对应LLM模块会详细讲进阶实现。</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <h2 id="dual-axis">🧭 双轴阅读方式</h2>
+            <ul>
+                <li><strong>纵轴（学习路径）：</strong>文本预处理 → 统计NLP → 词向量 → RNN/LSTM → 注意力 → Transformer → 预训练模型，从基础到前沿</li>
+                <li><strong>横轴（技术分支）：</strong>六大分支每个分支内独立深入，从经典算法到现代变体</li>
+                <li><strong>场景反查：</strong>做任务时先确定属于哪个任务类型，再反查该任务下的SOTA方案和工程坑点</li>
+            </ul>
+
+            <h2 id="branches">🗂️ 六大技术分支</h2>
+            <div class="branch-cards">
+                <div class="branch-card">
+                    <h4>① 文本预处理</h4>
+                    <p style="font-size:14px;color:var(--text-secondary)">分词、清洗、归一化、TF-IDF特征提取，是所有NLP任务的基础，数据预处理决定了效果上限。</p>
+                </div>
+                <div class="branch-card">
+                    <h4>② 统计NLP</h4>
+                    <p style="font-size:14px;color:var(--text-secondary)">N-gram、HMM、CRF，统计时代的经典模型，在特定场景（如中文分词、低资源）仍然有实用价值，BERT+CRF仍是序列标注常用方案。</p>
+                </div>
+                <div class="branch-card">
+                    <h4>③ 词表示与神经网络</h4>
+                    <p style="font-size:14px;color:var(--text-secondary)">从One-Hot到Word2Vec、GloVe静态词向量，再到RNN/LSTM/TextCNN序列模型，深度学习时代的NLP基础。</p>
+                </div>
+                <div class="branch-card">
+                    <h4>④ 注意力与Transformer</h4>
+                    <p style="font-size:14px;color:var(--text-secondary)">Bahdanau注意力、自注意力、Transformer完整架构，是现代所有NLP和大模型的基石，必须彻底搞懂。</p>
+                </div>
+                <div class="branch-card">
+                    <h4>⑤ 预训练语言模型</h4>
+                    <p style="font-size:14px;color:var(--text-secondary)">BERT（双向理解）、GPT（自回归生成）两大预训练路线，开启NLP大模型时代，微调即可解决大部分任务。</p>
+                </div>
+                <div class="branch-card">
+                    <h4>⑥ 核心任务实战</h4>
+                    <p style="font-size:14px;color:var(--text-secondary)">文本分类、序列标注、机器翻译、文本摘要、信息抽取、问答系统、对话系统，工业界常见落地方向。</p>
+                </div>
+            </div>
+
+            <h2 id="timeline">📅 发展时间线</h2>
+            <div class="timeline">
+                <div class="timeline-item">
+                    <div class="timeline-year">1950</div>
+                    <div class="timeline-content">图灵提出图灵测试，NLP概念诞生</div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-year">1966</div>
+                    <div class="timeline-content">ELIZA对话系统，基于规则匹配，第一个聊天机器人</div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-year">1972</div>
+                    <div class="timeline-content">TF-IDF算法提出，成为信息检索基石</div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-year">1980s</div>
+                    <div class="timeline-content">统计NLP兴起，HMM被用于语音识别和词性标注</div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-year">2001</div>
+                    <div class="timeline-content">CRF条件随机场提出，成为序列标注SOTA</div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-year">2013</div>
+                    <div class="timeline-content">Word2Vec提出，词向量时代开启，NLP进入深度学习时代</div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-year">2014</div>
+                    <div class="timeline-content">Seq2Seq提出，Bahdanau注意力提出，神经机器翻译开始取代统计机器翻译</div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-year">2017</div>
+                    <div class="timeline-content">《Attention Is All You Need》发布，Transformer提出，NLP进入Transformer时代</div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-year">2018</div>
+                    <div class="timeline-content">BERT和GPT-1发布，预训练+微调范式成为NLP标准范式</div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-year">2022-至今</div>
+                    <div class="timeline-content">ChatGPT发布，大语言模型时代开启，NLP从任务特定模型走向通用大模型</div>
+                </div>
+            </div>
+
+            <h2 id="lab">🧪 原理互动实验室</h2>
+            <div class="lab-card">
+                <h3>TF-IDF 权重计算器</h3>
+                <p style="font-size:14px;color:var(--text-secondary)">输入文档集合，实时计算每个词的TF-IDF权重，直观理解关键词提取原理</p>
+                <div class="slider-container">
+                    <label>当前文档索引：</label>
+                    <input type="range" min="0" max="2" value="0" id="tfidf-doc-slider">
+                </div>
+                <div class="lab-result" id="tfidf-result">
+请移动滑块查看不同文档的TF-IDF计算结果
+                </div>
+            </div>
+
+            <h2 id="playground">🎮 真实算法Playground</h2>
+            <div class="lab-card">
+                <h3>正向最大匹配中文分词</h3>
+                <p style="font-size:14px;color:var(--text-secondary)">浏览器中运行分词算法，输入句子实时看到分词结果</p>
+                <input type="text" id="seg-input" placeholder="输入中文句子，比如：我喜欢自然语言处理" style="width:100%;padding:8px 12px;border:1px solid var(--border);border-radius:4px;background:var(--bg);color:var(--text);margin:8px 0">
+                <button onclick="runSeg()" style="padding:8px 16px;background:var(--primary);color:white;border:none;border-radius:4px;cursor:pointer">运行分词</button>
+                <div class="lab-result" id="seg-result"></div>
+            </div>
+
+            <h2 id="algorithms">📚 精选算法档案</h2>
+            <p>点击家族树中每个算法即可查看完整四层内容，下面是核心算法快速入口：</p>
+            <div class="card">
+                <h3>Word2Vec 词向量</h3>
+                <p>里程碑式工作，把词语映射到低维稠密向量空间，使词语具有语义计算能力，是深度学习NLP的基础。核心贡献是提出了高效的负采样训练方法，让大规模语料训练词向量成为可能。缺点是静态向量无法解决一词多义。</p>
+            </div>
+            <div class="card">
+                <h3>LSTM 长短期记忆网络</h3>
+                <p>通过门控机制解决了RNN梯度消失问题，能够捕捉长距离依赖，在Transformer之前统治NLP近20年。三个门（遗忘门/输入门/输出门）的设计是经典，至今在时间序列、低资源场景仍有广泛应用。</p>
+            </div>
+            <div class="card">
+                <h3>Self-Attention 自注意力</h3>
+                <p>Transformer的核心，现代AI的基石。完全抛弃循环结构，通过Q/K/V点积计算任意两个位置之间的依赖，并行性好，长距离建模能力强。所有大模型都是基于自注意力构建的，必须深入理解其数学原理和实现细节。</p>
+            </div>
+
+            <h2 id="papers">📝 必读论文</h2>
+            <div class="paper-card">
+                <div class="paper-title">《Attention Is All You Need》</div>
+                <div class="paper-meta">Vaswani et al., 2017 · NLP圣经</div>
+                <p style="font-size:14px">Transformer的开山之作，NLP领域最重要的论文，必须精读。</p>
+            </div>
+            <div class="paper-card">
+                <div class="paper-title">《Efficient Estimation of Word Representations in Vector Space》</div>
+                <div class="paper-meta">Mikolov et al., 2013 · Word2Vec原文</div>
+                <p style="font-size:14px">词向量经典工作，开启深度学习NLP时代。</p>
+            </div>
+            <div class="paper-card">
+                <div class="paper-title">《BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding》</div>
+                <div class="paper-meta">Devlin et al., 2018 · BERT原文</div>
+                <p style="font-size:14px">预训练语言模型里程碑，刷爆11个NLP任务榜单。</p>
+            </div>
+            <div class="paper-card">
+                <div class="paper-title">《Neural Machine Translation by Jointly Learning to Align and Translate》</div>
+                <div class="paper-meta">Bahdanau et al., 2015 · 注意力机制开山作</div>
+                <p style="font-size:14px">第一次把注意力机制引入Seq2Seq，是Transformer注意力的前身。</p>
+            </div>
+
+            <h2 id="cases">🎯 实战案例</h2>
+            <div class="card">
+                <h3>电商评论情感分析</h3>
+                <p><strong>技术栈：</strong>BERT + 线性分类头</p>
+                <p><strong>坑点：</strong>要处理网络用语、表情符号、否定转折（"不是不好用，是非常难用"），数据标注质量比模型重要，垂直领域用领域预训练模型比通用模型效果好5%以上。</p>
+            </div>
+            <div class="card">
+                <h3>简历信息抽取</h3>
+                <p><strong>技术栈：</strong>BERT + BiLSTM + CRF 命名实体识别</p>
+                <p><strong>坑点：</strong>实体嵌套问题（"阿里巴巴公司"既是公司名，"阿里巴巴"也可能单独出现），CRF层对标签合法性约束很重要，要设计丰富的规则做后处理。</p>
+            </div>
+        </main>
+        <aside class="sidebar" id="sidebar">
+            <a href="#what" class="active">🎯 这是什么</a>
+            <a href="#four-layer">🧱 四层闭环</a>
+            <a href="#family-tree">🌳 全景家族树</a>
+            <a href="#dual-axis">🧭 双轴阅读方式</a>
+            <a href="#branches">🗂️ 六大技术分支</a>
+            <a href="#timeline">📅 发展时间线</a>
+            <a href="#lab">🧪 原理实验室</a>
+            <a href="#playground">🎮 真机Playground</a>
+            <a href="#algorithms">📚 算法档案</a>
+            <a href="#papers">📝 必读论文</a>
+            <a href="#cases">🎯 实战案例</a>
+        </aside>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script>
+        // 主题切换
+        function toggleTheme() {
+            const current = document.documentElement.getAttribute('data-theme');
+            const newTheme = current === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            document.getElementById('hljs-light').disabled = newTheme === 'dark';
+            document.getElementById('hljs-dark').disabled = newTheme === 'light';
+        }
+        const savedTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        document.documentElement.setAttribute('data-theme', savedTheme);
+        document.getElementById('hljs-light').disabled = savedTheme === 'dark';
+        document.getElementById('hljs-dark').disabled = savedTheme === 'light';
+
+        // 家族树展开/折叠
+        function toggleBranch(el) { el.parentElement.classList.toggle('open'); }
+        function toggleAlgo(el) { el.parentElement.classList.toggle('open'); }
+
+        // 滚动高亮侧边栏
+        const sections = document.querySelectorAll('h2[id]');
+        const sidebarLinks = document.querySelectorAll('.sidebar a');
+        window.addEventListener('scroll', () => {
+            let current = '';
+            sections.forEach(section => {
+                const sectionTop = section.offsetTop - 100;
+                if (pageYOffset >= sectionTop) current = section.getAttribute('id');
+            });
+            sidebarLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === '#' + current) link.classList.add('active');
+            });
+        });
+
+        // TF-IDF实验室
+        const docs = [
+            ["我", "喜欢", "自然语言处理", "自然语言处理", "很", "有趣"],
+            ["我", "喜欢", "计算机视觉", "计算机视觉", "应用", "很", "广"],
+            ["大模型", "改变", "了", "自然语言处理", "和", "计算机视觉", "的", "发展"]
+        ];
+        document.getElementById('tfidf-doc-slider').addEventListener('input', function(e) {
+            const docIdx = parseInt(e.target.value);
+            const tf = {};
+            docs[docIdx].forEach(w => tf[w] = (tf[w]||0)+1);
+            const total = docs[docIdx].length;
+            const df = {};
+            docs.forEach(doc => new Set(doc).forEach(w => df[w] = (df[w]||0)+1));
+            const N = docs.length;
+            const tfidf = {};
+            Object.keys(tf).forEach(w => {
+                tfidf[w] = (tf[w]/total) * Math.log(N/(df[w]+1));
+            });
+            const sorted = Object.entries(tfidf).sort((a,b)=>b[1]-a[1]);
+            let res = `文档${docIdx+1}：${docs[docIdx].join(' ')}\n\nTF-IDF权重（按重要性排序）：\n`;
+            sorted.forEach(([w,v]) => res += `${w.padEnd(8)}: ${v.toFixed(4)}\n`);
+            document.getElementById('tfidf-result').textContent = res;
+        });
+
+        // 分词Playground
+        const wordDict = new Set(["我","喜欢","自然","自然语言","自然语言处理","语言","处理","计算机","计算机视觉","视觉","大模型","模型","改变","发展","有趣","应用","很","非常","的","和","了","是","人工智能"]);
+        function forwardMaxMatch(sentence, maxLen=6) {
+            const result = [];
+            let i=0;
+            while(i<sentence.length) {
+                let matched = false;
+                for(let l=Math.min(maxLen, sentence.length-i); l>0; l--) {
+                    const w = sentence.substr(i,l);
+                    if(wordDict.has(w)) {
+                        result.push(w);
+                        i+=l;
+                        matched = true;
+                        break;
+                    }
+                }
+                if(!matched) { result.push(sentence[i]); i++; }
+            }
+            return result;
+        }
+        function runSeg() {
+            const sent = document.getElementById('seg-input').value || "我喜欢自然语言处理";
+            const res = forwardMaxMatch(sent);
+            document.getElementById('seg-result').textContent = `分词结果：\n${res.join(' | ')}`;
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            renderMathInElement(document.body, {
+                delimiters: [{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],
+                throwOnError:false
+            });
+            document.querySelectorAll('pre code').forEach(el => hljs.highlightElement(el));
+            runSeg();
+        });
+    </script>
+</body>
+</html>
