@@ -176,12 +176,23 @@ h4 { margin-top: 20px; margin-bottom: 12px; color: #6b21a8; }
   <section id="transformer">
     <h2 class="text-3xl font-bold">🧱 Transformer Decoder · 大模型骨架</h2>
     <p class="text-gray-700 mb-4">所有现代大模型都用Transformer Decoder架构，和NLP里讲的Encoder有几个关键区别：</p>
-<div class="play-card" style="margin-top:14px;border-left:4px solid #8b5cf6">
-  <h4>🏗️ <a href="../transformer-arch.html" style="color:#8b5cf6;text-decoration:none">动手玩：Transformer 架构互动图 →</a></h4>
-  <p>GPT 是 Decoder-only 架构。在互动图上看 Decoder 侧 Masked MHA / FFN / Add&Norm 的结构与公式，理解因果掩码在哪里起作用。</p>
+<div style="background:linear-gradient(135deg,#eef4ff,#f5f0ff 55%,#fff7ed);border:1px solid #e6e9f2;border-radius:16px;padding:18px 20px;margin:14px 0">
+  <div style="font-size:13px;font-weight:800;letter-spacing:1px;color:#8b5cf6">DEEP DIVE · 深度专题</div>
+  <h4 style="font-size:20px;font-weight:800;color:#1e293b;margin:4px 0 8px">🧠 Transformer 深度专题：从直觉到从零实现</h4>
+  <p style="font-size:14.5px;color:#475569;line-height:1.75;margin-bottom:12px">Transformer 是 GPT、Llama、文心一言共同的骨架。光看一句话定义不算懂——我们把它的心脏拆开讲过：<b>为什么需要它 → 注意力的直觉（查字典）→ Q/K/V 是什么 → 为什么除以 √d → 因果掩码 → 多头 → 位置编码 → FFN/残差/LayerNorm → 从零实现 → 自回归生成 → 现代改进</b>，每一节都配一个<b>能动手拖/点/算</b>的互动实验室。</p>
+  <div style="display:flex;flex-wrap:wrap;gap:10px">
+    <a href="../transformer-deep.html" style="flex:1;min-width:220px;text-decoration:none;background:#7c3aed;color:#fff;border-radius:12px;padding:13px 16px;display:block">
+      <div style="font-weight:800;font-size:15px">🧠 进入 Transformer 深度专题 →</div>
+      <div style="font-size:12.5px;opacity:.9;margin-top:3px">12 节图文 + 11 个真实计算互动实验室（注意力热力图 / √d 缩放 / 因果掩码 / 多头 / 位置编码 / 残差梯度 / KV Cache …）</div>
+    </a>
+    <a href="../transformer-arch.html" style="flex:1;min-width:220px;text-decoration:none;background:#3b6fe0;color:#fff;border-radius:12px;padding:13px 16px;display:block">
+      <div style="font-weight:800;font-size:15px">🏗️ Transformer 架构互动解剖 →</div>
+      <div style="font-size:12.5px;opacity:.9;margin-top:3px">点击每个模块，看它的张量形状、核心公式、以及注意力/掩码的迷你计算器</div>
+    </a>
+  </div>
 </div>
 
-    
+
     <div class="grid grid-cols-2 gap-4 mb-4">
       <div class="card bg-blue-50 border-blue-200">
         <h5 class="font-bold text-blue-800">Transformer Encoder (BERT)</h5>

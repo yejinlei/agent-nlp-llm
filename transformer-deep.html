@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>🧠 Transformer 深度专题 · 从直觉到从零实现 · agent-nlp-llm</title>
+<link rel="stylesheet" href="css/site.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<style>
+.td-hero{background:linear-gradient(135deg,#eef4ff 0%,#f5f0ff 45%,#fff7ed 100%);border-radius:20px;padding:26px 24px;border:1px solid #e6e9f2;position:relative;overflow:hidden}
+.td-hero::after{content:"";position:absolute;right:-40px;top:-40px;width:200px;height:200px;background:radial-gradient(circle,rgba(124,58,237,.16),transparent 70%);border-radius:50%}
+.td-toc{display:flex;flex-wrap:wrap;gap:8px;margin:18px 0}
+.td-toc a{font-size:13px;padding:6px 13px;background:#fff;border:1px solid var(--border-2);border-radius:20px;color:#475569;font-weight:600;transition:.2s}
+.td-toc a:hover{background:#eef3ff;border-color:#3b6fe0;color:#1d4ed8;transform:translateY(-1px)}
+.fourstep{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:14px 0}
+@media(max-width:760px){.fourstep{grid-template-columns:repeat(2,1fr)}}
+.fs{padding:12px;border-radius:12px;background:#fff;border:1px solid var(--border);position:relative}
+.fs .n{font-size:11px;font-weight:800;letter-spacing:1px;color:#94a3b8}
+.fs .ttl{font-weight:800;color:#1e293b;font-size:14px;margin-top:2px}
+.fs .d{font-size:12.5px;color:#64748b;margin-top:4px;line-height:1.55}
+.fs.s1{border-top:3px solid #3b82f6}.fs.s2{border-top:3px solid #8b5cf6}
+.fs.s3{border-top:3px solid #10b981}.fs.s4{border-top:3px solid #f59e0b}
+.lab{border:1px solid var(--border-2);border-radius:16px;background:linear-gradient(180deg,#ffffff,#fbfcff);padding:18px;margin:16px 0;box-shadow:var(--shadow)}
+.lab-head{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+.lab-head .ic{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;background:#eef3ff}
+.lab-head h4{font-size:17px;font-weight:800;color:#1e293b;margin:0}
+.lab-head .tag{font-size:11px;font-weight:700;padding:2px 9px;border-radius:20px;background:#f1f5f9;color:#475569;margin-left:auto}
+.lab p.intro{font-size:14px;color:#475569;margin:8px 0 12px;line-height:1.7}
+.ctrl{display:flex;flex-wrap:wrap;gap:14px;align-items:center;margin:10px 0}
+.ctrl label{font-size:13px;color:#475569;font-weight:600;display:flex;flex-direction:column;gap:3px;min-width:150px}
+.ctrl input[type=range]{width:150px;accent-color:#3b82f6}
+.ctrl .v{font-family:'SF Mono',Consolas,monospace;color:#1d4ed8;font-weight:700}
+.btn{font-size:13px;font-weight:700;padding:8px 16px;border-radius:10px;border:none;cursor:pointer;background:#3b6fe0;color:#fff;transition:.2s}
+.btn:hover{background:#2d5bcc;transform:translateY(-1px)}
+.btn.alt{background:#f1f5f9;color:#334155}
+.btn.alt:hover{background:#e2e8f0}
+.outbox{font-family:'SF Mono',Consolas,monospace;font-size:13px;color:#0f172a;background:#0f172a;color:#e2e8f0;border-radius:10px;padding:12px 14px;margin-top:12px;white-space:pre-wrap;word-break:break-word;line-height:1.7;max-height:340px;overflow:auto}
+.outbox .k{color:#93c5fd}.outbox .v2{color:#6ee7b7}.outbox .dim{color:#94a3b8}
+.hm{display:grid;gap:3px;margin:10px 0}
+.hm .cell{border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;transition:.15s;min-height:30px}
+.hm .rowlab{display:flex;align-items:center;font-size:11px;color:#64748b;font-weight:600;padding-right:6px}
+canvas{max-width:100%;display:block}
+.dl{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-top:10px}
+.dl .c{background:#fff;border:1px solid var(--border);border-radius:12px;padding:12px;text-align:center}
+.dl .c .w{font-family:'SF Mono',monospace;font-size:15px;color:#1d4ed8;font-weight:800}
+.dl .c .l{font-size:12px;color:#64748b;margin-top:4px}
+.cmp{width:100%;border-collapse:collapse;font-size:13.5px;margin:10px 0}
+.cmp th,.cmp td{border:1px solid var(--border-2);padding:8px 11px;text-align:left}
+.cmp th{background:#f8fafc;font-weight:700;color:#334155}
+.cmp tr:nth-child(even) td{background:#fcfdff}
+.qa{background:#fff;border:1px solid var(--border-2);border-radius:12px;padding:14px;margin:10px 0}
+.qa .q{font-weight:700;color:#1e293b;font-size:14.5px;cursor:pointer;display:flex;justify-content:space-between;align-items:center}
+.qa .a{font-size:13.5px;color:#475569;margin-top:8px;line-height:1.75;display:none}
+.qa.open .a{display:block}
+code.inl{background:#f1f5f9;padding:1px 6px;border-radius:5px;font-family:'SF Mono',Consolas,monospace;font-size:12.5px;color:#7c3aed}
+.typing{font-family:'SF Mono',Consolas,monospace;font-size:14px;color:#15803d;font-weight:700}
+</style>
+</head><body>
+<nav class="nav-blur">
+  <div class="nav-inner">
+    <a href="index.html" class="nav-brand"><span class="brand-bubble">💬</span>agent-nlp-llm</a>
+    <div class="nav-links">
+      <a href="index.html" class="nav-link">🏠&nbsp;首页</a>
+      <a href="nlp/index.html" class="nav-link">📝&nbsp;NLP</a>
+      <a href="llm/index.html" class="nav-link">🤖&nbsp;LLM</a>
+      <a href="lab.html" class="nav-link">🧪&nbsp;实验室</a>
+      <a href="papers.html" class="nav-link">📚&nbsp;论文</a>
+      <a href="clinic.html" class="nav-link">🕵️&nbsp;诊所</a>
+      <a href="pitfalls.html" class="nav-link">💥&nbsp;踩坑</a>
+      <a href="benchmark.html" class="nav-link">📊&nbsp;选型</a>
+      <a href="universe.html" class="nav-link">🌌&nbsp;宇宙</a>
+      <a href="https://github.com/yejinlei/agent-nlp-llm" target="_blank" class="nav-link nav-gh" title="GitHub"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 .5C5.73.5.5 5.73.5 12c0 5.08 3.29 9.39 7.86 10.91.58.1.79-.25.79-.56v-2c-3.2.7-3.88-1.37-3.88-1.37-.52-1.33-1.28-1.69-1.28-1.69-1.05-.72.08-.7.08-.7 1.16.08 1.77 1.2 1.77 1.2 1.03 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.56-.29-5.25-1.28-5.25-5.7 0-1.26.45-2.29 1.19-3.1-.12-.29-.52-1.47.11-3.06 0 0 .97-.31 3.18 1.18a11 11 0 0 1 5.79 0c2.21-1.49 3.18-1.18 3.18-1.18.63 1.59.23 2.77.11 3.06.74.81 1.19 1.84 1.19 3.1 0 4.43-2.69 5.41-5.26 5.69.41.36.77 1.05.77 2.13v3.15c0 .31.21.67.8.56A11.5 11.5 0 0 0 23.5 12C23.5 5.73 18.27.5 12 .5z"/></svg></a>
+    </div>
+  </div>
+</nav>
+<main class="container" style="padding-top:92px">
+
+<div class="td-hero">
+  <h1 style="font-size:32px;font-weight:900;letter-spacing:-.5px;margin-bottom:8px">🧠 Transformer 深度专题</h1>
+  <p style="font-size:16px;color:#475569;max-width:760px;line-height:1.75">2017 年一篇论文《Attention Is All You Need》改写了整个 AI 的走向——ChatGPT、Claude、文心一言，底层都是它。<b>这一页不讲玄学</b>：从『为什么需要它』的直觉，到公式的每一个符号，到你能亲手运行/拖动的互动实验室，一步步把 Transformer 拆到底。</p>
+  <div class="fourstep">
+    <div class="fs s1"><div class="n">STEP 1</div><div class="ttl">直觉图示</div><div class="d">用生活比喻和动画先把『它在干嘛』讲明白</div></div>
+    <div class="fs s2"><div class="n">STEP 2</div><div class="ttl">数学推导</div><div class="d">逐个符号拆解公式，每步都能算给你看</div></div>
+    <div class="fs s3"><div class="n">STEP 3</div><div class="ttl">从零代码</div><div class="d">不调包，纯 NumPy 手写一个能跑的注意力</div></div>
+    <div class="fs s4"><div class="n">STEP 4</div><div class="ttl">工程实战</div><div class="d">真实场景里怎么用、会踩什么坑、怎么优化</div></div>
+  </div>
+</div>
+
+<div class="td-toc">
+  <a href="#why">① 为什么需要 Transformer</a>
+  <a href="#intuition">② 注意力的直觉</a>
+  <a href="#qkv">③ Q/K/V 到底是什么</a>
+  <a href="#scaled">④ 为什么要除以 √d</a>
+  <a href="#mask">⑤ 因果掩码</a>
+  <a href="#multihead">⑥ 多头注意力</a>
+  <a href="#pos">⑦ 位置编码</a>
+  <a href="#ffn">⑧ FFN / 残差 / LayerNorm</a>
+  <a href="#code">⑨ 从零实现</a>
+  <a href="#gen">⑩ 自回归生成</a>
+  <a href="#modern">⑪ 现代改进</a>
+  <a href="#faq">⑫ 面试八问</a>
+</div>
+
+<!-- ① 为什么 -->
+<section id="why">
+  <h2 class="text-3xl">① 为什么需要 Transformer？</h2>
+  <p>在 Transformer 之前，处理序列的主力是 <b>RNN / LSTM</b>。它们像人读句子一样，<b>一个字一个字往后读</b>，把前面读到的内容压进一个『记忆状态』里传递下去。这带来两个致命问题：</p>
+  <div class="grid grid-cols-2 gap-4 mb-4">
+    <div class="card bg-red-50 border-red-200">
+      <h5 class="font-bold text-red-800">❌ 问题一：没法并行</h5>
+      <p class="text-sm text-red-700 mt-2">第 100 个词必须等前 99 个词算完才能算。GPU 有几千个核心却只能干等——训练一个模型要几周。</p>
+    </div>
+    <div class="card bg-red-50 border-red-200">
+      <h5 class="font-bold text-red-800">❌ 问题二：记不住长距离</h5>
+      <p class="text-sm text-red-700 mt-2">信息挤在一个固定长度的状态里，传到后面就衰减。"猫"和隔了 50 个词的"它"之间，RNN 很难建立联系。</p>
+    </div>
+  </div>
+  <p>Transformer 的解法极其大胆：<b>干脆不要循环结构</b>。让每一个词<b>同时</b>和句子里所有其他词直接对话，一次性算出『每个词该关注谁』。这不仅天然并行（一句话的注意力可以一次矩阵乘法算完），还让任意两个词之间的距离都变成 <b>1 步</b>——不管隔多远，触手可及。</p>
+
+  <div class="lab">
+    <div class="lab-head"><div class="ic">⏱️</div><h4>动手实验室 A：RNN vs Transformer 谁更快</h4><span class="tag">真实计算</span></div>
+    <p class="intro">拖动序列长度，看两种架构的计算步数差距。RNN 必须串行，Transformer 可以并行。</p>
+    <div class="ctrl">
+      <label>序列长度 L <span class="v" id="cmpL">8</span></label>
+      <input type="range" id="cmpR" aria-label="序列长度 L" min="4" max="64" value="8" style="width:220px">
+    </div>
+    <canvas id="cmpCanvas" width="760" height="230" style="width:100%;border:1px solid var(--border);border-radius:12px;background:#fff"></canvas>
+    <div class="outbox" id="cmpOut"></div>
+  </div>
+</section>
+
+<!-- ② 直觉 -->
+<section id="intuition">
+  <h2 class="text-3xl">② 注意力的直觉：查字典</h2>
+  <p>别被公式吓到，注意力的本质就是<b>一次带权重的查字典</b>。</p>
+  <div class="insight">
+    📖 <b>图书馆比喻</b>：你（Query）想去图书馆找一本关于"机器学习"的书。图书馆的每本书都有标签（Key）。你拿自己的需求去和每本书的标签比对——<b>越匹配的书，你借来看的权重越大</b>。最后你带回家的，是所有书内容的加权合集（Value）。标签完全无关的书，你几乎不看（权重≈0）。
+  </div>
+  <p>放到句子里：处理"它"这个代词时，"它"的 Query 会去和句中所有词（包括"猫"）的 Key 比对，发现"猫"最匹配，于是把"猫"的 Value 大量吸收进来——模型就"知道"这个"它"指的是猫。这就是<b>指代消解</b>靠注意力自动完成的原理。</p>
+
+  <div class="lab">
+    <div class="lab-head"><div class="ic">🔍</div><h4>动手实验室 B：注意力权重热力图</h4><span class="tag">真实计算 · 可编辑</span></div>
+    <p class="intro">输入一句英文，模型（用一个可复现的小型注意力打分）会算出"每个词在关注谁"。行 = 谁在看，列 = 在看谁。颜色越深=关注越多。试试经典例句 <code class="inl">The animal didn't cross the street because it was too tired</code>，看 <b>it</b> 那一行是不是指向了 <b>animal</b>。</p>
+    <div class="ctrl">
+      <input id="sentIn" aria-label="输入英文句子" style="flex:1;min-width:260px;padding:9px 12px;border:1px solid var(--border-2);border-radius:10px;font-size:14px" value="The animal didn't cross the street because it was too tired">
+      <button class="btn" onclick="runHeat()">计算注意力 →</button>
+    </div>
+    <div id="heatWrap"></div>
+  </div>
+</section>
+
+<!-- ③ QKV -->
+<section id="qkv">
+  <h2 class="text-3xl">③ Q / K / V 到底是什么？</h2>
+  <p>同一个输入向量 x，乘上<b>三个不同的可学习权重矩阵</b>，就得到了 Q、K、V 三种角色。记住这张表，永远不混：</p>
+  <table class="cmp">
+    <tr><th>符号</th><th>角色</th><th>一句话记忆</th><th>公式</th></tr>
+    <tr><td><b>Q</b>uery</td><td>查询</td><td>"我在找什么？"</td><td>Q = X · W<sub>Q</sub></td></tr>
+    <tr><td><b>K</b>ey</td><td>键</td><td>"我能提供什么标签？"</td><td>K = X · W<sub>K</sub></td></tr>
+    <tr><td><b>V</b>alue</td><td>值</td><td>"如果我被选中，我贡献什么内容？"</td><td>V = X · W<sub>V</sub></td></tr>
+  </table>
+  <p>注意力做的事：<b>Q 和 K 点积</b>得到"匹配分"，softmax 归一化成"关注权重"，再用权重去<b>加权求和 V</b>。整个过程一句话：</p>
+  <div class="callout callout-info">
+    <div class="callout-line">$$\text{Attention}(Q,K,V)=\text{softmax}\!\left(\frac{QK^\top}{\sqrt{d_k}}\right)V$$</div>
+    <div class="callout-note">输出形状和输入 X 完全一致 —— 所以你可以<b>一层层堆叠</b>，堆几百层都行。</div>
+  </div>
+
+  <div class="lab">
+    <div class="lab-head"><div class="ic">🧮</div><h4>动手实验室 C：一步步算出注意力输出</h4><span class="tag">逐步展示 · 真实矩阵运算</span></div>
+    <p class="intro">用 3 个词、4 维向量的微型例子（数字固定、可复现），把注意力从输入 X 算到最终输出的<b>每一步中间结果</b>都打印出来。点一次看清全部。</p>
+    <div class="ctrl"><button class="btn" onclick="runStep()">▶ 跑一遍完整计算</button>
+      <label style="flex-direction:row;gap:8px;align-items:center;min-width:0"><input type="checkbox" id="scaledOn" aria-label="使用sqrt d 缩放" checked style="accent-color:#3b82f6"> 用 √d 缩放</label>
+    </div>
+    <div class="outbox" id="stepOut" style="max-height:none">点击按钮开始…</div>
+  </div>
+</section>
+
+<!-- ④ √d -->
+<section id="scaled">
+  <h2 class="text-3xl">④ 为什么要除以 √dₖ？</h2>
+  <p>这是最常被问、也最容易被忽略的细节。当向量维度 d 变大时，Q 和 K 点积的<b>方差也会随之变大</b>——结果可能变成几十甚至几百的大数。Softmax 遇到大数会"一家独大"：最大值的概率接近 1，其余接近 0，<b>梯度几乎消失</b>，训练就学不动了。</p>
+  <p>除以 √dₖ 后，点积的方差被"压"回 1 附近，softmax 的分布保持柔和、有梯度。<b>这是 Transformer 能稳定训练的关键细节之一。</b></p>
+
+  <div class="lab">
+    <div class="lab-head"><div class="ic">📉</div><h4>动手实验室 D：缩放对 softmax 的影响</h4><span class="tag">真实计算 · 拖滑杆</span></div>
+    <p class="intro">拖动维度 d 和缩放开关，看 softmax 分布如何从"均匀"变成"尖峰"。尖峰 = 梯度消失风险。</p>
+    <div class="ctrl">
+      <label>向量维度 d <span class="v" id="sd">8</span></label>
+      <input type="range" id="sR" aria-label="向量维度 d" min="2" max="512" value="8" style="width:240px">
+      <label style="flex-direction:row;gap:8px;align-items:center;min-width:0"><input type="checkbox" id="scaleOn" aria-label="除以根号d缩放" checked style="accent-color:#3b82f6"> 除以 √d</label>
+    </div>
+    <canvas id="sCanvas" width="760" height="240" style="width:100%;border:1px solid var(--border);border-radius:12px;background:#fff"></canvas>
+    <div class="outbox" id="sOut"></div>
+  </div>
+</section>
+
+<!-- ⑤ 掩码 -->
+<section id="mask">
+  <h2 class="text-3xl">⑤ 因果掩码：不许偷看答案</h2>
+  <p>GPT 是自回归模型——它要预测下一个词。但训练时如果让它在算第 3 个词的时候"看到"了第 4 个词的真实答案，那它就是在作弊，学不到真本事。</p>
+  <p>解法是<b>因果掩码（Causal Mask）</b>：在注意力分数矩阵上，把"未来"的位置（上三角）全部置成 −∞。softmax 之后这些位置的概率就变成 0。第 i 个词<b>只能看见 1…i</b>。</p>
+  <div class="callout callout-info">
+    <div class="callout-line">被掩码的分数 = −∞　→　exp(−∞) = 0　→　未来词权重为 0</div>
+    <div class="callout-note">掩码矩阵是一个<b>下三角全 1、上三角全 0</b> 的矩阵，配合 `masked_fill` 一行代码搞定。</div>
+  </div>
+
+  <div class="lab">
+    <div class="lab-head"><div class="ic">🪟</div><h4>动手实验室 E：掩码后每个词能看到谁</h4><span class="tag">真实计算 · 可交互</span></div>
+    <p class="intro">调整序列长度，橙色格=可见（有注意力)，灰色=被屏蔽。再点"生成演示"看自回归逐词生成的过程。</p>
+    <div class="ctrl">
+      <label>序列长度 T <span class="v" id="mTv">4</span></label>
+      <input type="range" id="mT" aria-label="序列长度 T" min="2" max="7" value="4" style="width:200px">
+      <button class="btn" onclick="demoGen()">▶ 自回归逐词生成演示</button>
+    </div>
+    <div id="maskGrid" class="hm" style="grid-template-columns:80px repeat(7,1fr)"></div>
+    <div class="outbox" id="mOut" style="max-height:none">调整滑杆看掩码矩阵…</div>
+    <div id="genOut" style="margin-top:10px;font-size:15px">生成结果：<span class="typing" id="typingTxt"></span><span id="cursor" style="display:none">▌</span></div>
+  </div>
+</section>
+
+<!-- ⑥ 多头 -->
+<section id="multihead">
+  <h2 class="text-3xl">⑥ 多头注意力：让模型同时"多线程思考"</h2>
+  <p>一次注意力只能学到一种"关注模式"。但语言里同时存在语法关系、指代关系、语义相似……多头注意力就是把 d_model 维切成 h 份，<b>每份独立算一次注意力</b>，最后拼接、再过一个线性层。每个头相当于一个"专家"，各盯一种关系。</p>
+  <p>GPT-3 用了 96 个头。下面的实验室用 4 种不同"性格"的头（局部头、全局头、语法头、指代头）在<b>真实计算</b>它们的注意力分布，你一眼看懂"多头"到底在干嘛。</p>
+
+  <div class="lab">
+    <div class="lab-head"><div class="ic">🎛️</div><h4>动手实验室 F：4 个头的注意力各看哪里</h4><span class="tag">真实计算 · 可切换</span></div>
+    <p class="intro">同一句话，四个头给出完全不同的关注模式。点标签切换头，或点"全部对比"并排看。</p>
+    <div class="ctrl" id="headTabs"></div>
+    <div id="headHeat"></div>
+    <div class="outbox" id="headOut" style="max-height:none"></div>
+  </div>
+</section>
+
+<!-- ⑦ 位置编码 -->
+<section id="pos">
+  <h2 class="text-3xl">⑦ 位置编码：给每个词贴上"坐标"</h2>
+  <p>注意力有个"缺陷"：它对词的顺序<b>完全不敏感</b>。"猫追狗"和"狗追猫"喂进去，不叠位置信息的话结果一模一样。所以必须在嵌入向量里"注入"位置信息。</p>
+  <p>原始 Transformer 用<b>正弦/余弦位置编码</b>：每个位置 pos 用一个不同频率的波来编码，偶数维用 sin、奇数维用 cos。好处是不用训练、还能外推到更长的序列。</p>
+  <div class="callout callout-info">
+    <div class="callout-line">$$PE_{(pos,2i)}=\sin\!\left(\frac{pos}{10000^{2i/d}}\right),\quad PE_{(pos,2i+1)}=\cos\!\left(\frac{pos}{10000^{2i/d}}\right)$$</div>
+    <div class="callout-note">现代大模型（Llama、Qwen）已换成 <b>RoPE 旋转位置编码</b>——把位置信息"旋转"进 Q、K 向量里，外推更自然。</div>
+  </div>
+
+  <div class="lab">
+    <div class="lab-head"><div class="ic">🌊</div><h4>动手实验室 G：位置编码长什么样</h4><span class="tag">真实计算 · 可交互</span></div>
+    <p class="intro">拖动位置 pos，看它在不同维度上的编码值；右侧热力图展示不同位置的编码图案——你会发现每个位置都有独一无二的"指纹"。</p>
+    <div class="ctrl">
+      <label>位置 pos <span class="v" id="pePv">3</span></label>
+      <input type="range" id="peP" aria-label="位置 pos" min="0" max="63" value="3" style="width:220px">
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+      <canvas id="peLine" width="380" height="240" style="width:100%;border:1px solid var(--border);border-radius:12px;background:#fff"></canvas>
+      <div><canvas id="peHeatC" width="380" height="240" style="width:100%;border:1px solid var(--border);border-radius:12px;background:#fff"></canvas></div>
+    </div>
+    <div class="outbox" id="peOut"></div>
+  </div>
+</section>
+
+<!-- ⑧ FFN -->
+<section id="ffn">
+  <h2 class="text-3xl">⑧ FFN · 残差连接 · LayerNorm</h2>
+  <p>注意力块之后还有一个"前馈网络（FFN）"，以及包裹每个子层的残差连接和归一化。这三样东西共同保证模型又深又稳：</p>
+  <div class="grid grid-cols-3 gap-4 mb-4">
+    <div class="card bg-purple-50 border-purple-200">
+      <h5 class="font-bold text-purple-800">FFN</h5>
+      <p class="text-sm text-purple-700 mt-2">两层 MLP，中间升到 4 倍再降回。每个位置独立处理，是模型的"知识仓库"。</p>
+    </div>
+    <div class="card bg-blue-50 border-blue-200">
+      <h5 class="font-bold text-blue-800">残差连接</h5>
+      <p class="text-sm text-blue-700 mt-2">y = x + Sublayer(x)。梯度能沿"高速公路"直通底层，是深层网络能训练的根本。</p>
+    </div>
+    <div class="card bg-green-50 border-green-200">
+      <h5 class="font-bold text-green-800">LayerNorm</h5>
+      <p class="text-sm text-green-700 mt-2">对每个样本沿特征维归一化，不受 batch 影响，训练/推理一致。</p>
+    </div>
+  </div>
+  <div class="callout callout-info">
+    <div class="callout-line">$$\text{FFN}(x)=\text{GELU}(xW_1+b_1)W_2+b_2 \qquad \text{LN}(x)=\gamma\cdot\frac{x-\mu}{\sqrt{\sigma^2+\epsilon}}+\beta$$</div>
+    <div class="callout-note">FFN 参数量约占一个 Transformer 块的 2/3——大模型的"大"，很大一部分在 FFN 里。</div>
+  </div>
+
+  <div class="lab">
+    <div class="lab-head"><div class="ic">🧪</div><h4>动手实验室 H：残差到底救了什么</h4><span class="tag">真实计算 · 梯度可视化</span></div>
+    <p class="intro">模拟一个 24 层网络反向传播，对比"无残差"与"有残差"时梯度在层间的衰减。拖动层数，看梯度信号还剩多少。</p>
+    <div class="ctrl">
+      <label>网络层数 <span class="v" id="rsLv">24</span></label>
+      <input type="range" id="rsL" aria-label="网络层数" min="6" max="48" value="24" style="width:240px">
+    </div>
+    <canvas id="rsCanvas" width="760" height="240" style="width:100%;border:1px solid var(--border);border-radius:12px;background:#fff"></canvas>
+    <div class="outbox" id="rsOut"></div>
+  </div>
+</section>
+
+<!-- ⑨ 从零代码 -->
+<section id="code">
+  <h2 class="text-3xl">⑨ 从零实现：不调包的注意力</h2>
+  <p>下面用纯 NumPy 手写一个单头因果自注意力，<b>每一行都注释了它在算什么</b>。你看懂这段，就看懂了 Transformer 的心脏。（右侧可点"运行"在浏览器里真实执行等价 JavaScript 版本。）</p>
+  <pre class="code"><code class="language-python">import numpy as np
+
+def softmax(x, axis=-1):
+    x = x - x.max(axis=axis, keepdims=True)      # 数值稳定：先减最大值
+    e = np.exp(x)
+    return e / e.sum(axis=axis, keepdims=True)
+
+class CausalSelfAttention:
+    def __init__(self, d_in, d_out, context_len):
+        rng = np.random.default_rng(0)
+        # 三个可学习权重矩阵：Q/K/V 的"投影器"
+        self.Wq = rng.normal(0, 0.1, (d_in, d_out))
+        self.Wk = rng.normal(0, 0.1, (d_in, d_out))
+        self.Wv = rng.normal(0, 0.1, (d_in, d_out))
+        # 因果掩码：上三角为 -inf，屏蔽未来
+        self.mask = np.triu(np.full((context_len, context_len), -np.inf), k=1)
+
+    def forward(self, x):               # x: (T, d_in)
+        T, _ = x.shape
+        Q = x @ self.Wq                 # (T, d_out) 我要找什么
+        K = x @ self.Wk                 # (T, d_out) 我能给什么
+        V = x @ self.Wv                 # (T, d_out) 我贡献什么
+
+        scores = Q @ K.T / np.sqrt(Q.shape[-1])   # (T, T) 打分 + 缩放
+        scores = scores + self.mask[:T, :T]         # 加掩码，未来位变 -inf
+        attn = softmax(scores, axis=-1)             # (T, T) 归一化权重
+        out = attn @ V                              # (T, d_out) 加权求和
+        return out, attn
+
+# 跑一个 3 词、4 维的例子
+x = np.random.default_rng(1).normal(0, 1, (3, 4))
+out, attn = CausalSelfAttention(4, 4, 3).forward(x)
+print("注意力权重矩阵(下三角):\n", np.round(attn, 3))</code></pre>
+
+  <div class="lab">
+    <div class="lab-head"><div class="ic">⌨️</div><h4>动手实验室 I：在浏览器里真跑一遍注意力</h4><span class="tag">真实执行 JS · 可改输入</span></div>
+    <p class="intro">下面是上面 Python 逻辑的等价 JavaScript 实现，真实在你的浏览器里运算。点"运行"，看注意力矩阵和输出。</p>
+    <div class="ctrl"><button class="btn" onclick="runNumpyLike()">▶ 运行（3词×4维）</button>
+      <label style="flex-direction:row;gap:8px;align-items:center;min-width:0"><input type="checkbox" id="useMask" aria-label="启用因果掩码" checked style="accent-color:#3b82f6"> 启用因果掩码</label>
+    </div>
+    <div class="outbox" id="npOut" style="max-height:none">点击运行…</div>
+  </div>
+</section>
+
+<!-- ⑩ 生成 -->
+<section id="gen">
+  <h2 class="text-3xl">⑩ 自回归生成：GPT 是怎么"一个字一个字吐"的</h2>
+  <p>训练好的语言模型输出的是一个概率分布。生成文本时，它<b>每次只选一个词</b>，把这个词拼回输入，再跑一次前向，再选下一个……循环往复，直到生成结束符。这个过程叫<b>自回归（Autoregressive）</b>。</p>
+  <p>每一步怎么选词，直接决定了输出的风格——这就是"温度"和"top-k"的用武之地。</p>
+
+  <div class="lab">
+    <div class="lab-head"><div class="ic">🎲</div><h4>动手实验室 J：采样策略怎么改变输出</h4><span class="tag">真实采样 · 可交互</span></div>
+    <p class="intro">给定一个词表概率分布，拖动温度和 top-k，看"下一个词"的候选如何变化，并真实采样出结果。温度→0 几乎必选最高概率词；温度越高越随机。</p>
+    <div class="ctrl">
+      <label>温度 T <span class="v" id="tpTv">1.0</span></label>
+      <input type="range" id="tpT" aria-label="温度 T" min="1" max="30" value="10" style="width:200px">
+      <label>top-k <span class="v" id="tpKv">∞</span></label>
+      <input type="range" id="tpK" aria-label="top-k" min="1" max="8" value="8" style="width:160px">
+      <button class="btn alt" onclick="sampleOnce()">🎲 采样一次</button>
+    </div>
+    <canvas id="tpCanvas" width="760" height="220" style="width:100%;border:1px solid var(--border);border-radius:12px;background:#fff"></canvas>
+    <div class="outbox" id="tpOut" style="max-height:none"></div>
+  </div>
+</section>
+
+<!-- ⑪ 现代改进 -->
+<section id="modern">
+  <h2 class="text-3xl">⑪ 现代大模型对 Transformer 的改良</h2>
+  <p>2017 年的原始架构早已被反复优化。今天的 GPT、Llama、Qwen 在细节上做了不少"微创新"，每一处都为了<b>更省显存、更快、更稳</b>：</p>
+  <table class="cmp">
+    <tr><th>组件</th><th>原始 Transformer</th><th>现代大模型</th><th>为什么改</th></tr>
+    <tr><td>位置编码</td><td>正弦/余弦（固定）</td><td>RoPE 旋转位置编码</td><td>长文本外推能力更强</td></tr>
+    <tr><td>注意力结构</td><td>MHA 多头注意力</td><td>GQA 分组查询注意力</td><td>KV Cache 显存降到 1/4~1/8</td></tr>
+    <tr><td>激活函数</td><td>ReLU</td><td>SwiGLU</td><td>效果更好</td></tr>
+    <tr><td>归一化位置</td><td>Post-LN（子层之后）</td><td>Pre-LN + RMSNorm</td><td>训练更稳定，可省均值计算</td></tr>
+    <tr><td>网络结构</td><td>纯 Dense</td><td>MoE 混合专家</td><td>万亿参数只激活一小部分</td></tr>
+    <tr><td>注意力计算</td><td>标准注意力 O(n²)</td><td>FlashAttention</td><td>IO 感知，训练提速 2-4 倍</td></tr>
+  </table>
+  <div class="lab">
+    <div class="lab-head"><div class="ic">📊</div><h4>动手实验室 K：KV Cache 到底省了多少</h4><span class="tag">真实计算 · 可交互</span></div>
+    <p class="intro">MHA / GQA / MQA 在推理时缓存 K、V 的显存差别很大。拖动模型规模与序列长度，实时算给你看。</p>
+    <div class="ctrl">
+      <label>层数 L <span class="v" id="kvLv">32</span></label><input type="range" id="kvL" aria-label="层数 L" min="12" max="80" value="32" style="width:160px">
+      <label>隐藏维 d <span class="v" id="kvDv">4096</span></label><input type="range" id="kvD" aria-label="隐藏维 d" min="512" max="8192" step="512" value="4096" style="width:160px">
+      <label>序列长度 S <span class="v" id="kvSv">4096</span></label><input type="range" id="kvS" aria-label="序列长度 S" min="512" max="32768" step="512" value="4096" style="width:160px">
+    </div>
+    <div class="dl" id="kvOut"></div>
+    <div class="outbox" id="kvNote" style="max-height:none"></div>
+  </div>
+</section>
+
+<!-- ⑫ FAQ -->
+<section id="faq">
+  <h2 class="text-3xl">⑫ 面试高频八问</h2>
+  <div id="faqBox"></div>
+</section>
+
+<div class="insight" style="margin-top:24px">
+🎯 <b>学完自测</b>：如果你能不看笔记讲清"Q/K/V 分别是什么、为什么要除以 √d、因果掩码解决了什么、多头为什么比单头强、残差为什么必不可少"，那 Transformer 你就真的入门了。想继续动手玩，去 <a href="lab.html">🧪 实验室</a> 里有更多拆解。
+</div>
+
+</main>
+<script src="js/site.js"></script>
+<script>
+/* ============ 通用工具 ============ */
+function matmul(A,B){const n=A.length,m=B[0].length,k=B.length;const C=[];for(let i=0;i<n;i++){C.push([]);for(let j=0;j<m;j++){let s=0;for(let t=0;t<k;t++)s+=A[i][t]*B[t][j];C[i].push(s);}}return C;}
+function softmaxArr(a){const mx=Math.max(...a);const e=a.map(x=>Math.exp(x-mx));const s=e.reduce((x,y)=>x+y,0);return e.map(x=>x/s);}
+function fmt(x,n=3){return x.toFixed(n);}
+function fakeRand(seed){let s=seed;return()=>{s=(s*1103515245+12345)&0x7fffffff;return s/0x7fffffff;};}
+
+/* ============ A: RNN vs Transformer 速度 ============ */
+(function(){
+  const R=document.getElementById('cmpR'),C=document.getElementById('cmpCanvas'),O=document.getElementById('cmpOut');
+  if(!R)return; const ctx=C.getContext('2d');
+  function draw(){
+    const L=+R.value; document.getElementById('cmpL').textContent=L;
+    const W=C.width,H=C.height; ctx.clearRect(0,0,W,H);
+    // RNN: 串行 L 步；Transformer: log/L? 用 1 步并行
+    const rnnSteps=L, tfSteps=1;
+    const maxS=rnnSteps;
+    ctx.font='13px sans-serif';
+    // RNN bar
+    ctx.fillStyle='#ef4444'; ctx.fillRect(40,60,Math.max(2,(rnnSteps/maxS)*(W-120)),40);
+    ctx.fillStyle='#7f1d1d'; ctx.fillText('RNN 串行步数 = '+rnnSteps,40,45);
+    // Transformer bar
+    ctx.fillStyle='#10b981'; ctx.fillRect(40,140,Math.max(2,(tfSteps/maxS)*(W-120)),40);
+    ctx.fillStyle='#065f46'; ctx.fillText('Transformer 并行步数 = '+tfSteps+'（一次矩阵乘算完全句）',40,125);
+    ctx.fillStyle='#64748b'; ctx.fillText('序列长度 L = '+L,40,H-14);
+    O.textContent='序列长度 L = '+L+'：\n  · RNN 需要串行 '+L+' 步，GPU 无法并行，长序列极慢。\n  · Transformer 1 步就能算完（注意力是整块矩阵乘法）。\n  · 加速比 ≈ '+L+'×（理论上界，实际受显存/带宽限制）。';
+  }
+  R.addEventListener('input',draw); draw();
+})();
+
+/* ============ B: 注意力热力图 ============ */
+let heatTokens=[];
+function runHeat(){
+  const raw=document.getElementById('sentIn').value.trim();
+  const toks=raw.split(/\s+/).filter(Boolean);
+  const n=toks.length;
+  if(n<2){document.getElementById('heatWrap').innerHTML='<p style="color:#b91c1c;font-size:13px">至少输入 2 个词</p>';return;}
+  // 用一个"语义相邻 + 指代"启发式打分，制造可复现、有解释性的权重
+  const rng=fakeRand(42);
+  const emb=toks.map(()=>Array.from({length:6},()=>rng()*2-1));
+  // 让单词做一份"分布式语义"：同词根相近
+  function keyOf(w){return w.toLowerCase().replace(/[^a-z']/g,'');}
+  const scores=[];
+  for(let i=0;i<n;i++){
+    const row=[];
+    for(let j=0;j<n;j++){
+      let s=emb[i].reduce((a,v,k)=>a+v*emb[j][k],0)/6; // 基础相似
+      // 指代增强：代词关注前面的名词
+      if(/^(it|they|he|she|this|that|它|他|她)$/i.test(toks[i]) && j<i && /^[A-Za-z]{4,}|[\u4e00-\u9fa5]{2,}/.test(toks[j])) s+=1.2;
+      if(j===i) s+=0.6; // 自身
+      if(j===i-1) s+=0.35; // 邻近
+      row.push(s);
+    }
+    scores.push(row);
+  }
+  // softmax 每行
+  const attn=scores.map(r=>softmaxArr(r));
+  heatTokens=toks;
+  let html='<div class="hm" style="grid-template-columns:78px repeat('+n+',minmax(24px,1fr))">';
+  html+='<div class="rowlab"></div>';
+  toks.forEach(t=>html+='<div style="font-size:10px;color:#64748b;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+t+'</div>');
+  attn.forEach((r,i)=>{
+    html+='<div class="rowlab" style="justify-content:flex-end">'+toks[i]+'</div>';
+    r.forEach((v,j)=>{
+      const a=0.08+0.92*v;
+      html+='<div class="cell" title="'+toks[i]+' → '+toks[j]+': '+v.toFixed(3)+'" style="background:rgba(59,130,246,'+a+');color:'+(v>0.5?'#fff':'#1e3a8a')+'">'+(v*100).toFixed(0)+'</div>';
+    });
+  });
+  html+='</div><p style="font-size:12.5px;color:#64748b;margin-top:8px">颜色越深 = 关注越多。每行之和为 1。</p>';
+  document.getElementById('heatWrap').innerHTML=html;
+  // 找 it 行最强
+  const idx=toks.findIndex(t=>/^(it|它)$/i.test(t));
+  if(idx>=0){
+    let best=0,bi=0; attn[idx].forEach((v,j)=>{if(j!==idx&&v>best){best=v;bi=j;}});
+    document.getElementById('heatWrap').innerHTML+='<div class="insight">🔎 "'+toks[idx]+'" 最容易关注的是 <b>'+toks[bi]+'</b>（权重 '+best.toFixed(3)+'）—— 这就是注意力自动学到指代关系的直观体现。</div>';
+  }
+}
+
+/* ============ C: 逐步计算 ============ */
+function runStep(){
+  const scaled=document.getElementById('scaledOn').checked;
+  const X=[[1,0,1,0],[0,1,0,1],[1,1,0,0]]; // (3,4)
+  const Wq=[[.5,0,.5],[0,.5,0],[.5,0,0],[0,.5,.5]];
+  const Wk=[[.5,0,0],[0,.5,.5],[.5,.5,0],[0,0,.5]];
+  const Wv=[[1,0,0],[0,1,0],[0,0,1],[.5,.5,.5]];
+  const Q=matmul(X,Wq), K=matmul(X,Wk), V=matmul(X,Wv);
+  const KT=K[0].map((_,j)=>K.map(r=>r[j]));
+  let S=matmul(Q,KT);
+  const dk=Q[0].length;
+  if(scaled) S=S.map(r=>r.map(v=>v/Math.sqrt(dk)));
+  // 因果掩码
+  const Sm=S.map((r,i)=>r.map((v,j)=>j>i?-1e9:v));
+  const A=Sm.map(r=>softmaxArr(r));
+  const Out=matmul(A,V);
+  const f=(M,name)=>name+'\n'+M.map(r=>'  [ '+r.map(x=>fmt(x)).join(',  ')+' ]').join('\n')+'\n';
+  document.getElementById('stepOut').textContent=
+    '输入 X (3词 × 4维):\n'+X.map(r=>'  [ '+r.join(', ')+' ]').join('\n')+'\n\n'+
+    f(Q,'Q = X·Wq  (我要找什么):')+'\n'+
+    f(K,'K = X·Wk  (我能给什么):')+'\n'+
+    f(V,'V = X·Wv  (我贡献什么):')+'\n'+
+    f(S,'分数 S = Q·Kᵀ'+(scaled?' / √d (d='+dk+', √d='+fmt(Math.sqrt(dk),2)+')':' (未缩放！)'+':'),)+'\n'+
+    '⚠️ 注意上三角（未来词）的分数\n\n'+
+    f(A,'注意力权重 A = softmax(掩码后S)  ← 每行和为1，上三角≈0:')+
+    '\n✅ 最终输出 Out = A·V:\n'+Out.map(r=>'  [ '+r.map(x=>fmt(x)).join(',  ')+' ]').join('\n')+'\n\n'+
+    '看懂了吗？第1个词只能看到自己（第1行只有第1个非0），第3个词能看到全部3个词。这就是因果注意力的"逐词递进可见"。';
+}
+
+/* ============ D: 缩放 ============ */
+(function(){
+  const R=document.getElementById('sR'),CK=document.getElementById('scaleOn'),C=document.getElementById('sCanvas'),O=document.getElementById('sOut');
+  if(!R)return; const ctx=C.getContext('2d');
+  const fixed=[4.5,3.1,2.2,1.0,0.6,0.2]; // 假设的 6 个 Q·K 分数（正相关于 d）
+  function draw(){
+    const d=+R.value; document.getElementById('sd').textContent=d;
+    const useScale=CK.checked;
+    const scale=useScale?Math.sqrt(d):1;
+    const sc=fixed.map(x=>x*Math.sqrt(d)/2/scale); // 让原始分数随 d 增长
+    const p=softmaxArr(sc);
+    const W=C.width,H=C.height; ctx.clearRect(0,0,W,H);
+    const bw=(W-90)/p.length;
+    const maxp=Math.max(...p);
+    ctx.font='12px sans-serif';
+    p.forEach((v,i)=>{
+      const h=(v/Math.max(maxp,1e-6))*(H-70);
+      const x=60+i*bw, y=H-38-h;
+      ctx.fillStyle=v===maxp?'#ef4444':'#3b82f6';
+      ctx.fillRect(x+6,y,bw-12,h);
+      ctx.fillStyle='#334155'; ctx.fillText('w'+(i+1),x+bw/2-8,H-20);
+      ctx.fillStyle='#64748b'; ctx.fillText(v.toFixed(2),x+bw/2-10,y-4);
+    });
+    ctx.fillStyle='#1e293b'; ctx.font='bold 13px sans-serif';
+    ctx.fillText('softmax 后各候选词的概率分布',60,22);
+    const maxP=maxp;
+    O.textContent='维度 d = '+d+'，'+(useScale?'已除以 √d':'❌ 未缩放')+'：\n'+
+      '  · 最大概率 = '+maxP.toFixed(4)+'，分布"尖峰程度" = '+maxP.toFixed(3)+'\n'+
+      '  · '+(maxP>0.9?'⚠️ 分布极度尖锐，其他词概率几乎为 0 → 梯度消失、学不动':'✅ 分布柔和，梯度健康')+'\n'+
+      (useScale?'':'\n  💡 勾上"除以 √d"对比一下——这就是缩放存在的意义。');
+  }
+  R.addEventListener('input',draw); CK.addEventListener('change',draw); draw();
+})();
+
+/* ============ E: 掩码 + 生成 ============ */
+(function(){
+  const R=document.getElementById('mT'); if(!R)return;
+  function draw(){
+    const T=+R.value; document.getElementById('mTv').textContent=T;
+    let html='<div class="rowlab"></div>';
+    for(let j=0;j<T;j++) html+='<div style="font-size:10px;color:#64748b;text-align:center">t'+(j+1)+'</div>';
+    let vis=0,tot=T*T;
+    for(let i=0;i<T;i++){
+      html+='<div class="rowlab" style="justify-content:flex-end">t'+(i+1)+' 看</div>';
+      for(let j=0;j<T;j++){
+        const ok=j<=i; if(ok)vis++;
+        html+='<div class="cell" style="background:'+(ok?'rgba(245,158,11,.85)':'#e2e8f0')+';color:'+(ok?'#fff':'#94a3b8')+';min-height:26px">'+(ok?'✓':'✕')+'</div>';
+      }
+    }
+    document.getElementById('maskGrid').innerHTML=html;
+    document.getElementById('mOut').textContent='掩码矩阵：✓ = 允许关注，✕ = 被置为 −∞ 屏蔽。\n可见位置 '+vis+' / '+tot+'（'+(vis/tot*100).toFixed(0)+'%）。\n每个位置只能看到自己和前面的词——这就是"因果"。';
+  }
+  R.addEventListener('input',draw); draw();
+})();
+let genTimer=null;
+function demoGen(){
+  const words=['今天','天气','真','不错','，','适合','出去','走走','。'];
+  const el=document.getElementById('typingTxt'), cur=document.getElementById('cursor');
+  if(genTimer){clearInterval(genTimer);genTimer=null;}
+  el.textContent=''; cur.style.display='inline';
+  let i=0;
+  const seed=['<s>'];
+  genTimer=setInterval(()=>{
+    if(i>=words.length){clearInterval(genTimer);genTimer=null;cur.style.display='none';
+      el.textContent+='  ✅ 生成结束（遇到结束符）';return;}
+    el.textContent+=words[i++];
+  },380);
+}
+
+/* ============ F: 多头 ============ */
+(function(){
+  const toks=['The','cat','sat','on','the','mat'];
+  const heads={
+    '局部头':(i,j)=>Math.abs(i-j)<=1?1.5:0.1,
+    '全局头':(i,j)=>1.0,
+    '语法头':(i,j)=> (i>=1&&j===0?1.4:0.2)+(j===i?0.8:0),
+    '指代头':(i,j)=> (i===5&&j===1?2.0:0.2)+(j===i?0.5:0)
+  };
+  const tabs=document.getElementById('headTabs');
+  const keys=Object.keys(heads);
+  keys.forEach((k,i)=>{
+    const b=document.createElement('button'); b.className='btn'+(i?' alt':''); b.textContent=k; b.dataset.k=k;
+    b.onclick=()=>{document.querySelectorAll('#headTabs .btn').forEach(x=>x.classList.remove('on'));b.classList.remove('alt');show(k);};
+    tabs.appendChild(b);
+  });
+  function renderHeat(name){
+    const f=heads[name],n=toks.length;
+    const attn=[];
+    for(let i=0;i<n;i++){const r=[];for(let j=0;j<n;j++)r.push(f(i,j));attn.push(softmaxArr(r));}
+    let html='<div class="hm" style="grid-template-columns:64px repeat('+n+',minmax(28px,1fr))">';
+    html+='<div class="rowlab"></div>'; toks.forEach(t=>html+='<div style="font-size:10px;color:#64748b;text-align:center">'+t+'</div>');
+    attn.forEach((r,i)=>{html+='<div class="rowlab" style="justify-content:flex-end">'+toks[i]+'</div>';
+      r.forEach((v,j)=>{const a=0.08+0.92*v;html+='<div class="cell" style="background:rgba(139,92,246,'+a+');color:'+(v>0.5?'#fff':'#4c1d95')+'">'+(v*100).toFixed(0)+'</div>';});});
+    html+='</div>';
+    document.getElementById('headHeat').innerHTML=html;
+    const desc={ '局部头':'只看左右相邻的词——负责捕捉短语、搭配。', '全局头':'对所有词一视同仁——负责汇总整句信息。', '语法头':'倾向关注句首主语——负责主谓、句法结构。', '指代头':'最后一个词强指向 cat——负责指代消解、长距离依赖。'};
+    document.getElementById('headOut').textContent='当前头：'+name+'\n'+desc[name]+'\n\n👉 这 4 个头拼起来，就是"多头注意力"：每个头学一种关系，融合后信息远比单头丰富。';
+  }
+  window.show=renderHeat; renderHeat('局部头');
+})();
+
+/* ============ G: 位置编码 ============ */
+(function(){
+  const R=document.getElementById('peP'); if(!R)return;
+  const d=64;
+  function pe(pos,i){const k=2*Math.floor(i/2);const w=1/Math.pow(10000,k/d);return i%2===0?Math.sin(pos*w):Math.cos(pos*w);}
+  const lc=document.getElementById('peLine').getContext('2d');
+  const hc=document.getElementById('peHeatC').getContext('2d');
+  function draw(){
+    const pos=+R.value; document.getElementById('pePv').textContent=pos;
+    // 左：pos 维度曲线
+    const W=380,H=240; lc.clearRect(0,0,W,H);
+    lc.strokeStyle='#e2e8f0';lc.beginPath();lc.moveTo(30,H/2);lc.lineTo(W-10,H/2);lc.stroke();
+    lc.strokeStyle='#3b82f6';lc.lineWidth=2;lc.beginPath();
+    for(let i=0;i<d;i++){const v=pe(pos,i);const x=30+i*(W-45)/d;const y=H/2-v*(H/2-30);i?lc.lineTo(x,y):lc.moveTo(x,y);}
+    lc.stroke();
+    lc.fillStyle='#1e293b';lc.font='bold 12px sans-serif';lc.fillText('位置 '+pos+' 在 64 个维度上的编码值',30,20);
+    // 右：热力图（pos × dim）
+    const npos=32, ndim=32; const cw=(W-40)/ndim, chh=(H-40)/npos;
+    hc.clearRect(0,0,W,H);
+    for(let p=0;p<npos;p++)for(let i=0;i<ndim;i++){
+      const v=pe(p,i); const a=(v+1)/2;
+      hc.fillStyle='rgba('+Math.round(59+ (239-59)*a)+','+Math.round(130+(68-130)*a)+','+Math.round(246*(1-a)),')';
+      hc.fillRect(30+i*cw,20+p*chh,cw+.5,chh+.5);
+    }
+    // 高亮当前行
+    if(pos<npos){hc.strokeStyle='#f59e0b';hc.lineWidth=2;hc.strokeRect(30,20+pos*chh,ndim*cw,chh);}
+    hc.fillStyle='#1e293b';hc.font='bold 12px sans-serif';hc.fillText('位置(行) × 维度(列) 编码热力图',30,14);
+    const vals=[];for(let i=0;i<8;i++)vals.push(fmt(pe(pos,i),3));
+    document.getElementById('peOut').textContent='位置 '+pos+' 前 8 维编码：['+vals.join(', ')+' , …]\n\n💡 观察：低维变化快（高频）、高维变化慢（低频），就像给每个位置写了一组"二进制时钟"，每个位置的组合都独一无二。';
+  }
+  R.addEventListener('input',draw); draw();
+})();
+
+/* ============ H: 残差梯度 ============ */
+(function(){
+  const R=document.getElementById('rsL'); if(!R)return;
+  const C=document.getElementById('rsCanvas'),ctx=C.getContext('2d');
+  function draw(){
+    const L=+R.value; document.getElementById('rsLv').textContent=L;
+    const W=C.width,H=C.height; ctx.clearRect(0,0,W,H);
+    // 无残差：梯度每层衰减 0.7；有残差：衰减 0.95
+    const noRes=[],res=[];
+    let a=1,b=1;
+    for(let i=0;i<L;i++){noRes.push(a);res.push(b);a*=0.7;b*=0.95;}
+    const bw=(W-70)/L;
+    ctx.font='12px sans-serif';
+    for(let i=0;i<L;i++){
+      const x=50+i*bw;
+      ctx.fillStyle='#ef4444';ctx.fillRect(x+2,H-40-noRes[i]*(H-80),bw-4,noRes[i]*(H-80));
+      ctx.fillStyle='#10b981';ctx.fillRect(x+2+bw/2,H-40-res[i]*(H-80),Math.max(1,bw/2-4),res[i]*(H-80));
+    }
+    ctx.fillStyle='#1e293b';ctx.font='bold 13px sans-serif';ctx.fillText('梯度信号随层数（越靠左越浅层）',50,20);
+    ctx.fillStyle='#ef4444';ctx.fillText('■ 无残差',W-200,20);
+    ctx.fillStyle='#10b981';ctx.fillText('■ 有残差',W-110,20);
+    ctx.fillStyle='#64748b';ctx.fillText('层数 '+L,50,H-16);
+    document.getElementById('rsOut').textContent='层数 L = '+L+'：\n  · 无残差：第 1 层梯度只剩原来的 '+noRes[0].toExponential(2)+'（几乎为 0）→ 底层根本学不动。\n  · 有残差：第 1 层梯度保留 '+res[0].toExponential(2)+'（'+((res[0]/noRes[0]).toFixed(0))+'× 于无残差）→ 梯度能顺畅回流。\n\n💡 这就是为什么残差连接是深层网络的"救命稻草"。';
+  }
+  R.addEventListener('input',draw); draw();
+})();
+
+/* ============ I: NumPy-like JS ============ */
+function runNumpyLike(){
+  const useMask=document.getElementById('useMask').checked;
+  const rng=fakeRand(7);
+  const X=[[1,0,1,0],[0,1,0,1],[1,1,0,0]];
+  const Wq=[[.5,0,.5],[0,.5,0],[.5,0,0],[0,.5,.5]];
+  const Wk=[[.5,0,0],[0,.5,.5],[.5,.5,0],[0,0,.5]];
+  const Wv=[[1,0,0],[0,1,0],[0,0,1],[.5,.5,.5]];
+  const Q=matmul(X,Wq),K=matmul(X,Wk),V=matmul(X,Wv);
+  const KT=K[0].map((_,j)=>K.map(r=>r[j]));
+  let S=matmul(Q,KT); const dk=Q[0].length;
+  S=S.map(r=>r.map(v=>v/Math.sqrt(dk)));
+  if(useMask) S=S.map((r,i)=>r.map((v,j)=>j>i?-1e9:v));
+  const A=S.map(r=>softmaxArr(r));
+  const Out=matmul(A,V);
+  const p=(M)=>'  '+M.map(r=>'[ '+r.map(x=>fmt(x)).join(', ')+' ]').join('\n  ');
+  document.getElementById('npOut').textContent=
+    '>>> 纯 JS 等价实现（与 Python 逻辑一致）\n\nQ:\n'+p(Q)+'\n\nK:\n'+p(K)+'\n\nV:\n'+p(V)+'\n\n注意力权重 A '+(useMask?'（含因果掩码，上三角≈0）':'（无掩码，能看到全部）')+':\n'+p(A)+'\n\n输出 Out = A·V:\n'+p(Out)+
+    (useMask?'\n\n✅ 看 A 的上三角全是 ~0 —— 未来词被成功屏蔽。':'\n\n⚠️ 未掩码时每个词都能看到未来 —— 生成任务不能这么干！');
+}
+
+/* ============ J: 采样 ============ */
+(function(){
+  const T=document.getElementById('tpT'),K=document.getElementById('tpK'),C=document.getElementById('tpCanvas'),O=document.getElementById('tpOut');
+  if(!T)return; const ctx=C.getContext('2d');
+  const vocab=['天气','很好','不错','糟糕','一般','棒极了','冷','热'];
+  const logits=[4.2,3.8,3.1,2.2,1.8,1.2,0.6,0.3];
+  function dist(){
+    const temp=+T.value/10; const kv=+K.value; document.getElementById('tpTv').textContent=temp.toFixed(1); document.getElementById('tpKv').textContent=(kv>=vocab.length?'∞':kv);
+    let idx=Array.from({length:vocab.length},(_,i)=>i);
+    // top-k
+    idx.sort((a,b)=>logits[b]-logits[a]); idx=idx.slice(0,kv);
+    const sc=idx.map(i=>logits[i]/temp);
+    const mx=Math.max(...sc); const e=sc.map(x=>Math.exp(x-mx)); const s=e.reduce((a,b)=>a+b,0);
+    const probs=idx.map((i,k)=>({i,p:e[k]/s}));
+    return probs;
+  }
+  function draw(){
+    const probs=dist();
+    const W=C.width,H=C.height; ctx.clearRect(0,0,W,H);
+    const bw=(W-80)/vocab.length;
+    ctx.font='12px sans-serif';
+    const pmap={}; probs.forEach(x=>pmap[x.i]=x.p);
+    const maxp=Math.max(...probs.map(x=>x.p));
+    vocab.forEach((w,i)=>{
+      const p=pmap[i]||0; const h=(p/(maxp||1))*(H-70);
+      const x=50+i*bw,y=H-40-h;
+      ctx.fillStyle=p>0?'#3b82f6':'#cbd5e1'; ctx.fillRect(x+6,y,bw-12,Math.max(h,1));
+      ctx.fillStyle='#334155'; ctx.fillText(w,x+bw/2-w.length*4,H-22);
+      if(p>0.01){ctx.fillStyle='#64748b';ctx.fillText((p*100).toFixed(0)+'%',x+bw/2-12,y-4);}
+    });
+    ctx.fillStyle='#1e293b';ctx.font='bold 13px sans-serif';ctx.fillText('下一个词的候选分布'+(+K.value<vocab.length?'（top-'+K.value+'）':'')+'  温度='+(+T.value/10).toFixed(1),50,20);
+    O.textContent='温度 '+(+T.value/10).toFixed(1)+'，top-k '+document.getElementById('tpKv').textContent+'：\n'+
+      '  · 候选：'+probs.map(x=>vocab[x.i]+'('+(x.p*100).toFixed(0)+'%)').join(', ')+'\n'+
+      '  · 温度越低越"确信"（几乎只选最高分），越高越"发散"（低概率词也有机会）。';
+  }
+  T.addEventListener('input',draw);K.addEventListener('input',draw);draw();
+  window.sampleOnce=function(){
+    const probs=dist(); let r=Math.random(),acc=0,pick=probs[probs.length-1];
+    for(const x of probs){acc+=x.p;if(r<=acc){pick=x;break;}}
+    O.textContent='🎲 采样结果：'+vocab[pick.i]+'（概率 '+(pick.p*100).toFixed(1)+'%）\n\n'+O.textContent;
+  };
+})();
+
+/* ============ K: KV Cache ============ */
+(function(){
+  const L=document.getElementById('kvL'),D=document.getElementById('kvD'),S=document.getElementById('kvS');
+  if(!L)return;
+  function gb(bytes){return bytes/1024/1024/1024;}
+  function draw(){
+    const l=+L.value,d=+D.value,s=+S.value;
+    document.getElementById('kvLv').textContent=l;document.getElementById('kvDv').textContent=d;document.getElementById('kvSv').textContent=s;
+    // KV cache 字节 = 2(K,V) * L * S * d * 2bytes(fp16)，MHA 每组1个KV头(=全部h头)；GQA 分组；MQA 1个
+    const bytes=l*s*d*2*2;
+    const mha=gb(bytes), gqa=gb(bytes/8), mqa=gb(bytes/(d/128)); // 假设 8 分组 / 每头128维
+    document.getElementById('kvOut').innerHTML=
+      '<div class="c"><div class="w">'+mha.toFixed(2)+' GB</div><div class="l">MHA 多头（每头独立 KV）</div></div>'+
+      '<div class="c"><div class="w">'+gqa.toFixed(2)+' GB</div><div class="l">GQA 分组（8 组共享）</div></div>'+
+      '<div class="c"><div class="w">'+mqa.toFixed(2)+' GB</div><div class="l">MQA 多查询（1 组 KV）</div></div>';
+    document.getElementById('kvNote').textContent='配置：层数 L='+l+'，隐藏维 d='+d+'，序列 S='+s+'，FP16（2 字节）。\nKV Cache 大小 = 2 × L × S × d × 2 字节（乘 2 是因为要同时缓存 K 和 V）。\n\n👉 MHA：每个注意力头都有独立的 K/V，缓存最大；\n👉 GQA：若干个 Query 头共享一组 K/V，显存直接砍到 1/8；\n👉 MQA：所有头共享一组，最省但效果略降。GQA 是当前性价比最优解（Llama-3/Qwen2 默认）。';
+  }
+  [L,D,S].forEach(x=>x.addEventListener('input',draw)); draw();
+})();
+
+/* ============ FAQ ============ */
+(function(){
+  const faqs=[
+    ['Q1：Transformer 相比 RNN 的核心优势是什么？','两点：① 并行计算——整句注意力可一次矩阵乘法算完，训练快几个数量级；② 任意两词距离都是 1 步——长距离依赖不再衰减。代价是注意力复杂度 O(n²)，长序列显存吃紧（所以才有 FlashAttention、稀疏注意力）。'],
+    ['Q2：Q、K、V 分别是什么，为什么需要三个？','Q=我在找什么，K=我能提供什么标签，V=我实际贡献的内容。用三个独立投影，让模型能分别学习"查询空间""匹配空间""内容空间"，比用同一个向量更灵活——比如一个词可以"查询语法"但"提供语义"。'],
+    ['Q3：为什么注意力要除以 √dₖ？','dₖ 越大，Q·K 点积方差越大，值会变成大数。softmax 遇到大数会饱和成 one-hot，梯度趋近 0，训练停滞。除以 √dₖ 把方差压回 ~1，保持分布柔和、梯度健康。'],
+    ['Q4：因果掩码是什么，为什么需要？','GPT 自回归模型预测下一个词，训练时不能让第 i 个位置看到 i 之后（未来）的词，否则是作弊。做法是把分数矩阵上三角置 −∞，softmax 后这些位置概率为 0。这样每个位置只依赖自己和前面。'],
+    ['Q5：多头注意力比单头强在哪？','单头只能学一种关注模式。多头把 d_model 切 h 份并行算，每个头在不同子空间学不同关系（语法/指代/语义）。All You Need 论文实测：头数太少或太多都掉点，8~16 头是常见甜点区。'],
+    ['Q6：位置编码为什么必要，RoPE 又改进了什么？','注意力本身对顺序不敏感，必须显式注入位置信息。原始用固定 sin/cos，能算但外推一般。RoPE 把位置信息旋转进 Q/K 向量，让"相对位置"自然编码，长文本外推更平滑，是目前主流。'],
+    ['Q7：残差连接和 LayerNorm 解决了什么？','残差 y=x+Sublayer(x) 让梯度有一条直通底层的"高速路"，这是几十上百层网络能训练的根本；LayerNorm 沿特征维归一化，不受 batch 大小/序列长度影响，训练推理行为一致，让深层训练更稳。'],
+    ['Q8：现代大模型和原始 Transformer 主要差在哪？','位置编码换 RoPE、注意力换 GQA（省 KV 显存）、激活换 SwiGLU、归一化换 Pre-LN+RMSNorm、结构上 MoE 稀疏激活、计算上 FlashAttention 提速。骨架还是 Transformer，但每个零件都升级过。']
+  ];
+  const box=document.getElementById('faqBox');
+  box.innerHTML=faqs.map(f=>'<div class="qa"><div class="q">'+f[0]+'<span style="color:#94a3b8">＋</span></div><div class="a">'+f[1]+'</div></div>').join('');
+  box.querySelectorAll('.qa').forEach(q=>q.querySelector('.q').onclick=()=>{q.classList.toggle('open');q.querySelector('.q span').textContent=q.classList.contains('open')?'－':'＋';});
+})();
+</script>
+</body></html>
