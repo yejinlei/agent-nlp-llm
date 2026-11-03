@@ -69,7 +69,7 @@ h4 { margin-top: 20px; margin-bottom: 12px; color: #6b21a8; }
       .observe(document.documentElement,{childList:true,subtree:true});
   }
   window.__katexRender = render;
-});
+})();
 </script>
 </head>
 <body>
@@ -164,8 +164,8 @@ h4 { margin-top: 20px; margin-bottom: 12px; color: #6b21a8; }
       <p class="text-sm text-gray-600 mb-4">BPE通过反复合并语料中最常见的字节对构建词表。点击按钮看BPE合并过程。</p>
       <div class="flex gap-2 mb-4">
         <input type="text" id="bpeInput" value="low lower lowest new newer newest" class="flex-1 px-3 py-2 border border-gray-300 rounded-lg">
-        <button onclick="runBPE" class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700">▶ 运行BPE合并</button>
-        <button onclick="resetBPE" class="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600">🔄 重置</button>
+        <button onclick="runBPE()" class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700">▶ 运行BPE合并</button>
+        <button onclick="resetBPE()" class="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600">🔄 重置</button>
       </div>
       <canvas id="bpeCanvas"></canvas>
       <div id="bpeResult" class="mt-4 p-3 bg-white rounded-lg border border-purple-200 font-mono text-sm"></div>

@@ -34,9 +34,9 @@ input[type=range]{ vertical-align:middle; width:180px; }
   function render(){ if(typeof renderMathInElement!=='function') return false;
     try{ renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'\\[',right:'\\]',display:true},{left:'\\(',right:'\\)',display:false},{left:'$',right:'$',display:false}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false}); }catch(e){}
     return true; }
-  function go(){ if(render()) return; setTimeout(go(),200); }
+  function go(){ if(render()) return; setTimeout(go,200); }
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',go()); else go();
-  window.addEventListener('load',function(){render(); setTimeout(render(),600); setTimeout(render(),1600)});
+  window.addEventListener('load',function(){render(); setTimeout(render,600); setTimeout(render,1600)});
 })();
 </script>
 </head>

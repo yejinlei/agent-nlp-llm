@@ -38,9 +38,9 @@ button.primary { background: linear-gradient(135deg,#2563eb,#1d4ed8); color:#fff
   function render(){ if(typeof renderMathInElement!=='function') return false;
     try{ renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'\\[',right:'\\]',display:true},{left:'\\(',right:'\\)',display:false},{left:'$',right:'$',display:false}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false}); }catch(e){}
     return true; }
-  function go(){ if(render()) return; setTimeout(go(),200); }
+  function go(){ if(render()) return; setTimeout(go,200); }
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',go()); else go();
-  window.addEventListener('load',function(){render(); setTimeout(render(),600); setTimeout(render(),1600)});
+  window.addEventListener('load',function(){render(); setTimeout(render,600); setTimeout(render,1600)});
 })();
 </script>
 </head>
@@ -75,7 +75,7 @@ button.primary { background: linear-gradient(135deg,#2563eb,#1d4ed8); color:#fff
     <div class="ctrl">
       <label><b>输入句子：</b></label>
       <input id="mlm-sent" type="text" value="深度学习是人工智能的核心技术" style="flex:1;min-width:280px">
-      <button class="primary" onclick="runMLM">🎲 生成掩码样本</button>
+      <button class="primary" onclick="runMLM()">🎲 生成掩码样本</button>
     </div>
     <div id="mlm-out" style="margin-top:6px;line-height:2.4"></div>
     <div id="mlm-legend" style="margin-top:14px;font-size:13px;color:#475569"></div>
@@ -115,7 +115,7 @@ button.primary { background: linear-gradient(135deg,#2563eb,#1d4ed8); color:#fff
   <p>BERT 的每个 token 最终输入 = <b>词嵌入 + 位置嵌入 + 段嵌入</b>，三个相加。段嵌入（Segment）就是为 NSP 服务的，用来区分第一句和第二句。</p>
 
   <div class="demo">
-    <button class="primary" onclick="drawEmbed">▶ 画出 [CLS] 我 爱 [SEP] 你 [SEP] 的表示构成</button>
+    <button class="primary" onclick="drawEmbed()">▶ 画出 [CLS] 我 爱 [SEP] 你 [SEP] 的表示构成</button>
     <canvas id="embed-canvas" width="1000" height="280" style="margin-top:16px"></canvas>
     <div class="info" style="margin-top:14px">
       <b>三个特殊 token 的作用：</b> <span class="mono">[CLS]</span> 放在句首，它的最终向量被当作"整句表示"用于分类；<span class="mono">[SEP]</span> 用来分隔句子（NSP 需要）；<span class="mono">[MASK]</span> 是 MLM 要预测的占位符。BertEmbeddings 层做的就是这三张表查出来相加，再过 LayerNorm + Dropout。

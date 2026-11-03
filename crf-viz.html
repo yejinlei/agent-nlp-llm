@@ -36,9 +36,9 @@ td { padding: 10px 14px; border-bottom: 1px solid #f3f4f6; color: #4b5563; }
   function render(){ if(typeof renderMathInElement!=='function') return false;
     try{ renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'\\[',right:'\\]',display:true},{left:'\\(',right:'\\)',display:false},{left:'$',right:'$',display:false}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false}); }catch(e){}
     return true; }
-  function go(){ if(render()) return; setTimeout(go(),200); }
+  function go(){ if(render()) return; setTimeout(go,200); }
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',go()); else go();
-  window.addEventListener('load',function(){render(); setTimeout(render(),600); setTimeout(render(),1600)});
+  window.addEventListener('load',function(){render(); setTimeout(render,600); setTimeout(render,1600)});
 })();
 </script>
 </head>
@@ -87,7 +87,7 @@ td { padding: 10px 14px; border-bottom: 1px solid #f3f4f6; color: #4b5563; }
         <option value="BMES">BMES（分词用）</option>
         <option value="BIO">BIO（NER用）</option>
       </select>
-      <button class="primary" onclick="randomizeCRF">🎲 随机扰动特征分数</button>
+      <button class="primary" onclick="randomizeCRF()">🎲 随机扰动特征分数</button>
     </div>
     <canvas id="crf-score" width="1000" height="300"></canvas>
     <div id="crf-best" style="margin-top:12px;font-size:15px"></div>

@@ -163,7 +163,7 @@
       .observe(document.documentElement,{childList:true,subtree:true});
   }
   window.__katexRender = render;
-});
+})();
 </script>
 </head>
 <body>
@@ -192,7 +192,7 @@
   <section class="clinic-hero">
     <h1>🕵️ 大模型诊所：给模型"看病"</h1>
     <p class="sub">模型不会喊疼，它只会用一堆奇怪的数字和行为向你求救。<br>
-      这里有 <strong>10 份真实病历</strong>：先读症状，再下诊断，然后看主治医师的病因分析与处方。<br>
+      这里有 <strong>12 份真实病历</strong>：先读症状，再下诊断，然后看主治医师的病因分析与处方。<br>
       诊断错了不要紧——<b>误诊也是学习</b>。</p>
     <div class="scoreboard">
       <div class="sb-item"><b id="sb-done">0</b><span>已诊断病历</span></div>
@@ -205,14 +205,14 @@
       </div>
     </div>
     <div class="btn-row" style="margin-top:22px">
-      <button class="btn btn-outline" onclick="Clinic.reset">🔄 重置全部病历</button>
-      <button class="btn btn-outline" onclick="Clinic.revealAll">📖 一键揭开全部谜底</button>
-      <button class="btn btn-primary" onclick="Clinic.showReport">📋 查看我的诊断报告</button>
+      <button class="btn btn-outline" onclick="Clinic.reset()">🔄 重置全部病历</button>
+      <button class="btn btn-outline" onclick="Clinic.revealAll()">📖 一键揭开全部谜底</button>
+      <button class="btn btn-primary" onclick="Clinic.showReport()">📋 查看我的诊断报告</button>
     </div>
   </section>
 
   <div class="filter-bar" id="filter-bar">
-    <button class="chip on" data-f="all">全部 10 例</button>
+    <button class="chip on" data-f="all">全部 12 例</button>
     <button class="chip" data-f="fit">📉 拟合与泛化</button>
     <button class="chip" data-f="grad">⚡ 梯度与数值</button>
     <button class="chip" data-f="mem">🧠 记忆与遗忘</button>
@@ -1051,5 +1051,233 @@
 <footer class="site"><p>💬 agent-nlp-llm · 自然语言技术本体论研究站</p></footer>
 
 <script src="js/site.js"></script>
+<script>
+/* ===== 大模型诊所：病例诊断游戏 ===== */
+var Clinic = (function () {
+  'use strict';
+
+  var total = 0, done = 0, right = 0, wrong = 0, score = 0;
+  var state = {};   // caseId -> { answered:bool, firstTryRight:bool, tries:int }
+
+  function $(s, r) { return (r || document).querySelector(s); }
+  function $$(s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); }
+
+  var EXTRA = {
+    A: '这个方向看似合理，但它无法解释本例最核心的化验结果。',
+    B: '注意这个选项与患者的关键指标不匹配，先看曲线的形状再下结论。',
+    C: '这个选项描述的是另一种病症，和本例的症状签名正好相反或无关。',
+    D: '听起来专业，但它不能解释症状中"位置/数值/比例"这类结构性证据。'
+  };
+
+  /* 取选项的正文（排除 .opt-tag 标签），兼容 innerText 缺失的环境 */
+  function optText(card, key) {
+    var el = $('.opt[data-key="' + key + '"]', card);
+    if (!el) return '';
+    var clone = el.cloneNode(true);
+    $$('.opt-tag, .mark', clone).forEach(function (n) { n.remove(); });
+    return (clone.textContent || '').replace(/\s+/g, ' ').trim();
+  }
+
+  function stats() {
+    $('#sb-done').textContent = done;
+    $('#sb-right').textContent = right;
+    $('#sb-wrong').textContent = wrong;
+    $('#sb-score').textContent = score;
+    $('#sb-acc').textContent = done ? Math.round(right / done * 100) + '%' : '—';
+    var bar = $('#sb-bar-fill');
+    if (bar) bar.style.width = (done / 12 * 100) + '%';
+  }
+
+  /* 打开某一病例的解析 */
+  function grade(card, pickedKey, answerKey, firstTry) {
+    var verdict = $('.verdict', card);
+    var head = $('.verdict-head', card);
+    if (!verdict || !head) return;
+    var isRight = pickedKey === answerKey;
+    head.className = 'verdict-head ' + (isRight ? 'right' : 'wrong');
+    head.innerHTML = isRight
+      ? '✅ 诊断正确！你抓住了病因。'
+      : '❌ 误诊了——正确答案是 <b style="margin-left:4px">' + answerKey + '</b>。不过误诊也是学习，下面是完整病理报告。';
+    verdict.classList.add('show');
+    return isRight;
+  }
+
+  function answer(card, key) {
+    // data-case 挂在包裹的 section.blk 上，卡片本身没有该属性
+    var host = card.closest('[data-case]') || card.parentNode || card;
+    var caseId = (host && host.getAttribute && host.getAttribute('data-case')) || card.getAttribute('data-case') || 'x';
+    var answerKey = $('.opt-list', card).getAttribute('data-answer');
+    var st = state[caseId] || (state[caseId] = { answered: false, firstTryRight: false, tries: 0 });
+    if (st.answered) return;
+
+    st.tries++;
+    var isRight = grade(card, key, answerKey, st.tries === 1);
+    var opts = $$('.opt', card);
+
+    opts.forEach(function (o) {
+      o.disabled = true;
+      var k = o.getAttribute('data-key');
+      if (k === key) o.classList.add(isRight ? 'picked-right' : 'picked-wrong');
+      if (k === answerKey && !isRight) o.classList.add('reveal-right');
+    });
+
+    // 若答错，附加一条"为什么这个选项不对"的提示
+    if (!isRight) {
+      var verdictBody = $('.verdict-body', card);
+      var tip = document.createElement('div');
+      tip.className = 'hint warn';
+      tip.style.marginTop = '14px';
+      tip.innerHTML = '<b>❌ 关于选项 ' + key + '：</b>' +
+        (EXTRA[key] || '这个选项不是本例的病因。') +
+        '<br><b>👉 正确诊断是 ' + answerKey + '：</b>' + optText(card, answerKey);
+      verdictBody.appendChild(tip);
+      st.answered = true;
+      st.firstTryRight = false;
+      wrong++;
+      score += 0;
+    } else {
+      st.answered = true;
+      st.firstTryRight = st.tries === 1;
+      right++;
+      var bonus = Math.max(4, 14 - (st.tries - 1) * 4);
+      score += bonus;
+    }
+    done++;
+    stats();
+    updateReport();
+  }
+
+  function revealAll() {
+    $$('.blk[data-case]').forEach(function (blk) {
+      var card = blk.querySelector('.case-card');
+      if (!card) return;
+      var caseId = blk.getAttribute('data-case');
+      var answerKey = $('.opt-list', card).getAttribute('data-answer');
+      var st = state[caseId];
+      if (st && st.answered) return;
+      $$('.opt', card).forEach(function (o) {
+        o.disabled = true;
+        if (o.getAttribute('data-key') === answerKey) o.classList.add('reveal-right');
+      });
+      var verdict = $('.verdict', card);
+      var head = $('.verdict-head', card);
+      if (verdict && head) {
+        head.className = 'verdict-head wrong';
+        head.innerHTML = '📖 谜底揭晓：正确诊断是 <b style="margin-left:4px">' + answerKey + '</b>';
+        verdict.classList.add('show');
+      }
+      state[caseId] = { answered: true, firstTryRight: false, tries: 0, revealed: true };
+      done++; wrong++;
+    });
+    stats();
+    updateReport();
+  }
+
+  function reset() {
+    state = {}; total = 0; done = 0; right = 0; wrong = 0; score = 0;
+    $$('.blk[data-case]').forEach(function (blk) {
+      var card = blk.querySelector('.case-card');
+      if (!card) return;
+      $$('.opt', card).forEach(function (o) {
+        o.disabled = false;
+        o.classList.remove('picked-right', 'picked-wrong', 'reveal-right');
+      });
+      var v = $('.verdict', card);
+      if (v) v.classList.remove('show');
+      $$('.verdict-body .hint.warn', card).forEach(function (h) { h.remove(); });
+    });
+    stats();
+    updateReport();
+    var rpt = $('#dx-report');
+    if (rpt) rpt.classList.remove('show');
+  }
+
+  function updateReport() {
+    var body = $('#rpt-body');
+    if (!body) return;
+    var html = '';
+    $$('.blk[data-case]').forEach(function (blk) {
+      var id = blk.getAttribute('data-case');
+      var title = ($('.case-title', blk) || {}).textContent || id;
+      var st = state[id];
+      var cls = st ? (st.answered && st.firstTryRight ? 'ok' : 'bad') : '';
+      var tag = !st ? '未作答'
+        : st.revealed ? '已揭晓'
+        : (st.firstTryRight ? '✔ 一次命中' : '✘ 曾误诊');
+      html += '<div class="rpt-row"><span class="rpt-dot ' + cls + '"></span>' +
+        '<span class="rpt-name">' + title + '</span>' +
+        '<span class="rpt-tag">' + tag + '</span></div>';
+    });
+    body.innerHTML = html;
+    var sum = $('#rpt-summary');
+    if (sum) {
+      if (!done) {
+        sum.textContent = '还没有作答记录，先去诊断几份病历吧。';
+      } else {
+        var acc = Math.round(right / done * 100);
+        var msg = acc >= 80 ? '🏆 主任医师水平：你对训练动态的直觉相当准！'
+          : acc >= 50 ? '🩺 住院医师水平：方向感不错，细节还需打磨。'
+          : '📚 实习生水平：建议回到上面的解析里逐条读病因，再刷一遍。';
+        sum.innerHTML = '已完成 <b>' + done + '</b> / 12 份病历，正确率 <b>' + acc + '%</b>，累计积分 <b>' + score + '</b>。' + msg;
+      }
+    }
+  }
+
+  function showReport() {
+    var rpt = $('#dx-report');
+    if (!rpt) return;
+    updateReport();
+    rpt.classList.add('show');
+    window.scrollTo({ top: rpt.offsetTop - 90, behavior: 'smooth' });
+  }
+
+  function initFilters() {
+    var bar = $('#filter-bar');
+    if (!bar) return;
+    $$('.chip', bar).forEach(function (chip) {
+      chip.addEventListener('click', function () {
+        $$('.chip', bar).forEach(function (c) { c.classList.remove('on'); });
+        chip.classList.add('on');
+        var f = chip.getAttribute('data-f');
+        $$('.blk[data-case]').forEach(function (blk) {
+          var show = (f === 'all' || blk.getAttribute('data-cat') === f);
+          blk.style.display = show ? '' : 'none';
+        });
+      });
+    });
+  }
+
+  function init() {
+    total = $$('.blk[data-case]').length;
+    $$('.blk[data-case]').forEach(function (blk) {
+      var card = blk.querySelector('.case-card');
+      if (!card) return;
+      $$('.opt', card).forEach(function (o) {
+        o.addEventListener('click', function () { answer(card, o.getAttribute('data-key')); });
+      });
+    });
+    initFilters();
+    stats();
+    updateReport();
+  }
+
+  return { init: init, reset: reset, revealAll: revealAll, showReport: showReport };
+})();
+
+document.addEventListener('DOMContentLoaded', function () {
+  Clinic.init();
+  // KaTeX 可能晚于 DOMContentLoaded 加载完成后才可用，做一次延迟兜底渲染
+  setTimeout(function () {
+    if (window.renderMathInElement) {
+      try {
+        window.renderMathInElement(document.body, {
+          delimiters: [{ left: '$$', right: '$$', display: true }, { left: '\\(', right: '\\)', display: false }],
+          throwOnError: false
+        });
+      } catch (e) { /* ignore */ }
+    }
+  }, 600);
+});
+</script>
 </body>
 </html>

@@ -43,9 +43,9 @@ td { padding: 10px 14px; border-bottom: 1px solid #f3f4f6; color: #4b5563; }
     try{ renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'\\[',right:'\\]',display:true},{left:'\\(',right:'\\)',display:false},{left:'$',right:'$',display:false}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false}); }catch(e){}
     return true;
   }
-  function go(){ if(render()) return; setTimeout(go(),200); }
+  function go(){ if(render()) return; setTimeout(go,200); }
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',go()); else go();
-  window.addEventListener('load',function(){render(); setTimeout(render(),600); setTimeout(render(),1600)});
+  window.addEventListener('load',function(){render(); setTimeout(render,600); setTimeout(render,1600)});
 })();
 </script>
 </head>
@@ -81,8 +81,8 @@ td { padding: 10px 14px; border-bottom: 1px solid #f3f4f6; color: #4b5563; }
     <div class="ctrl" style="margin-top:16px">
       <label><b>选一个句子：</b></label>
       <input id="hmm-sent" type="text" value="我爱北京" style="flex:1;min-width:200px;padding:7px 12px;border:1px solid #cbd5e1;border-radius:8px;font-size:14px;font-family:inherit">
-      <button class="primary" onclick="drawHMM">▶ 生成状态路径</button>
-      <button onclick="playHMM">🎬 播放生成过程</button>
+      <button class="primary" onclick="drawHMM()">▶ 生成状态路径</button>
+      <button onclick="playHMM()">🎬 播放生成过程</button>
     </div>
     <div id="hmm-path" style="margin-top:12px;font-size:15px;font-family:'JetBrains Mono',monospace;color:#334155"></div>
   </div>
@@ -102,7 +102,7 @@ td { padding: 10px 14px; border-bottom: 1px solid #f3f4f6; color: #4b5563; }
     <div class="ctrl">
       <label>观测序列长度 T = <b id="tw-val">5</b></label>
       <input id="tw-t" type="range" min="3" max="8" value="5" oninput="drawForward">
-      <button class="primary" onclick="drawForward">重算</button>
+      <button class="primary" onclick="drawForward()">重算</button>
     </div>
     <canvas id="fwd-canvas" width="1000" height="300"></canvas>
     <div id="fwd-total" style="margin-top:12px;font-size:15px;color:#334155"></div>
@@ -123,7 +123,7 @@ td { padding: 10px 14px; border-bottom: 1px solid #f3f4f6; color: #4b5563; }
   </table>
 
   <div class="demo">
-    <button class="primary" onclick="runViterbi">▶ 跑一遍 Viterbi 解码（以"我爱北京"为例）</button>
+    <button class="primary" onclick="runViterbi()">▶ 跑一遍 Viterbi 解码（以"我爱北京"为例）</button>
     <canvas id="vit-canvas" width="1000" height="300" style="margin-top:16px"></canvas>
     <div id="vit-out" style="margin-top:12px;font-size:15px;font-family:'JetBrains Mono',monospace"></div>
   </div>
@@ -366,7 +366,7 @@ function runViterbi(){
       const v=delta[t][i];
       const x=padL+t*cw,y=padT+i*ch;
       const a=(v-maxD+10)/10;
-      ctx.fillStyle=`rgba(37,99,235,${Math.max(.08,Math.min(.9,a()))})`;
+      ctx.fillStyle=`rgba(37,99,235,${Math.max(.08,Math.min(.9,a))})`;
       ctx.fillRect(x+2,y+2,cw-4,ch-4);
       ctx.strokeStyle='#e2e8f0'; ctx.strokeRect(x+2,y+2,cw-4,ch-4);
       ctx.fillStyle= a>0.5?'#fff':'#475569'; ctx.font='10px monospace'; ctx.textAlign='center';

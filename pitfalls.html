@@ -158,7 +158,7 @@ textarea#lab-input {
       .observe(document.documentElement,{childList:true,subtree:true});
   }
   window.__katexRender = render;
-});
+})();
 </script>
 </head>
 <body>
@@ -1090,15 +1090,15 @@ query = "年假 天数 跨年 累积"
           <label for="lab-input">📝 你的原始 Prompt（试试粘贴一段你正在用的）</label>
           <textarea id="lab-input" spellcheck="false" placeholder="例如：&#10;请给我写一个产品介绍，要尽可能好，专业一点。&#10;不要写得太长，也不要用那种很空的词。&#10;另外我们公司是做 SaaS 的，产品是财务对账工具，用户是中小企业的会计。&#10;输出 JSON。"></textarea>
           <div class="btn-row" style="justify-content:flex-start">
-            <button class="btn btn-primary" onclick="Lab.run">🔬 开始体检</button>
-            <button class="btn btn-outline" onclick="Lab.demo">🎲 载入示例 prompt</button>
-            <button class="btn btn-outline" onclick="Lab.clear">🧹 清空</button>
+            <button class="btn btn-primary" onclick="Lab.run()">🔬 开始体检</button>
+            <button class="btn btn-outline" onclick="Lab.demo()">🎲 载入示例 prompt</button>
+            <button class="btn btn-outline" onclick="Lab.clear()">🧹 清空</button>
           </div>
         </div>
         <div class="lab-col">
           <label>📋 改写后的 Prompt（可直接复制使用）</label>
           <div class="lab-out" id="lab-out">点击「开始体检」后，这里会生成一份改写过的 prompt。</div>
-          <button class="btn btn-outline" onclick="Lab.copy" style="margin-top:8px">📎 复制改写结果</button>
+          <button class="btn btn-outline" onclick="Lab.copy()" style="margin-top:8px">📎 复制改写结果</button>
         </div>
       </div>
 
@@ -1120,20 +1120,20 @@ query = "年假 天数 跨年 累积"
       <div class="ck-progress"><i id="ck-fill"></i></div>
       <div class="card">
         <div class="checklist" id="ck-list">
-          <div class="ck-item"><span class="ck-txt"><b>① 指令在首尾</b><span>任务描述和输出格式放在 prompt 开头，并在结尾复述一次关键动作。数据放中间。</span></span></div>
-          <div class="ck-item"><span class="ck-txt"><b>② 没有否定式约束</b><span>把所有"不要写…"翻译成"要写…"。除了安全边界，其余一律用正面规格。</span></span></div>
-          <div class="ck-item"><span class="ck-txt"><b>③ 输出格式被钉死</b><span>给出 schema（字段名 + 类型 + 取值范围）+ 一个 few-shot 样例，并明确"不输出任何解释和代码围栏"。</span></span></div>
-          <div class="ck-item"><span class="ck-txt"><b>④ Few-shot 示例经过审核</b><span>类别均衡、标签 100% 正确、句式多样、格式完全一致；打乱顺序测试过稳定性。</span></span></div>
-          <div class="ck-item"><span class="ck-txt"><b>⑤ 关键约束 ≤ 5 条且结构化</b><span>硬约束编号列出、加粗数字；"必须"与"希望"明确区分；用 Markdown 标题分块降低信噪比。</span></span></div>
-          <div class="ck-item"><span class="ck-txt"><b>⑥ 需要推理的任务给了草稿纸</b><span>数学/多步逻辑题要求"一步一步推理"；必要时用 few-shot CoT 或让模型生成代码执行。</span></span></div>
-          <div class="ck-item"><span class="ck-txt"><b>⑦ 采样参数与任务匹配</b><span>抽取/分类 T=0–0.2，推理 T=0–0.3，创意 T=0.8–1.1；多样性靠多次采样而不是拉高温度。</span></span></div>
-          <div class="ck-item"><span class="ck-txt"><b>⑧ 长上下文做了检索与重排</b><span>不贴全文；用 RAG 取 Top-K 并重排；最相关的片段放在开头和结尾；要求模型标注引用来源。</span></span></div>
-          <div class="ck-item"><span class="ck-txt"><b>⑨ 没有含糊代词</b><span>所有"它/这个/那个/上次说的"都替换为具体名词和路径；做了「陌生人测试」。</span></span></div>
-          <div class="ck-item"><span class="ck-txt"><b>⑩ 一次只做一件事</b><span>复合任务拆成链式调用；每个子任务有明显的输入输出边界；单次 prompt 硬约束 ≤ 5 条。</span></span></div>
-          <div class="ck-item"><span class="ck-txt"><b>⑪ 长度有明确区间</b><span>给出字数区间 + 结构约束（几段/几点）；程序侧做长度校验与超限重试。</span></span></div>
-          <div class="ck-item"><span class="ck-txt"><b>⑫ 目标是可验收的</b><span>每个形容词都翻译成可观测的量；prompt 里不存在无法打分的表述。</span></span></div>
-          <div class="ck-item"><span class="ck-txt"><b>⑬ 做了鲁棒性与安全性设计</b><span>定义了"信息不足时如何回答"（如回答"资料中未提及"）；输入做了注入防护；有失败兜底与日志。</span></span></div>
-          <div class="ck-item"><span class="ck-txt"><b>⑭ 版本化与回归测试</b><span>prompt 与模型版本、参数一起纳入版本管理；有一套固定测试集（含边界 case），改动后跑回归对比。</span></span></div>
+          <div class="ck-item"><span class="ck-box" data-ck></span><span class="ck-txt"><b>① 指令在首尾</b><span>任务描述和输出格式放在 prompt 开头，并在结尾复述一次关键动作。数据放中间。</span></span></div>
+          <div class="ck-item"><span class="ck-box" data-ck></span><span class="ck-txt"><b>② 没有否定式约束</b><span>把所有"不要写…"翻译成"要写…"。除了安全边界，其余一律用正面规格。</span></span></div>
+          <div class="ck-item"><span class="ck-box" data-ck></span><span class="ck-txt"><b>③ 输出格式被钉死</b><span>给出 schema（字段名 + 类型 + 取值范围）+ 一个 few-shot 样例，并明确"不输出任何解释和代码围栏"。</span></span></div>
+          <div class="ck-item"><span class="ck-box" data-ck></span><span class="ck-txt"><b>④ Few-shot 示例经过审核</b><span>类别均衡、标签 100% 正确、句式多样、格式完全一致；打乱顺序测试过稳定性。</span></span></div>
+          <div class="ck-item"><span class="ck-box" data-ck></span><span class="ck-txt"><b>⑤ 关键约束 ≤ 5 条且结构化</b><span>硬约束编号列出、加粗数字；"必须"与"希望"明确区分；用 Markdown 标题分块降低信噪比。</span></span></div>
+          <div class="ck-item"><span class="ck-box" data-ck></span><span class="ck-txt"><b>⑥ 需要推理的任务给了草稿纸</b><span>数学/多步逻辑题要求"一步一步推理"；必要时用 few-shot CoT 或让模型生成代码执行。</span></span></div>
+          <div class="ck-item"><span class="ck-box" data-ck></span><span class="ck-txt"><b>⑦ 采样参数与任务匹配</b><span>抽取/分类 T=0–0.2，推理 T=0–0.3，创意 T=0.8–1.1；多样性靠多次采样而不是拉高温度。</span></span></div>
+          <div class="ck-item"><span class="ck-box" data-ck></span><span class="ck-txt"><b>⑧ 长上下文做了检索与重排</b><span>不贴全文；用 RAG 取 Top-K 并重排；最相关的片段放在开头和结尾；要求模型标注引用来源。</span></span></div>
+          <div class="ck-item"><span class="ck-box" data-ck></span><span class="ck-txt"><b>⑨ 没有含糊代词</b><span>所有"它/这个/那个/上次说的"都替换为具体名词和路径；做了「陌生人测试」。</span></span></div>
+          <div class="ck-item"><span class="ck-box" data-ck></span><span class="ck-txt"><b>⑩ 一次只做一件事</b><span>复合任务拆成链式调用；每个子任务有明显的输入输出边界；单次 prompt 硬约束 ≤ 5 条。</span></span></div>
+          <div class="ck-item"><span class="ck-box" data-ck></span><span class="ck-txt"><b>⑪ 长度有明确区间</b><span>给出字数区间 + 结构约束（几段/几点）；程序侧做长度校验与超限重试。</span></span></div>
+          <div class="ck-item"><span class="ck-box" data-ck></span><span class="ck-txt"><b>⑫ 目标是可验收的</b><span>每个形容词都翻译成可观测的量；prompt 里不存在无法打分的表述。</span></span></div>
+          <div class="ck-item"><span class="ck-box" data-ck></span><span class="ck-txt"><b>⑬ 做了鲁棒性与安全性设计</b><span>定义了"信息不足时如何回答"（如回答"资料中未提及"）；输入做了注入防护；有失败兜底与日志。</span></span></div>
+          <div class="ck-item"><span class="ck-box" data-ck></span><span class="ck-txt"><b>⑭ 版本化与回归测试</b><span>prompt 与模型版本、参数一起纳入版本管理；有一套固定测试集（含边界 case），改动后跑回归对比。</span></span></div>
         </div>
         <div class="hint good" id="ck-msg" style="margin-top:16px">
           <b>📊 进度：</b><span id="ck-num">0 / 14</span> 项已完成。
@@ -1148,5 +1148,403 @@ query = "年假 天数 跨年 累积"
 <footer class="site"><p>💬 agent-nlp-llm · 自然语言技术本体论研究站</p></footer>
 
 <script src="js/site.js"></script>
+<script>
+/* ===== Prompt 踩坑博物馆：改写实验室 + 检查清单 ===== */
+var Lab = (function () {
+  'use strict';
+
+  var RULES = [
+    {
+      id: 'negation',
+      name: '否定式指令',
+      re: /不要|别用|不能用|禁止|avoid|do not|don\'t|never/i,
+      msg: '<b>出现否定式指令</b>：被否定的词会实体化进入上下文并<b>激活</b>相关语义，模型反而更容易写出来。请改写为"要写什么"的正面规格。'
+    },
+    {
+      id: 'vague',
+      name: '模糊目标词',
+      re: /尽可能好|做到最好|高质量|专业一点|更专业|眼前一亮|优秀的|尽量好|完美|更棒|更好一点/i,
+      msg: '<b>出现无法验收的模糊目标</b>："好/专业/高质量"没有方向。请翻译成可观测的量，例如"术语首次出现给全称""≤120 字""每个结论标注来源"。'
+    },
+    {
+      id: 'json_no_schema',
+      name: 'JSON 未给 schema',
+      re: /json|JSON|Json/,
+      needs: function (t) {
+        return !/\{\s*["']?\w+["']?\s*:/.test(t) && !/schema|字段|类型|样例|示例输出/i.test(t);
+      },
+      msg: '<b>要求了 JSON 但没给 schema</b>：字段名、类型、包装层全靠猜，下游极易解析失败。请给出完整 schema + 一个 few-shot 样例 + "不要输出解释和代码围栏"。'
+    },
+    {
+      id: 'length',
+      name: '长度未指定',
+      re: /.{10,}/,
+      needs: function (t) {
+        return !/\d+\s*[-–~至到]\s*\d+\s*字|不超过\s*\d+\s*字|字数|max_?tokens|长度|字以内|\d+\s*words?/i.test(t);
+      },
+      msg: '<b>没有指定输出长度</b>：模型按训练分布的平均长度采样，方差可能从 30 字到 1500 字。请给出字数区间 + 结构约束（几段几点）。'
+    },
+    {
+      id: 'pronoun',
+      name: '含糊代词',
+      re: /它(?!们)|这个(?!个词)|那个|这些|那些|上次说的|之前提的|刚才说的/,
+      msg: '<b>存在含糊代词</b>："它/这个/那个/上次说的"需要模型猜测先行词，猜错概率很高。请替换为具体名词、路径或字段名。'
+    },
+    {
+      id: 'multi',
+      name: '一锅端多任务',
+      re: /(1[.、)]|2[.、)]|3[.、)]|（1）|；.*然后.*再)|第一步[\s\S]*第二步[\s\S]*第三步/i,
+      needs: function (t) {
+        var m = t.match(/(^|\n)\s*(\d+)[.、)]/g);
+        return (m && m.length >= 3) || /帮我.*然后.*再.*顺便/.test(t);
+      },
+      msg: '<b>一次塞了 3 个以上并列任务</b>：注意力被切分，越靠后的要求越容易被漏掉（"约束疲劳"）。建议拆成链式调用，每步只做一件事。'
+    },
+    {
+      id: 'long',
+      name: '超长上下文',
+      re: /.{10,}/,
+      needs: function (t) { return t.length > 1200; },
+      msg: '<b>Prompt 过长（>' + '1200 字符）</b>：容易触发 lost-in-the-middle，中段信息被注意力稀释。请先做检索与重排，只放最相关的片段，并把关键内容放到首尾。'
+    },
+    {
+      id: 'math_nocot',
+      name: '数学题无思维链',
+      re: /(计算|算一下|求|答案|等于几|多少[个元人件台]).{0,40}[?？]|[\d]\s*[+\-*/×÷]\s*[\d]/,
+      needs: function (t) {
+        return !/一步一步|逐步|step by step|思维链|推理过程|写出步骤|先推理/i.test(t);
+      },
+      msg: '<b>数学/多步计算题没有要求分步推理</b>：固定深度的 Transformer 无法在一次前向内完成多步串行运算，会靠模式匹配猜答案。请加"请一步一步推理，最后输出「答案：X」"。'
+    },
+    {
+      id: 'temp',
+      name: '缺少采样参数',
+      re: /.{10,}/,
+      needs: function (t) { return !/temperature|top_?p|top_?k|温度|采样参数/i.test(t); },
+      msg: '<b>Prompt 里没有任何采样参数约定</b>：抽取类任务建议 temperature 0–0.2、top_p 0.9–1.0；创意类建议 0.8–1.1。把参数与 prompt 一起版本化管理。'
+    },
+    {
+      id: 'instr_position',
+      name: '指令位置偏僻',
+      re: /.{10,}/,
+      needs: function (t) {
+        // 指令类关键词若只出现在后半段，视为"指令埋在后面"
+        var m = t.match(/请|要求|输出|请输出|格式|规则|必须|task|output/i);
+        return m && m.index > t.length * 0.55 && t.length > 300;
+      },
+      msg: '<b>任务指令出现在文本靠后的位置</b>：长文本中段/尾部之外的内容容易被忽略。请把任务与输出格式前置到开头，并在结尾复述一次动作。'
+    },
+    {
+      id: 'no_fallback',
+      name: '未定义兜底行为',
+      re: /.{10,}/,
+      needs: function (t) { return !/未提及|不知道|无法确定|信息不足|N\/?A|null|若没有|如果没有/i.test(t); },
+      msg: '<b>没有定义"信息不足时怎么办"</b>：模型默认会继续流畅生成 → 幻觉。请明确写上"若资料中没有相关信息，回答『未提及』，不要编造"。'
+    }
+  ];
+
+  function $(id) { return document.getElementById(id); }
+
+  function analyze(text) {
+    var hits = [];
+    for (var i = 0; i < RULES.length; i++) {
+      var r = RULES[i];
+      var matched = false;
+      if (r.re && r.re.test(text)) matched = true;
+      if (r.needs) {
+        if (r.needs(text)) matched = true;
+        else if (r.re && r.re.source === '.{10,}') matched = false; // 仅由 needs 决定
+      }
+      if (r.id === 'length' || r.id === 'temp' || r.id === 'no_fallback' || r.id === 'long' || r.id === 'instr_position') {
+        matched = r.needs ? r.needs(text) : matched;
+      }
+      if (r.id === 'multi') matched = r.needs ? r.needs(text) : matched;
+      if (r.id === 'json_no_schema') matched = (r.re.test(text) && r.needs && r.needs(text));
+      if (r.id === 'math_nocot') matched = (r.re.test(text) && r.needs && r.needs(text));
+      if (r.id === 'negation' || r.id === 'vague' || r.id === 'pronoun') matched = r.re.test(text);
+      if (matched) hits.push(r);
+    }
+    return hits;
+  }
+
+  /* --- 改写：把用户 prompt 重构为一条合格的 prompt --- */
+  function rewrite(text, hits) {
+    var t = text.trim();
+    if (!t) return '（请输入原始 prompt）';
+
+    // 抽取可能的约束句
+    var lines = t.split(/\n+/).map(function (s) { return s.trim(); }).filter(Boolean);
+    var taskLine = '';
+    var constraints = [];
+    var dataLines = [];
+
+    lines.forEach(function (ln) {
+      if (!taskLine && /(请|帮我|写|生成|分析|提取|总结|翻译|判断|改)/.test(ln) && ln.length < 200) {
+        taskLine = ln; return;
+      }
+      if (/不要|别|不能|禁止|尽量|最好|must|≤|不超过|\d+\s*字/.test(ln)) constraints.push(ln);
+      else if (ln.length > 200) dataLines.push(ln);
+      else constraints.push(ln);
+    });
+    if (!taskLine) taskLine = lines[0] || t;
+
+    // 否定 → 正面
+    var pos = [];
+    constraints.forEach(function (c) {
+      var m = c.match(/不要?用?|别用?|不能|禁止/);
+      if (m) {
+        var tail = c.slice(m.index + m[0].length).replace(/[。；;！!]+$/, '').trim();
+        if (tail) pos.push('改用具体、可核查的表述替代「' + tail + '」这类笼统说法（给出具体的参数、场景或数据）');
+      } else {
+        pos.push(c);
+      }
+    });
+
+    var out = [];
+    out.push('# 任务');
+    out.push(taskLine.replace(/。$/, '') + '。');
+    out.push('');
+    out.push('# 硬性约束（必须全部满足，共 ' + Math.min(pos.length || 1, 5) + ' 条）');
+
+    var hard = pos.slice(0, 5);
+    if (!hard.length) hard = ['面向目标读者，用具体事实与数据说话，不使用空泛形容词'];
+    hard.forEach(function (c, i) { out.push((i + 1) + '. ' + c); });
+
+    if (hits.some(function (h) { return h.id === 'length'; })) {
+      out.push((hard.length + 1) + '. 总长度控制在 150–250 字（给出区间，不要自由发挥）');
+    }
+    out.push('');
+    out.push('# 输出格式');
+    if (hits.some(function (h) { return h.id === 'json_no_schema'; })) {
+      out.push('只输出一个 JSON 对象，不要输出任何解释、寒暄或 Markdown 代码围栏。');
+      out.push('');
+      out.push('{');
+      out.push('  "summary": string,        // 一句话概括，≤40 字');
+      out.push('  "points": string[],       // 3-5 条要点，每条 ≤15 字');
+      out.push('  "confidence": number      // 0-1 之间的浮点数');
+      out.push('}');
+      out.push('');
+      out.push('样例：');
+      out.push('{"summary":"财务对账工具可把月结对账从三天压缩到半小时。","points":["自动匹配发票","差异高亮","一键导出"],"confidence":0.86}');
+    } else {
+      out.push('结构固定为：');
+      out.push('① 一句话结论');
+      out.push('② 3 条要点（每条一行，以「- 」开头）');
+      out.push('③ 一句话说明适用范围');
+      out.push('只输出正文，不要标题，不要额外解释。');
+    }
+
+    if (hits.some(function (h) { return h.id === 'math_nocot'; })) {
+      out.push('');
+      out.push('# 推理要求');
+      out.push('请一步一步推理，写出每一步的计算过程，最后单独一行输出「答案：X」。');
+    }
+    if (hits.some(function (h) { return h.id === 'multi'; })) {
+      out.push('');
+      out.push('# 执行顺序（本 prompt 只做第 1 步）');
+      out.push('① 本步：完成上面「任务」所述内容。');
+      out.push('② 后续步骤请等我基于本步输出再发起新请求。');
+    }
+
+    out.push('');
+    out.push('# 信息不足时的行为');
+    out.push('若给定的输入材料中不包含足以作答的信息，直接回答「材料中未提及」，严禁编造。');
+
+    if (hits.some(function (h) { return h.id === 'temp'; })) {
+      out.push('');
+      out.push('# 采样与参数建议');
+      out.push('- 抽取 / 分类类任务：temperature 0.0–0.2，top_p 0.9–1.0');
+      out.push('- 推理 / 计算类任务：temperature 0.0–0.3，top_p 0.95');
+      out.push('- 创意 / 文案类任务：temperature 0.8–1.1，top_p 0.95');
+    }
+
+    if (dataLines.length) {
+      out.push('');
+      out.push('# 输入材料（放在最后，并在上方指令中已引用）');
+      out.push('<' + '输入>' + dataLines[0] + '<' + '/输入>');
+    } else {
+      out.push('');
+      out.push('# 输入材料');
+      out.push('<' + '输入>\n（把待处理的内容粘贴到这里）\n<' + '/输入>');
+    }
+    out.push('');
+    out.push('# 现在开始执行上面的「任务」，按「输出格式」直接输出：');
+
+    return out.join('\n');
+  }
+
+  function render(hits, text) {
+    var score = Math.max(0, 100 - hits.length * 9);
+    var sEl = $('lab-score');
+    var ring = $('lab-ring');
+    if (sEl) sEl.textContent = score;
+    if (ring) {
+      var deg = score * 3.6;
+      var color = score >= 80 ? '#10a37f' : score >= 55 ? '#f59e0b' : '#ef4444';
+      ring.style.background = 'conic-gradient(' + color + ' ' + deg + 'deg, #eef1f8 ' + deg + 'deg)';
+    }
+    var prob = $('lab-prob');
+    if (!prob) return;
+    var html = '';
+    if (!hits.length) {
+      html = '<div class="prob-item"><span class="dot ok"></span><span class="txt"><b>没有命中已知的 12 个坑</b>，这条 prompt 的结构质量不错。仍建议按下方检查清单逐条核对一遍边界情况。</span></div>';
+    } else {
+      hits.forEach(function (h) {
+        html += '<div class="prob-item"><span class="dot bad"></span><span class="txt">' + h.msg + '</span></div>';
+      });
+      html += '<div class="prob-item"><span class="dot ok"></span><span class="txt">右侧已生成一份<b>改写版 prompt</b>，可直接复制使用。</span></div>';
+    }
+    prob.innerHTML = html;
+  }
+
+  function run() {
+    var el = $('lab-input');
+    var txt = el ? el.value : '';
+    if (!txt.trim()) {
+      var prob = $('lab-prob');
+      if (prob) prob.innerHTML = '<div class="prob-item"><span class="dot bad"></span><span class="txt">请先粘贴一段 prompt。</span></div>';
+      return;
+    }
+    var hits = analyze(txt);
+    render(hits, txt);
+    var out = $('lab-out');
+    if (out) out.textContent = rewrite(txt, hits);
+  }
+
+  function demo() {
+    var el = $('lab-input');
+    if (!el) return;
+    el.value = '请给我写一个产品介绍，要尽可能好、专业一点，体现出水平。\n' +
+      '不要写得太长，也不要用那种很空的词，别用感叹号。\n' +
+      '我们公司是做 SaaS 的，产品是财务对账工具，主打自动匹配发票，把月底对账从三天缩到半小时，用户是中小企业的会计。\n' +
+      '顺便把这段也翻译成英文，再总结三个卖点，最后输出 JSON。\n' +
+      '另外老师上次说的那个问题也一起改了吧。';
+    run();
+  }
+
+  function clear() {
+    var el = $('lab-input');
+    if (el) el.value = '';
+    var out = $('lab-out');
+    if (out) out.textContent = '点击「开始体检」后，这里会生成一份改写过的 prompt。';
+    var s = $('lab-score');
+    if (s) s.textContent = '—';
+    var ring = $('lab-ring');
+    if (ring) ring.style.background = 'conic-gradient(#10a37f 0deg, #eef1f8 0deg)';
+    var prob = $('lab-prob');
+    if (prob) prob.innerHTML = '<div class="prob-item"><span class="dot ok"></span><span class="txt">等待体检……</span></div>';
+  }
+
+  function copy() {
+    var out = $('lab-out');
+    if (!out) return;
+    var txt = out.textContent || '';
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(txt).then(function () {
+        out.style.outline = '2px solid #10a37f';
+        setTimeout(function () { out.style.outline = ''; }, 600);
+      }, function () { fallbackCopy(txt, out); });
+    } else {
+      fallbackCopy(txt, out);
+    }
+  }
+
+  function fallbackCopy(txt, out) {
+    try {
+      var ta = document.createElement('textarea');
+      ta.value = txt;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      out.style.outline = '2px solid #10a37f';
+      setTimeout(function () { out.style.outline = ''; }, 600);
+    } catch (e) {
+      alert('复制失败，请手动选择文本复制。');
+    }
+  }
+
+  return { run: run, demo: demo, clear: clear, copy: copy };
+})();
+
+/* ===== 检查清单 ===== */
+var Checklist = (function () {
+  'use strict';
+
+  function update() {
+    var boxes = document.querySelectorAll('#ck-list [data-ck]');
+    var on = 0;
+    Array.prototype.forEach.call(boxes, function (b) { if (b.classList.contains('on')) on++; });
+    var fill = document.getElementById('ck-fill');
+    var num = document.getElementById('ck-num');
+    if (fill) fill.style.width = (boxes.length ? on / boxes.length * 100 : 0) + '%';
+    if (num) num.textContent = on + ' / ' + boxes.length;
+    // 注意：庆祝文案写在独立的 #ck-done 里，绝不能覆盖 #ck-msg，
+    // 否则会连带把 #ck-num 这个进度节点一起抹掉，导致后续更新找不到节点。
+    var done = document.getElementById('ck-done');
+    if (done) {
+      if (on === boxes.length && boxes.length > 0) {
+        done.style.display = '';
+        done.innerHTML = '<b>🎉 全部 ' + boxes.length + ' 项已完成！</b> 这条 prompt 已经通过了工程上线的基本门槛。' +
+          '别忘了把它和模型版本、参数一起打进版本管理，并补充固定的回归测试集。';
+      } else {
+        done.style.display = 'none';
+        done.innerHTML = '';
+      }
+    }
+  }
+
+  function init() {
+    var boxes = document.querySelectorAll('#ck-list [data-ck]');
+    Array.prototype.forEach.call(boxes, function (b) {
+      b.addEventListener('click', function () {
+        b.classList.toggle('on');
+        b.textContent = b.classList.contains('on') ? '✓' : '';
+        update();
+      });
+    });
+    update();
+  }
+
+  return { init: init };
+})();
+
+/* ===== 坑位筛选 ===== */
+function initFilters() {
+  var bar = document.getElementById('filter-bar');
+  if (!bar) return;
+  var chips = bar.querySelectorAll('.chip');
+  Array.prototype.forEach.call(chips, function (chip) {
+    chip.addEventListener('click', function () {
+      Array.prototype.forEach.call(chips, function (c) { c.classList.remove('on'); });
+      chip.classList.add('on');
+      var f = chip.getAttribute('data-f');
+      var blocks = document.querySelectorAll('.blk[data-pit]');
+      Array.prototype.forEach.call(blocks, function (blk) {
+        var show = (f === 'all' || blk.getAttribute('data-cat') === f);
+        blk.style.display = show ? '' : 'none';
+      });
+    });
+  });
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+  initFilters();
+  Checklist.init();
+  // KaTeX 兜底渲染
+  setTimeout(function () {
+    if (window.renderMathInElement) {
+      try {
+        window.renderMathInElement(document.body, {
+          delimiters: [{ left: '$$', right: '$$', display: true }, { left: '\\(', right: '\\)', display: false }],
+          throwOnError: false
+        });
+      } catch (e) { /* ignore */ }
+    }
+  }, 600);
+});
+</script>
 </body>
 </html>

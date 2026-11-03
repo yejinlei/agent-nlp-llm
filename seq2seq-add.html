@@ -121,7 +121,7 @@ function makeModel(useReverse,usePeeky,H){
 
 function featurize(q,m){
   let ids=encodeQ(q);
-  if(m.useReverse)ids=ids.slice.reverse(); // // 简单 bag-of-char + 位置编码
+  if(m.useReverse)ids=ids.slice().reverse(); // // 简单 bag-of-char + 位置编码
   const feat=new Array(m.H).fill(0);
   ids.forEach((id,pos)=>{
     for(let k=0;k<m.H;k++){
