@@ -41,24 +41,32 @@ tr:hover td { background: #f9fafb; }
 h2 { margin-top: 48px; margin-bottom: 24px; padding-bottom: 12px; border-bottom: 2px solid #e5e7eb; }
 h4 { margin-top: 20px; margin-bottom: 12px; color: #6b21a8; }
 </style>
+<link rel="stylesheet" href="../css/site.css">
 </head>
 <body>
 <!-- 导航栏 -->
-<nav class="nav-blur fixed top-0 left-0 right-0 z-50 h-16 px-6 flex items-center justify-between">
-  <div class="flex items-center gap-8">
-    <a href="../index.html" class="text-xl font-bold text-purple-600">💬 agent-nlp-llm</a>
-    <div class="hidden md:flex items-center gap-6">
-      <a href="../index.html" class="text-gray-700 hover:text-purple-600 font-medium">首页</a>
-      <a href="../nlp/index.html" class="text-gray-700 hover:text-blue-600 font-medium">📝 NLP</a>
-      <a href="index.html" class="text-purple-600 font-medium">🤖 LLM</a>
-      <a href="#papers" class="text-gray-700 hover:text-purple-600 font-medium">论文</a>
-      <a href="#models" class="text-gray-700 hover:text-purple-600 font-medium">模型</a>
+<nav class="navbar">
+  <div class="nav-inner">
+    <a href="../index.html" class="nav-logo">💬 agent-nlp-llm</a>
+    <button class="nav-toggle" onclick="document.querySelector('.nav-links').classList.toggle('open')" aria-label="菜单">☰</button>
+    <div class="nav-links">
+      <a href="../index.html" class="nav-link">🏠 首页</a>
+      <a href="../playground.html" class="nav-link">🎨 玩法</a>
+      <a href="../nlp/index.html" class="nav-link">📝 NLP</a>
+      <a href="../llm/index.html" class="nav-link active">🤖 LLM</a>
+      <a href="../bpe.html" class="nav-link">🔤 分词器</a>
+      <a href="../embedding.html" class="nav-link">🧭 词向量</a>
+      <a href="../attention.html" class="nav-link">🎯 注意力</a>
+      <a href="../papers.html" class="nav-link">📚 论文</a>
+      <a href="../clinic.html" class="nav-link">🕵️ 诊所</a>
+      <a href="../pitfalls.html" class="nav-link">💥 踩坑</a>
+      <a href="../benchmark.html" class="nav-link">📊 选型</a>
+      <a href="../universe.html" class="nav-link">🌌 宇宙</a>
+      <a href="https://github.com/yejinlei/agent-nlp-llm" target="_blank" rel="noopener" class="nav-gh" aria-label="GitHub">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+      </a>
     </div>
   </div>
-  <a href="https://github.com/yejinlei/agent-nlp-llm" target="_blank" class="flex items-center gap-2 text-gray-600 hover:text-gray-900">
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
-    GitHub
-  </a>
 </nav>
 
 <!-- 侧边目录 -->
@@ -173,6 +181,63 @@ h4 { margin-top: 20px; margin-bottom: 12px; color: #6b21a8; }
       <tr><td>归一化</td><td>Post-LN</td><td>Pre-LN + RMSNorm（训练更稳定）</td></tr>
       <tr><td>架构扩展</td><td>纯Dense</td><td>MoE混合专家模型（万亿参数稀疏激活）</td></tr>
     </table>
+
+    <h4>🔧 从零实现单头因果自注意力（QKV 是怎么算出来的）</h4>
+    <p class="text-gray-600 mb-3">书1《Build a Large Language Model (From Scratch)》里，注意力被拆成三个矩阵：<b>Query（我在找什么）</b>、<b>Key（我能提供什么）</b>、<b>Value（我实际贡献什么）</b>。缩放点积注意力的公式只有一行，但每个符号都要落实到代码：</p>
+    <div class="callout callout-info">
+      <div class="callout-line">Attention(Q,K,V) = softmax( <b>Q·Kᵀ / √d<sub>k</sub></b> ) · V</div>
+      <div class="callout-note">除以 √d<sub>k</sub> 是防止点积随维度变大而数值爆炸、把 softmax 推入梯度极小的饱和区。</div>
+    </div>
+    <pre class="code"><code class="language-python">import torch, torch.nn as nn
+
+class CausalSelfAttention(nn.Module):
+    """书1第3章的单头实现，seq_len 每步只能看见自己及之前的 token"""
+    def __init__(self, d_in, d_out, context_length, dropout, qkv_bias=False):
+        super().__init__()
+        self.d_out = d_out
+        self.W_query = nn.Linear(d_in, d_out, bias=qkv_bias)  # 我要找什么
+        self.W_key   = nn.Linear(d_in, d_out, bias=qkv_bias)  # 我能给什么
+        self.W_value = nn.Linear(d_in, d_out, bias=qkv_bias)  # 我给什么内容
+        # 上三角掩码：把"未来"位置置为 -inf，softmax 后概率为 0
+        self.register_buffer('mask',
+            torch.triu(torch.ones(context_length, context_length), diagonal=1))
+
+    def forward(self, x):              # x: (B, T, d_in)
+        b, num_tokens, _ = x.shape
+        q, k, v = self.W_query(x), self.W_key(x), self.W_value(x)
+
+        attn_scores = q @ k.transpose(1, 2)                # (B, T, T)
+        attn_scores.masked_fill_(self.mask.bool()[:num_tokens,:num_tokens], -torch.inf)
+        attn_weights = torch.softmax(attn_scores / k.shape[-1]**0.5, dim=-1)
+        return attn_weights @ v        # (B, T, d_out)
+
+# 验证：3 个 token，看输出是不是只依赖前面的 token
+torch.manual_seed(123)
+x = torch.rand(2, 3, 4)
+print(CausalSelfAttention(4, 4, 3, 0.0)(x).shape)   # torch.Size([2, 3, 4])</code></pre>
+    <p class="text-gray-600 mb-3">把 <code>W_query/W_key/W_value</code> 换成 <b>多组并行</b> 就叫 <b>多头注意力（MHA）</b>：让模型在不同子空间里同时关注不同的关系（一个头盯语法、一个头盯指代……），最后拼接。现代大模型更进一步改为 <b>GQA</b>——多个 Query 头共享同一组 K/V 头，把推理时的 KV Cache 显存降到 1/4～1/8，这也是 Llama-3、Qwen2 的默认选择。</p>
+
+    <h4>🧩 GELU：为什么大模型抛弃了 ReLU</h4>
+    <p class="text-gray-600 mb-3">书1里 GPT 的 FFN 层用的是 <b>GELU（高斯误差线性单元）</b> 而不是 ReLU。ReLU 在负半轴直接归零，梯度在 0 处不光滑、容易让神经元"死掉"；GELU 用一个平滑的门控曲线给小负值留一条小通路，梯度更稳、表达更细腻。近似写法：</p>
+    <pre class="code"><code class="language-python">class GELU(nn.Module):
+    """书1第4章的 tanh 近似实现，和官方精确版本数值误差 < 1e-3"""
+    def forward(self, x):
+        return 0.5 * x * (1.0 + torch.tanh(
+            torch.sqrt(torch.tensor(2.0 / torch.pi)) *
+            (x + 0.044715 * torch.pow(x, 3))
+        ))
+
+class FeedForward(nn.Module):
+    """Transformer 块里的 FFN：先升维到 4x，再降回原维度"""
+    def __init__(self, cfg):
+        super().__init__()
+        self.layers = nn.Sequential(
+            nn.Linear(cfg['emb_dim'], 4 * cfg['emb_dim']),
+            GELU(),
+            nn.Linear(4 * cfg['emb_dim'], cfg['emb_dim']),
+        )
+    def forward(self, x):
+        return self.layers(x)</code></pre>
   </section>
 
   <!-- 预训练 -->
@@ -180,6 +245,69 @@ h4 { margin-top: 20px; margin-bottom: 12px; color: #6b21a8; }
     <h2 class="text-3xl font-bold">📚 第一阶段：预训练 Pre-training</h2>
     <p class="text-gray-700 mb-4">预训练是大模型能力的来源：在互联网规模的文本（数万亿token）上做下一词预测任务，模型学会了语法、常识、逻辑、世界知识。这一步成本极高，70B模型预训练成本在千万美元级别，只有大厂能做。</p>
     <p class="text-gray-600 mb-4">预训练完成后得到的基座模型（Base Model）能力很强，但它只会"接话茬"，不会听从指令，也不会对话，需要后续对齐。</p>
+
+    <h4>📉 训练好坏怎么看？—— 交叉熵损失与困惑度</h4>
+    <p class="text-gray-600 mb-3">预训练的目标就是"预测下一个词"。模型输出一个全词表概率分布，用 <b>交叉熵损失</b> 衡量它与真实下一个词的差距；再取指数就得到 <b>困惑度（Perplexity, PPL）</b>：</p>
+    <div class="callout callout-info">
+      <div class="callout-line">Loss = −(1/N) · Σ log P(w<sub>i</sub> | w<sub>1</sub>…w<sub>i−1</sub>)　　PPL = e<sup>Loss</sup></div>
+      <div class="callout-note">PPL 可以直观理解为"模型在每一步平均在多少个候选词之间犹豫"。PPL = 10 意味着模型大概在 10 个词里做选择。</div>
+    </div>
+    <pre class="code"><code class="language-python">def calc_loss_batch(input_batch, target_batch, model, device):
+    """书1第5章的损失计算：输入和标签只错开一个位置"""
+    input_batch, target_batch = input_batch.to(device), target_batch.to(device)
+    logits = model(input_batch)                      # (B, T, vocab)
+    return torch.nn.functional.cross_entropy(
+        logits.flatten(0, 1), target_batch.flatten() # 拉平成 (B*T, vocab) vs (B*T,)
+    )
+
+# 困惑度 = exp(平均损失)
+loss = 3.2
+print(f'Loss={loss}, PPL={torch.exp(torch.tensor(loss)).item():.1f}')  # PPL=24.5</code></pre>
+
+    <h4>🎲 生成时的"调味料"：温度与 top-k 采样</h4>
+    <p class="text-gray-600 mb-3">同一个模型，换个采样策略，输出的风格天差地别——这正是书1第5章 <code>generate</code> 函数的核心：</p>
+    <div class="grid grid-cols-2 gap-4 mb-4">
+      <div class="card bg-orange-50 border-orange-200">
+        <h5 class="font-bold text-orange-800">🌡️ 温度 Temperature</h5>
+        <ul class="text-sm text-orange-700 space-y-1 mt-2">
+          <li>除以温度后再 softmax</li>
+          <li>T → 0：几乎只选最高概率词，输出死板但稳定</li>
+          <li>T = 1：原始分布</li>
+          <li>T &gt; 1：分布被"压平"，输出更随机更有创意</li>
+        </ul>
+      </div>
+      <div class="card bg-teal-50 border-teal-200">
+        <h5 class="font-bold text-teal-800">🎯 top-k 截断</h5>
+        <ul class="text-sm text-teal-700 space-y-1 mt-2">
+          <li>只保留概率最高的 k 个词</li>
+          <li>其余概率清零，重新归一化</li>
+          <li>避免从长尾里抽到莫名其妙的怪词</li>
+          <li>k 越小越保守，越大越天马行空</li>
+        </ul>
+      </div>
+    </div>
+    <pre class="code"><code class="language-python">def generate(model, idx, max_new_tokens, context_size, temperature=0.0, top_k=None):
+    """书1第5章：自回归逐词生成，temperature 与 top_k 二选一或组合"""
+    for _ in range(max_new_tokens):
+        idx_cond = idx[:, -context_size:]                   # 裁到上下文长度
+        with torch.no_grad():
+            logits = model(idx_cond)[:, -1, :]              # 只取最后一个位置的分布
+
+        if top_k is not None:                               # ① 长尾截断
+            top_logits, _ = torch.topk(logits, top_k)
+            min_val = top_logits[:, -1].unsqueeze(-1)
+            logits = torch.where(logits < min_val, -torch.inf, logits)
+
+        if temperature > 0.0:                               # ② 温度缩放
+            logits = logits / temperature
+            probs = torch.softmax(logits, dim=-1)
+            idx_next = torch.multinomial(probs, num_samples=1)
+        else:                                               # ③ 贪心：直接取最大
+            idx_next = torch.argmax(logits, dim=-1, keepdim=True)
+
+        idx = torch.cat((idx, idx_next), dim=1)             # 拼回序列，喂给下一步
+    return idx</code></pre>
+    <p class="text-gray-600">💡 <b>一句话记住</b>：预训练让模型"会接话"，<b>温度</b>控制它"接得多疯"，<b>top-k</b> 控制它"别离谱到外太空"。调 API 时看到的 <code>temperature</code>、<code>top_p</code> 参数，源头就在这里。</p>
   </section>
 
   <!-- SFT -->
@@ -513,5 +641,6 @@ document.addEventListener('DOMContentLoaded', function() {
   hljs.highlightAll();
 });
 </script>
+<script src="../js/site.js"></script>
 </body>
 </html>

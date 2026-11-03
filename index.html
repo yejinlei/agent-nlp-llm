@@ -3,581 +3,485 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Agent-NLP-LLM · 自然语言技术本体论研究站</title>
-<script src="https://cdn.tailwindcss.com"></script>
+<title>agent-nlp-llm · 自然语言技术本体论研究站</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
-<script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+<link rel="stylesheet" href="css/site.css">
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=JetBrains+Mono:wght@400;500&display=swap');
-* { font-family: 'Noto Sans SC', sans-serif; }
-code, pre { font-family: 'JetBrains Mono', monospace; }
-body { background: #fafbfc; color: #1a1a2e; }
-.nav-blur { backdrop-filter: blur(12px); background: rgba(255,255,255,0.85); border-bottom: 1px solid #e5e7eb; }
-.sidebar { position: fixed; left: 0; top: 64px; width: 240px; height: calc(100vh - 64px); overflow-y: auto; padding: 24px 16px; border-right: 1px solid #e5e7eb; background: white; }
-.sidebar a { display: block; padding: 8px 12px; margin: 2px 0; border-radius: 6px; color: #4b5563; font-size: 14px; transition: all 0.2s; text-decoration: none; }
-.sidebar a:hover { background: #f3f4f6; color: #2563eb; }
-.sidebar a.active { background: #eff6ff; color: #2563eb; font-weight: 500; }
-.content { margin-left: 240px; padding: 40px 60px; max-width: 960px; }
-.code-block { background: #1e1e1e; border-radius: 8px; padding: 20px; overflow-x: auto; margin: 16px 0; }
-.code-block pre { margin: 0; }
-.hero-gradient { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
-.card { background: white; border-radius: 12px; border: 1px solid #e5e7eb; padding: 24px; transition: all 0.3s; }
-.card:hover { transform: translateY(-2px); box-shadow: 0 12px 24px -8px rgba(0,0,0,0.1); }
-.btn-primary { background: linear-gradient(135deg, #2563eb 0%, #4f46e5 100%); color: white; padding: 12px 24px; border-radius: 8px; font-weight: 500; transition: all 0.2s; text-decoration: none; display: inline-block; }
-.btn-primary:hover { transform: translateY(-1px); box-shadow: 0 8px 16px -4px rgba(37,99,235,0.4); }
-.btn-secondary { background: white; color: #2563eb; padding: 12px 24px; border-radius: 8px; font-weight: 500; border: 1px solid #2563eb; transition: all 0.2s; text-decoration: none; display: inline-block; }
-.btn-secondary:hover { background: #eff6ff; }
-.timeline-item { position: relative; padding-left: 24px; border-left: 2px solid #e5e7eb; margin-left: 8px; padding-bottom: 24px; }
-.timeline-dot { position: absolute; left: -7px; top: 4px; width: 12px; height: 12px; border-radius: 50%; background: #2563eb; border: 2px solid white; }
-.tree { font-family: 'JetBrains Mono', monospace; font-size: 13px; line-height: 1.8; background: #f8fafc; padding: 20px; border-radius: 8px; white-space: pre; overflow-x: auto; }
-.lab-card { background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); border-radius: 12px; padding: 24px; margin: 16px 0; border: 1px solid #bae6fd; }
-.lab-slider { width: 100%; margin: 8px 0; }
-.algorithm-card { border-left: 4px solid #2563eb; padding: 16px 20px; margin: 12px 0; background: white; border-radius: 0 8px 8px 0; transition: all 0.2s; cursor: pointer; }
-.algorithm-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.08); transform: translateX(4px); }
-.algorithm-card.llm { border-left-color: #7c3aed; }
-table { width: 100%; border-collapse: collapse; margin: 16px 0; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
-th { background: #f8fafc; padding: 12px 16px; text-align: left; font-weight: 500; color: #374151; border-bottom: 1px solid #e5e7eb; }
-td { padding: 12px 16px; border-bottom: 1px solid #f3f4f6; color: #4b5563; }
-tr:hover td { background: #f9fafb; }
-.feature-card { text-align: center; padding: 24px 16px; }
-.feature-icon { width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; margin: 0 auto 12px; font-size: 24px; }
-.layer-card { flex: 1; padding: 20px; border-radius: 10px; text-align: center; }
-#heatmapCanvas, #scalingCanvas, #ngramCanvas { border-radius: 8px; background: white; border: 1px solid #e5e7eb; width: 100%; height: 200px; }
-@media (max-width: 1024px) { .sidebar { display: none; } .content { margin-left: 0; padding: 24px 20px; } }
+.reveal { opacity: 0; transform: translateY(18px); transition: opacity .55s ease, transform .55s ease; }
+.reveal.revealed { opacity: 1; transform: none; }
+.hero-stat { display: flex; gap: 30px; justify-content: center; flex-wrap: wrap; margin-top: 34px; }
+.hero-stat div { text-align: center; }
+.hero-stat b { display: block; font-size: 1.8rem; font-weight: 800; background: linear-gradient(120deg,#3b6fe0,#7c3aed); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.hero-stat span { font-size: .84rem; color: var(--text-3); }
+.book-badge { display: inline-flex; align-items: center; gap: 6px; font-size: .78rem; background: #fff8ec; color: #a96b06; border: 1px solid #f5e3c0; padding: 3px 10px; border-radius: 20px; margin: 4px 4px 0 0; }
+.path-step { display: flex; gap: 16px; align-items: flex-start; padding: 18px 0; border-bottom: 1px dashed var(--border); }
+.path-step:last-child { border-bottom: none; }
+.path-lv { flex: 0 0 56px; height: 56px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-weight: 800; color: #fff; font-size: 1rem; }
+.demo-cell { display: inline-block; width: 30px; height: 30px; line-height: 30px; text-align: center; border-radius: 7px; margin: 2px; font-size: .8rem; font-weight: 600; }
+.attn-heat { border-collapse: collapse; }
+.attn-heat td { width: 34px; height: 30px; text-align: center; font-size: .68rem; border: 1px solid #fff; }
+.play-card { text-decoration: none; color: inherit; display: block; }
+.play-card .pc-icon { font-size: 1.9rem; margin-bottom: 10px; display: block; }
 </style>
 </head>
 <body>
-<!-- 导航栏 -->
-<nav class="nav-blur fixed top-0 left-0 right-0 z-50 h-16 px-6 flex items-center justify-between">
-  <div class="flex items-center gap-8">
-    <a href="index.html" class="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">💬 agent-nlp-llm</a>
-    <div class="hidden md:flex items-center gap-6">
-      <a href="index.html" class="text-gray-700 hover:text-blue-600 font-medium">首页</a>
-      <a href="#family" class="text-gray-700 hover:text-blue-600 font-medium">谱系</a>
-      <a href="#lab" class="text-gray-700 hover:text-blue-600 font-medium">实验室</a>
-      <a href="nlp/index.html" class="text-blue-600 font-medium">📝 NLP</a>
-      <a href="llm/index.html" class="text-purple-600 font-medium">🤖 LLM</a>
+
+<nav class="navbar">
+  <div class="nav-inner">
+    <a href="index.html" class="nav-logo">💬 agent-nlp-llm</a>
+    <button class="nav-toggle" onclick="document.querySelector('.nav-links').classList.toggle('open')" aria-label="菜单">☰</button>
+    <div class="nav-links">
+      <a href="index.html" class="nav-link active">🏠 首页</a>
+      <a href="playground.html" class="nav-link">🎨 玩法</a>
+      <a href="nlp/index.html" class="nav-link">📝 NLP</a>
+      <a href="llm/index.html" class="nav-link">🤖 LLM</a>
+      <a href="bpe.html" class="nav-link">🔤 分词器</a>
+      <a href="embedding.html" class="nav-link">🧭 词向量</a>
+      <a href="attention.html" class="nav-link">🎯 注意力</a>
+      <a href="papers.html" class="nav-link">📚 论文</a>
+      <a href="clinic.html" class="nav-link">🕵️ 诊所</a>
+      <a href="pitfalls.html" class="nav-link">💥 踩坑</a>
+      <a href="benchmark.html" class="nav-link">📊 选型</a>
+      <a href="universe.html" class="nav-link">🌌 宇宙</a>
+      <a href="https://github.com/yejinlei/agent-nlp-llm" target="_blank" rel="noopener" class="nav-gh" aria-label="GitHub">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+      </a>
     </div>
   </div>
-  <a href="https://github.com/yejinlei/agent-nlp-llm" target="_blank" class="flex items-center gap-2 text-gray-600 hover:text-gray-900">
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
-    GitHub
-  </a>
 </nav>
 
-<!-- 侧边目录 -->
-<div class="sidebar">
-  <h4 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3 px-3">导览</h4>
-  <a href="#intro" class="active">🎯 这是什么</a>
-  <a href="#layers">🧱 四层闭环</a>
+<aside class="toc">
+  <h4>导览</h4>
+  <a href="#intro" class="on">🎯 这是什么</a>
+  <a href="#four-step">🧱 四步教学法</a>
+  <a href="#path">🪜 六级学习路径</a>
   <a href="#family">🌳 全景家族树</a>
-  <a href="#reading">🧭 双轴阅读</a>
-  <a href="#lab">🧪 数学实验室</a>
-  <a href="#algorithms">📚 精选算法</a>
-  <a href="#timeline">🔗 传承脉络</a>
+  <a href="#lab">🧪 互动实验室</a>
+  <a href="#playground">🎨 创意玩法</a>
+  <a href="#heritage">🔗 传承脉络</a>
+  <a href="#books">📖 参考书地图</a>
   <a href="#start">🚀 快速开始</a>
-</div>
+</aside>
 
-<!-- 主内容 -->
-<div class="content pt-24">
+<div class="wrap page">
   <!-- Hero -->
-  <section class="text-center py-16 mb-16">
-    <h1 class="text-5xl font-bold mb-6 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">自然语言技术本体论研究站</h1>
-    <p class="text-xl text-gray-600 mb-10 max-w-2xl mx-auto">从统计语言模型到大语言模型，一条线讲透 NLP 与 LLM 的数学原理、算法演进与工程落地。</p>
-    <div class="flex flex-wrap gap-4 justify-center">
-      <a href="nlp/index.html" class="btn-primary text-lg">📝 进入 NLP 自然语言处理</a>
-      <a href="llm/index.html" class="btn-primary text-lg" style="background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);">🤖 进入 LLM 大语言模型</a>
-      <a href="#lab" class="btn-secondary text-lg">🧪 先玩数学实验室</a>
+  <section class="hero reveal">
+    <h1>自然语言技术本体论研究站</h1>
+    <p class="sub">从统计语言模型到大语言模型，一条线讲透 NLP 与 LLM 的<strong>数学原理、算法演进与工程落地</strong>。不罗列名词、不堆砌术语，只讲"为什么会这样"和"到底怎么工作"。</p>
+    <div class="btn-row">
+      <a href="nlp/index.html" class="btn btn-primary">📝 进入 NLP 自然语言处理</a>
+      <a href="llm/index.html" class="btn btn-purple">🤖 进入 LLM 大语言模型</a>
+      <a href="#lab" class="btn btn-outline">🧪 先玩互动实验室</a>
+    </div>
+    <div class="hero-stat">
+      <div><b>2</b><span>大支柱模块</span></div>
+      <div><b>30+</b><span>核心算法档案</span></div>
+      <div><b>10</b><span>创意互动玩法</span></div>
+      <div><b>70年</b><span>技术演进脉络</span></div>
     </div>
   </section>
 
   <!-- 这是什么 -->
-  <section id="intro" class="mb-20">
-    <h2 class="text-3xl font-bold mb-8">🎯 这是什么</h2>
-    <p class="text-lg text-gray-700 mb-8">这不是又一个"大模型入门教程"。我们从 1950 年代图灵测试开始，沿着自然语言处理 70 年发展脉络，把每一个核心算法的数学原理、代码实现、工程坑点都讲透。不罗列名词、不堆砌术语，只讲"为什么会这样"和"到底怎么工作"。</p>
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-      <div class="card feature-card">
-        <div class="feature-icon bg-blue-100 text-blue-600">📐</div>
-        <h4 class="font-semibold mb-2">有体系</h4>
-        <p class="text-sm text-gray-600">按技术发展时间线组织，不是零散知识点堆砌</p>
+  <section id="intro" class="blk reveal">
+    <h2 class="blk-title"><span class="num">01</span>🎯 这是什么</h2>
+    <p class="blk-desc">这不是又一个"大模型入门教程"。我们从 1950 年代图灵测试开始，沿着自然语言处理 70 年发展脉络，把每一个核心算法的数学原理、代码实现、工程坑点都讲透。核心理念只有一句话：<strong>把黑箱拆成看得见的零件</strong>。</p>
+    <div class="grid g4">
+      <div class="card">
+        <div style="font-size:1.7rem">🧱</div>
+        <h4 style="margin:8px 0 6px">四步教学法</h4>
+        <p style="font-size:.9rem;color:var(--text-2)">每个算法都按「直觉 → 数学 → 代码 → 实战」四步讲，不跳步</p>
       </div>
-      <div class="card feature-card">
-        <div class="feature-icon bg-purple-100 text-purple-600">🧮</div>
-        <h4 class="font-semibold mb-2">看得懂公式</h4>
-        <p class="text-sm text-gray-600">每个公式都有直观解释，不是只扔一堆数学符号</p>
+      <div class="card">
+        <div style="font-size:1.7rem">🎨</div>
+        <h4 style="margin:8px 0 6px">可玩可动手</h4>
+        <p style="font-size:.9rem;color:var(--text-2)">BPE 分词、注意力热力图、词向量类比……拖一拖就懂</p>
       </div>
-      <div class="card feature-card">
-        <div class="feature-icon bg-green-100 text-green-600">⚙️</div>
-        <h4 class="font-semibold mb-2">跑得了代码</h4>
-        <p class="text-sm text-gray-600">核心算法都有从零实现的可运行代码，不是伪代码</p>
+      <div class="card">
+        <div style="font-size:1.7rem">🐍</div>
+        <h4 style="margin:8px 0 6px">从零写代码</h4>
+        <p style="font-size:.9rem;color:var(--text-2)">核心算法都有不依赖高层 API 的从零实现，能跑起来</p>
       </div>
-      <div class="card feature-card">
-        <div class="feature-icon bg-orange-100 text-orange-600">🧠</div>
-        <h4 class="font-semibold mb-2">知其所以然</h4>
-        <p class="text-sm text-gray-600">讲清楚每个技术解决了什么问题、为什么有效</p>
+      <div class="card">
+        <div style="font-size:1.7rem">🔗</div>
+        <h4 style="margin:8px 0 6px">连得起来</h4>
+        <p style="font-size:.9rem;color:var(--text-2)">讲清楚每个技术解决了前一代什么问题，为什么被替代</p>
       </div>
     </div>
   </section>
 
-  <!-- 四层闭环 -->
-  <section id="layers" class="mb-20">
-    <h2 class="text-3xl font-bold mb-8">🧱 四层闭环学习</h2>
-    <p class="text-gray-600 mb-8">每一个算法我们都按这四层拆解，学完不仅知道是什么，还能懂原理、写代码、做项目。</p>
-    <div class="flex flex-col md:flex-row gap-4">
-      <div class="layer-card bg-blue-50 border border-blue-200">
-        <div class="text-3xl mb-2">①</div>
-        <h4 class="font-bold text-blue-800 mb-2">概念层</h4>
-        <p class="text-sm text-blue-700">解决什么问题？核心直觉是什么？和其他方法比有什么优势？</p>
+  <!-- 四步教学法 -->
+  <section id="four-step" class="blk reveal">
+    <h2 class="blk-title"><span class="num">02</span>🧱 四步教学法：每个算法都这么讲</h2>
+    <p class="blk-desc">为什么很多教程看完还是不会？因为它只给你第二步（数学）或者第三步（代码），却跳过了最关键的"为什么要这么干"。我们把四步都补齐，而且每一步都配一个"人话翻译"。</p>
+    <div class="grid g4">
+      <div class="card step-card s1">
+        <div class="step-no">①</div>
+        <h4 style="margin-bottom:8px">直觉</h4>
+        <p style="font-size:.9rem;color:var(--text-2)">它解决什么问题？用生活类比先建立画面感。比如 Self-Attention 就是"开会时每个人同时听所有人说话，再决定该重点听谁"。</p>
       </div>
-      <div class="layer-card bg-purple-50 border border-purple-200">
-        <div class="text-3xl mb-2">②</div>
-        <h4 class="font-bold text-purple-800 mb-2">数学层</h4>
-        <p class="text-sm text-purple-700">公式长什么样？每个变量什么意思？推导的核心步骤是什么？</p>
+      <div class="card step-card s2">
+        <div class="step-no">②</div>
+        <h4 style="margin-bottom:8px">数学</h4>
+        <p style="font-size:.9rem;color:var(--text-2)">公式长什么样？每个符号什么意思？推导的关键转折点在哪？不求严密证明，但求看懂每一步在干嘛。</p>
       </div>
-      <div class="layer-card bg-green-50 border border-green-200">
-        <div class="text-3xl mb-2">③</div>
-        <h4 class="font-bold text-green-800 mb-2">算法层</h4>
-        <p class="text-sm text-green-700">从零写代码实现核心逻辑，不依赖高层API封装</p>
+      <div class="card step-card s3">
+        <div class="step-no">③</div>
+        <h4 style="margin-bottom:8px">代码</h4>
+        <p style="font-size:.9rem;color:var(--text-2)">用最少行数的 Python / PyTorch 从零实现核心逻辑，对照公式逐行标注，让你看见数学怎么变成代码。</p>
       </div>
-      <div class="layer-card bg-orange-50 border border-orange-200">
-        <div class="text-3xl mb-2">④</div>
-        <h4 class="font-bold text-orange-800 mb-2">工程层</h4>
-        <p class="text-sm text-orange-700">真实场景怎么用？有哪些坑？工业界优化技巧是什么？</p>
+      <div class="card step-card s4">
+        <div class="step-no">④</div>
+        <h4 style="margin-bottom:8px">实战</h4>
+        <p style="font-size:.9rem;color:var(--text-2)">工业界到底怎么用？有哪些坑？性能、显存、并发、成本怎么权衡？这一步决定了你能不能真正用起来。</p>
+      </div>
+    </div>
+    <div class="insight"><b>怎么用这套方法？</b> 学新算法时，先只读①的直觉，能用自己的话复述再往下；读②时拿纸笔推一遍；③一定要亲手敲一遍（别复制粘贴）；④看完立刻想"我手上哪个任务能用它"。四步走完，才算真学会。</div>
+  </section>
+
+  <!-- 六级学习路径 -->
+  <section id="path" class="blk reveal">
+    <h2 class="blk-title"><span class="num">03</span>🪜 六级学习路径：从零到能上手</h2>
+    <p class="blk-desc">不知道该从哪学起？按这条路径走，每级都有明确的"学完了能干什么"，避免在无关细节上迷路。</p>
+    <div class="card">
+      <div class="path-step">
+        <div class="path-lv" style="background:linear-gradient(135deg,#3b6fe0,#5c8bf0)">L1</div>
+        <div>
+          <h4>文本预处理与表示</h4>
+          <p style="font-size:.92rem;color:var(--text-2)">分词、去停用词、归一化、N-gram、TF-IDF、共现矩阵。学完能：把任意原始文本变成模型能吃的数字。</p>
+          <span class="tag tag-blue">分词</span><span class="tag tag-blue">词袋</span><span class="tag tag-blue">TF-IDF</span>
+        </div>
+      </div>
+      <div class="path-step">
+        <div class="path-lv" style="background:linear-gradient(135deg,#5c5ce0,#7c3aed)">L2</div>
+        <div>
+          <h4>词向量与分布式表示</h4>
+          <p style="font-size:.92rem;color:var(--text-2)">Word2Vec（CBOW / skip-gram）、负采样、GloVe。学完能：理解"词义由上下文决定"，把词映射到有语义的向量空间。</p>
+          <span class="tag tag-purple">Word2Vec</span><span class="tag tag-purple">负采样</span><span class="tag tag-purple">GloVe</span>
+        </div>
+      </div>
+      <div class="path-step">
+        <div class="path-lv" style="background:linear-gradient(135deg,#7c3aed,#a855f7)">L3</div>
+        <div>
+          <h4>序列建模与注意力</h4>
+          <p style="font-size:.92rem;color:var(--text-2)">RNN → LSTM / GRU → Seq2Seq → Attention → Transformer。学完能：理解为啥顺序处理会被并行处理取代。</p>
+          <span class="tag tag-purple">RNN</span><span class="tag tag-purple">LSTM</span><span class="tag tag-purple">Transformer</span>
+        </div>
+      </div>
+      <div class="path-step">
+        <div class="path-lv" style="background:linear-gradient(135deg,#10a37f,#34d399)">L4</div>
+        <div>
+          <h4>预训练与微调范式</h4>
+          <p style="font-size:.92rem;color:var(--text-2)">BERT 双向编码、GPT 自回归、Scaling Law、预训练+SFT+对齐三段式。学完能：说清大模型是怎么"炼"出来的。</p>
+          <span class="tag tag-green">BERT</span><span class="tag tag-green">GPT</span><span class="tag tag-green">Scaling Law</span>
+        </div>
+      </div>
+      <div class="path-step">
+        <div class="path-lv" style="background:linear-gradient(135deg,#f59e0b,#fbbf24)">L5</div>
+        <div>
+          <h4>高效微调与对齐</h4>
+          <p style="font-size:.92rem;color:var(--text-2)">LoRA / QLoRA、指令微调、RLHF / DPO。学完能：用一张消费级显卡微调出能用的领域模型。</p>
+          <span class="tag tag-orange">LoRA</span><span class="tag tag-orange">RLHF</span><span class="tag tag-orange">DPO</span>
+        </div>
+      </div>
+      <div class="path-step">
+        <div class="path-lv" style="background:linear-gradient(135deg,#ec4899,#f472b6)">L6</div>
+        <div>
+          <h4>应用落地与工程优化</h4>
+          <p style="font-size:.92rem;color:var(--text-2)">Prompt 工程、RAG、Agent、量化部署、推理加速。学完能：把模型变成真正能上线、扛得住成本的产品。</p>
+          <span class="tag" style="background:#fdeef5;color:#c2185b">RAG</span><span class="tag" style="background:#fdeef5;color:#c2185b">Agent</span><span class="tag" style="background:#fdeef5;color:#c2185b">量化</span>
+        </div>
       </div>
     </div>
   </section>
 
   <!-- 全景家族树 -->
-  <section id="family" class="mb-20">
-    <h2 class="text-3xl font-bold mb-8">🌳 全景技术家族树</h2>
-    <div class="tree">
+  <section id="family" class="blk reveal">
+    <h2 class="blk-title"><span class="num">04</span>🌳 全景技术家族树</h2>
+    <p class="blk-desc">看清全貌才不会迷路。这棵树从上到下就是技术演进的方向：从人工规则，到统计学习，再到神经网络，最后到大模型。</p>
+    <div class="card" style="overflow-x:auto">
+<pre class="code" style="background:#0f1424;color:#dfe6f5;font-size:.83rem;line-height:1.85">
 💬 自然语言处理技术谱系
-├─ 📝 传统 NLP 时代 (1950-2017)
-│  ├─ 规则方法 (1950s-1980s)
-│  │  ├─ 有限状态机、句法分析树
-│  │  └─ 专家系统、模板匹配
-│  ├─ 统计方法 (1990s-2010)
-│  │  ├─ N-gram 语言模型
-│  │  ├─ HMM 隐马尔可夫
-│  │  ├─ CRF 条件随机场
-│  │  └─ Viterbi 解码算法
-│  ├─ 词表示演进
-│  │  ├─ One-Hot / TF-IDF
-│  │  ├─ Word2Vec (2013) / GloVe
-│  │  └─ ELMo 上下文词向量 (2018)
-│  └─ 神经网络方法 (2013-2017)
-│     ├─ RNN / LSTM / GRU
-│     ├─ Seq2Seq + Attention (2014)
-│     └─ Transformer (2017) ✨ 大模型基石
+├─ 📝 传统 NLP 时代 (1950–2017)
+│  ├─ 规则方法 (1950s–1980s)      有限状态机 · 句法分析树 · 专家系统 · 模板匹配
+│  ├─ 统计方法 (1990s–2010)       N-gram 语言模型 · HMM · CRF · Viterbi 解码
+│  ├─ 词表示演进                   One-Hot → TF-IDF → <span class="f">Word2Vec(2013)</span> / GloVe → ELMo(2018)
+│  └─ 神经网络方法 (2013–2017)     RNN / LSTM / GRU · Seq2Seq+Attention(2014)
+│                                  └─ <span class="f">Transformer(2017)</span> ✨ 大模型基石
 │
-└─ 🤖 大语言模型时代 (2018-至今)
-   ├─ 预训练范式
-   │  ├─ BERT 双向编码器 (2018)
-   │  └─ GPT 自回归解码器路线
-   ├─ 规模定律 Scaling Law (2020)
-   │  └─ 能力涌现
-   ├─ 对齐技术
-   │  ├─ SFT 监督微调
-   │  ├─ RLHF 人类反馈强化学习
-   │  └─ DPO 直接偏好优化 (2023)
-   ├─ 高效微调
-   │  └─ LoRA / QLoRA (2021)
-   ├─ 应用技术
-   │  ├─ Prompt Engineering
-   │  ├─ RAG 检索增强生成 (2020)
-   │  └─ Agent 智能体 (2022-)
-   └─ 部署优化
-      ├─ 量化 (GPTQ/AWQ/llama.cpp)
-      ├─ 推理加速 (vLLM/TensorRT-LLM)
-      └─ 端侧部署
+└─ 🤖 大语言模型时代 (2018–至今)
+   ├─ 预训练范式         <span class="f">BERT</span> 双向编码器(2018) │ <span class="f">GPT</span> 自回归解码器路线
+   ├─ 规模定律           Scaling Law · Chinchilla 最优配比
+   ├─ 架构演进           Decoder-only · MoE 混合专家 · GQA/MQA · 长上下文
+   ├─ 训练三段式         预训练 Pre-train → SFT 监督微调 → RLHF/DPO 对齐
+   ├─ 高效微调           LoRA · QLoRA · Prefix-Tuning · Adapter
+   └─ 应用层             Prompt 工程 · RAG 检索增强 · Agent 智能体 · 多模态
+</pre>
     </div>
   </section>
 
-  <!-- 双轴阅读 -->
-  <section id="reading" class="mb-20">
-    <h2 class="text-3xl font-bold mb-8">🧭 双轴阅读方式</h2>
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-      <div class="card">
-        <h3 class="text-xl font-bold mb-4 text-blue-600">📈 纵轴：6 级学习路径</h3>
-        <ol class="space-y-3 text-gray-700">
-          <li><strong>Level 1</strong>：文本基础与预处理</li>
-          <li><strong>Level 2</strong>：统计语言模型与传统方法</li>
-          <li><strong>Level 3</strong>：词向量与循环神经网络</li>
-          <li><strong>Level 4</strong>：注意力机制与Transformer</li>
-          <li><strong>Level 5</strong>：预训练模型与BERT/GPT</li>
-          <li><strong>Level 6</strong>：大模型训练、微调、RAG、Agent</li>
-        </ol>
-        <p class="text-sm text-gray-500 mt-4">适合零基础循序渐进学习，从底层到上层。</p>
+  <!-- 互动实验室 -->
+  <section id="lab" class="blk reveal">
+    <h2 class="blk-title"><span class="num">05</span>🧪 互动实验室：拖一拖就懂</h2>
+    <p class="blk-desc">下面三个 Demo 可以直接玩。每个都配了"这意味着什么"的提示——玩完别忘了看提示，那才是知识点。</p>
+
+    <!-- Demo 1: N-gram 窗口 -->
+    <div class="demo-box">
+      <h4>Demo 1 · N-gram 滑动窗口：语言模型怎么"看上下文"</h4>
+      <p style="font-size:.9rem;color:var(--text-2);margin:8px 0">语言模型预测下一个词，靠的是前面几个词。滑动窗口大小 n 决定它能"看到"多长的历史。拖动滑块看看。</p>
+      <div class="ctrl">
+        <label>窗口大小 n = <span id="ngramN" style="font-family:var(--mono)">2</span>
+          <input type="range" id="ngramRange" min="1" max="4" value="2">
+        </label>
       </div>
-      <div class="card">
-        <h3 class="text-xl font-bold mb-4 text-purple-600">↔️ 横轴：进入双子站</h3>
-        <div class="space-y-4">
-          <a href="nlp/index.html" class="block p-4 bg-blue-50 rounded-lg border border-blue-200 hover:bg-blue-100 transition">
-            <div class="font-bold text-blue-800 text-lg">📝 NLP 自然语言处理</div>
-            <div class="text-sm text-blue-700 mt-1">从分词、词向量到Transformer，覆盖传统NLP全栈技术</div>
-          </a>
-          <a href="llm/index.html" class="block p-4 bg-purple-50 rounded-lg border border-purple-200 hover:bg-purple-100 transition">
-            <div class="font-bold text-purple-800 text-lg">🤖 LLM 大语言模型</div>
-            <div class="text-sm text-purple-700 mt-1">从Scaling Law到微调、RAG、Agent，覆盖大模型全链路</div>
-          </a>
+      <div id="ngramOut" style="font-family:var(--mono);font-size:1rem;margin:12px 0;letter-spacing:1px"></div>
+      <div class="hint" id="ngramHint"></div>
+    </div>
+
+    <!-- Demo 2: Self-Attention 热力图 -->
+    <div class="demo-box">
+      <h4>Demo 2 · Self-Attention 热力图：每个词该看谁</h4>
+      <p style="font-size:.9rem;color:var(--text-2);margin:8px 0">以句子「小猫 追 老鼠 因为 它 饿 了」为例。点击某个词，看它把注意力分给了哪些词（颜色越深关注越多）。</p>
+      <div style="display:flex;gap:24px;flex-wrap:wrap;align-items:flex-start">
+        <div>
+          <div id="attnTokens" style="margin-bottom:10px"></div>
+          <div id="attnMatrix"></div>
         </div>
-        <p class="text-sm text-gray-500 mt-4">想专门深入某一个方向，可以直接进入对应子站。</p>
+        <div style="flex:1;min-width:240px">
+          <div class="hint" id="attnHint">👆 点击上方任意词，查看它对其他词的注意力分布。</div>
+        </div>
       </div>
+    </div>
+
+    <!-- Demo 3: 词向量类比 -->
+    <div class="demo-box">
+      <h4>Demo 3 · 词向量类比：国王 − 男人 + 女人 = ？</h4>
+      <p style="font-size:.9rem;color:var(--text-2);margin:8px 0">词向量的神奇之处：语义关系可以像算术一样运算。下面用二维示意（真实维度通常 300–4096 维）。</p>
+      <div class="ctrl">
+        <select id="vecA">
+          <option>国王</option><option>男人</option><option>北京</option><option>猫</option>
+        </select>
+        <span style="font-weight:700">−</span>
+        <select id="vecB">
+          <option>男人</option><option>国王</option><option>中国</option><option>小狗</option>
+        </select>
+        <span style="font-weight:700">+</span>
+        <select id="vecC">
+          <option>女人</option><option>女人</option><option>法国</option><option>老虎</option>
+        </select>
+        <button class="btn btn-primary" id="vecGo">计算 ≈ ?</button>
+      </div>
+      <div class="hint good" id="vecOut">点击"计算"看看结果。</div>
     </div>
   </section>
 
-  <!-- 数学互动实验室 -->
-  <section id="lab" class="mb-20">
-    <h2 class="text-3xl font-bold mb-8">🧪 数学概念互动实验室</h2>
-    <p class="text-gray-600 mb-8">拖动滑块、输入文字，直观理解核心数学原理，不用死记硬背公式。</p>
-
-    <div class="lab-card">
-      <h3 class="text-xl font-bold mb-4 text-blue-700">🔤 N-gram 语言模型 · 直觉演示</h3>
-      <p class="text-sm text-gray-600 mb-4">N-gram的核心思想：一个词出现的概率只和它前面的N-1个词有关。拖动N看模型效果变化。</p>
-      <div class="mb-4">
-        <label class="block text-sm font-medium mb-2">N值选择: <span id="ngramNValue">2</span>-gram</label>
-        <input type="range" class="lab-slider" id="ngramN" min="1" max="4" value="2">
-      </div>
-      <canvas id="ngramCanvas"></canvas>
-      <p class="text-xs text-gray-500 mt-2">N越大，依赖的上下文越长，模型越"聪明"，但数据稀疏问题也越严重。</p>
-    </div>
-
-    <div class="lab-card" style="background: linear-gradient(135deg, #faf5ff 0%, #f3e8ff 100%); border-color: #d8b4fe;">
-      <h3 class="text-xl font-bold mb-4 text-purple-700">🎯 Self-Attention 热力图 · 权重可视化</h3>
-      <p class="text-sm text-gray-600 mb-4">输入一句话，看自注意力机制如何计算每个词对其他词的关注程度。</p>
-      <div class="flex gap-2 mb-4">
-        <input type="text" id="attentionText" value="我 爱 自然 语言 处理" class="flex-1 px-3 py-2 border border-gray-300 rounded-lg">
-        <button onclick="drawAttention()" class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700">运行</button>
-      </div>
-      <canvas id="heatmapCanvas"></canvas>
-      <p class="text-xs text-gray-500 mt-2">颜色越亮表示两个词之间的注意力权重越高。</p>
-    </div>
-
-    <div class="lab-card" style="background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); border-color: #86efac;">
-      <h3 class="text-xl font-bold mb-4 text-green-700">📈 Scaling Law · 缩放定律</h3>
-      <p class="text-sm text-gray-600 mb-4">大模型性能和参数量、数据量、计算量呈幂律关系。拖动参数量看Loss变化。</p>
-      <div class="mb-4">
-        <label class="block text-sm font-medium mb-2">参数量: <span id="paramValue">7</span>B</label>
-        <input type="range" class="lab-slider" id="paramSlider" min="0" max="5" value="2" step="0.1">
-      </div>
-      <canvas id="scalingCanvas"></canvas>
-      <p class="text-xs text-gray-500 mt-2">随着参数量指数增长，Loss平滑下降。当规模超过临界点时，会出现能力涌现。</p>
-    </div>
-  </section>
-
-  <!-- 精选算法档案 -->
-  <section id="algorithms" class="mb-20">
-    <h2 class="text-3xl font-bold mb-8">📚 精选算法档案</h2>
-
-    <h3 class="text-xl font-bold mb-4 text-blue-600">📝 NLP 核心算法</h3>
-    <div class="space-y-3 mb-8">
-      <a href="nlp/index.html#ngram" class="algorithm-card block">
-        <h4 class="font-bold text-lg">🔤 N-gram 语言模型 1990s</h4>
-        <p class="text-gray-600 text-sm">统计语言模型基石，基于马尔可夫假设，用前面N-1个词预测下一个词。简单高效，统治工业界数十年。</p>
-      </a>
-      <a href="nlp/index.html#hmm" class="algorithm-card block">
-        <h4 class="font-bold text-lg">🔗 HMM 隐马尔可夫 1980s</h4>
-        <p class="text-gray-600 text-sm">序列标注经典模型，隐含状态序列生成观测序列，配合Viterbi解码解决分词、词性标注、命名实体识别。</p>
-      </a>
-      <a href="nlp/index.html#word2vec" class="algorithm-card block">
-        <h4 class="font-bold text-lg">📊 Word2Vec 词向量 2013</h4>
-        <p class="text-gray-600 text-sm">词表示革命，用Skip-gram/CBOW把词映射到低维稠密向量，让词之间有了"语义距离"。</p>
-      </a>
-      <a href="nlp/index.html#attention" class="algorithm-card block">
-        <h4 class="font-bold text-lg">🎯 Self-Attention 自注意力 2017</h4>
-        <p class="text-gray-600 text-sm">Transformer核心，Q/K/V机制让模型并行关注序列中所有位置，彻底解决RNN长距离依赖问题。</p>
-      </a>
-    </div>
-
-    <h3 class="text-xl font-bold mb-4 text-purple-600">🤖 LLM 核心算法</h3>
-    <div class="space-y-3">
-      <a href="llm/index.html#transformer" class="algorithm-card llm block">
-        <h4 class="font-bold text-lg">🧱 Transformer Decoder 2018</h4>
-        <p class="text-gray-600 text-sm">GPT系列基础架构，因果自回归注意力+位置编码，逐词生成文本，所有现代大模型都是Decoder。</p>
-      </a>
-      <a href="llm/index.html#scaling" class="algorithm-card llm block">
-        <h4 class="font-bold text-lg">📏 Scaling Law 缩放定律 2020</h4>
-        <p class="text-gray-600 text-sm">OpenAI发现模型性能和参数量、数据量、计算量呈幂律关系，只要堆算力就能持续提升性能，这是大模型时代的理论基础。</p>
-      </a>
-      <a href="llm/index.html#lora" class="algorithm-card llm block">
-        <h4 class="font-bold text-lg">⚡ LoRA 低秩适应 2021</h4>
-        <p class="text-gray-600 text-sm">参数高效微调开山之作，冻结原模型只训练低秩矩阵，显存需求降低1000倍，让平民也能微调大模型。</p>
-      </a>
-      <a href="llm/index.html#rlhf" class="algorithm-card llm block">
-        <h4 class="font-bold text-lg">🎯 RLHF 人类反馈强化学习 2022</h4>
-        <p class="text-gray-600 text-sm">ChatGPT背后的对齐技术，用人类偏好训练奖励模型，再用PPO优化大模型，让输出符合人类价值观。</p>
-      </a>
+  <!-- 创意玩法入口 -->
+  <section id="playground" class="blk reveal">
+    <h2 class="blk-title"><span class="num">06</span>🎨 创意玩法：把学习变成好玩的事</h2>
+    <p class="blk-desc">每个玩法都是一个独立可交互页面，点进去就能玩。从动手里长出来的理解，比死记硬背牢十倍。</p>
+    <div class="grid g3">
+      <a class="card play-card" href="bpe.html"><span class="pc-icon">🔤</span><h4>BPE 分词器逐步骤</h4><p style="font-size:.88rem;color:var(--text-2)">一步步看 BPE 怎么把字符合并成子词，理解大模型分词原理</p></a>
+      <a class="card play-card" href="embedding.html"><span class="pc-icon">🧭</span><h4>词向量类比游戏</h4><p style="font-size:.88rem;color:var(--text-2)">国王−男人+女人=？亲手算一算语义空间里的向量运算</p></a>
+      <a class="card play-card" href="attention.html"><span class="pc-icon">🎯</span><h4>注意力可视化沙盒</h4><p style="font-size:.88rem;color:var(--text-2)">换句子、调参数，实时看注意力权重怎么分布</p></a>
+      <a class="card play-card" href="clinic.html"><span class="pc-icon">🕵️</span><h4>大模型错误诊断诊所</h4><p style="font-size:.88rem;color:var(--text-2)">给你"病人病例"，你当医生诊断是数据问题还是模型问题</p></a>
+      <a class="card play-card" href="pitfalls.html"><span class="pc-icon">💥</span><h4>Prompt 踩坑博物馆</h4><p style="font-size:.88rem;color:var(--text-2)">收集真实翻车案例，看别人的坑长什么样，避免重蹈覆辙</p></a>
+      <a class="card play-card" href="benchmark.html"><span class="pc-icon">📊</span><h4>模型选型决策树</h4><p style="font-size:.88rem;color:var(--text-2)">按预算、场景、性能需求，一步步帮你选出合适的模型</p></a>
+      <a class="card play-card" href="universe.html"><span class="pc-icon">🌌</span><h4>技术宇宙时间轴</h4><p style="font-size:.88rem;color:var(--text-2)">70 年 NLP/LLM 里程碑，可视化拖动的技术宇宙</p></a>
+      <a class="card play-card" href="papers.html"><span class="pc-icon">📚</span><h4>10 篇必读论文精读</h4><p style="font-size:.88rem;color:var(--text-2)">每篇论文一页图解，讲清贡献、方法和影响</p></a>
+      <a class="card play-card" href="nlp/index.html"><span class="pc-icon">📝</span><h4>NLP 算法档案库</h4><p style="font-size:.88rem;color:var(--text-2)">从分词到 BERT，传统 NLP 核心算法系统整理</p></a>
+      <a class="card play-card" href="llm/index.html"><span class="pc-icon">🤖</span><h4>LLM 全流程手册</h4><p style="font-size:.88rem;color:var(--text-2)">预训练→微调→对齐→部署，大模型完整生命周期</p></a>
     </div>
   </section>
 
   <!-- 传承脉络 -->
-  <section id="timeline" class="mb-20">
-    <h2 class="text-3xl font-bold mb-8">🔗 传统 → 深度学习传承脉络</h2>
-    <div class="pl-4">
-      <div class="timeline-item">
-        <div class="timeline-dot"></div>
-        <div class="font-bold">1950 · 图灵测试</div>
-        <div class="text-gray-600 text-sm">Alan Turing提出"机器能思考吗"，开启人工智能与自然语言处理研究序幕。</div>
+  <section id="heritage" class="blk reveal">
+    <h2 class="blk-title"><span class="num">07</span>🔗 传承脉络：每个技术解决什么问题</h2>
+    <p class="blk-desc">没有无缘无故的新技术。每个新方法都是为了补前一个的短板，这条因果链理解了，技术史就活了。</p>
+    <div class="card" style="overflow-x:auto">
+<table class="tb">
+<thead><tr><th>时代</th><th>方法</th><th>解决的问题</th><th>留下的新问题</th></tr></thead>
+<tbody>
+<tr><td>1950s</td><td>规则 / 专家系统</td><td>把语法规则编码进机器</td><td>规则写不完，换领域就崩</td></tr>
+<tr><td>1990s</td><td>N-gram 统计模型</td><td>用数据自动学词序列概率</td><td>数据稀疏，n 一大就爆炸</td></tr>
+<tr><td>2003</td><td>神经网络语言模型</td><td>用连续向量缓解稀疏</td><td>训练慢，长依赖还是弱</td></tr>
+<tr><td>2013</td><td>Word2Vec</td><td>词变成有语义的稠密向量</td><td>一词一向量，上下文无感</td></tr>
+<tr><td>2014</td><td>Seq2Seq + Attention</td><td>解决变长序列到序列映射</td><td>RNN 顺序计算，没法并行</td></tr>
+<tr><td>2017</td><td>Transformer</td><td>纯注意力 + 全并行训练</td><td>算力需求爆炸式增长</td></tr>
+<tr><td>2018</td><td>BERT / GPT</td><td>预训练 + 微调，通用能力</td><td>模型巨大，微调成本高</td></tr>
+<tr><td>2021+</td><td>LoRA / RLHF / RAG</td><td>低成本微调、对齐人类偏好、接入知识</td><td>幻觉、成本、安全仍在博弈</td></tr>
+</tbody>
+</table>
+    </div>
+  </section>
+
+  <!-- 参考书地图 -->
+  <section id="books" class="blk reveal">
+    <h2 class="blk-title"><span class="num">08</span>📖 参考书地图：本站在两本书上的坐标系</h2>
+    <p class="blk-desc">本站的内容体系参考了两本经典著作的知识骨架，你可以把它当成这两本书的"可视化导航"。</p>
+    <div class="grid g2">
+      <div class="card">
+        <h4>📕 《从零构建大语言模型》</h4>
+        <p style="font-size:.9rem;color:var(--text-2);margin:8px 0">Sebastian Raschka 著（Manning 原版）。从零实现一个类 GPT 模型，覆盖 LLM 全生命周期。</p>
+        <span class="book-badge">第1章 Transformer 概览</span>
+        <span class="book-badge">第2章 文本处理与词元化</span>
+        <span class="book-badge">第3章 注意力机制</span>
+        <span class="book-badge">第4章 GPT 模型实现</span>
+        <span class="book-badge">第5章 预训练</span>
+        <span class="book-badge">第6章 分类微调</span>
+        <span class="book-badge">第7章 指令微调</span>
+        <p style="font-size:.86rem;color:var(--text-3);margin-top:10px">→ 对应本站 <a href="llm/index.html">LLM 模块</a> 与 <a href="bpe.html">BPE 分词器</a>、<a href="attention.html">注意力沙盒</a></p>
       </div>
-      <div class="timeline-item">
-        <div class="timeline-dot"></div>
-        <div class="font-bold">1970s · 规则与专家系统</div>
-        <div class="text-gray-600 text-sm">基于人工编写规则的对话系统ELIZA诞生，是第一个聊天机器人。</div>
-      </div>
-      <div class="timeline-item">
-        <div class="timeline-dot"></div>
-        <div class="font-bold">1990s · 统计方法崛起</div>
-        <div class="text-gray-600 text-sm">IBM基于统计方法的机器翻译系统击败规则系统，NLP进入统计时代。N-gram、HMM、CRF成为主流。</div>
-      </div>
-      <div class="timeline-item">
-        <div class="timeline-dot"></div>
-        <div class="font-bold">2013 · Word2Vec</div>
-        <div class="text-gray-600 text-sm">Tomas Mikolov提出Word2Vec，词向量技术让NLP进入深度学习时代，词的分布式表示成为标准。</div>
-      </div>
-      <div class="timeline-item">
-        <div class="timeline-dot"></div>
-        <div class="font-bold">2017 · Transformer</div>
-        <div class="text-gray-600 text-sm">Google发表《Attention Is All You Need》，自注意力机制彻底改变了NLP，成为大模型的基石。</div>
-      </div>
-      <div class="timeline-item">
-        <div class="timeline-dot"></div>
-        <div class="font-bold">2018-2019 · BERT & GPT-2</div>
-        <div class="text-gray-600 text-sm">预训练范式确立，BERT双向编码器横扫NLP榜单，GPT-2证明大模型零样本生成能力。</div>
-      </div>
-      <div class="timeline-item">
-        <div class="timeline-dot"></div>
-        <div class="font-bold">2022 · ChatGPT</div>
-        <div class="text-gray-600 text-sm">OpenAI发布ChatGPT，RLHF对齐技术让大模型真正可用，引爆全球AI革命。</div>
-      </div>
-      <div class="timeline-item">
-        <div class="timeline-dot"></div>
-        <div class="font-bold">2023至今 · 开源大模型爆发</div>
-        <div class="text-gray-600 text-sm">LLaMA、Qwen、DeepSeek等开源模型快速追赶闭源，LoRA、RAG、Agent技术蓬勃发展，大模型进入千家万户。</div>
+      <div class="card">
+        <h4>📗 《深度学习入门 2：自制框架》</h4>
+        <p style="font-size:.9rem;color:var(--text-2);margin:8px 0">斋藤康毅 著。从零实现自动微分框架，讲透 NLP 底层原理。</p>
+        <span class="book-badge">第1章 神经网络复习</span>
+        <span class="book-badge">第2章 单词分布式表示</span>
+        <span class="book-badge">第3章 word2vec CBOW</span>
+        <span class="book-badge">第4章 负采样高速化</span>
+        <span class="book-badge">第5章 RNN 语言模型</span>
+        <span class="book-badge">第6章 Gated RNN / LSTM</span>
+        <span class="book-badge">第7章 注意力机制</span>
+        <p style="font-size:.86rem;color:var(--text-3);margin-top:10px">→ 对应本站 <a href="nlp/index.html">NLP 模块</a> 与 <a href="embedding.html">词向量游戏</a></p>
       </div>
     </div>
   </section>
 
   <!-- 快速开始 -->
-  <section id="start" class="mb-16">
-    <h2 class="text-3xl font-bold mb-8">🚀 5 分钟快速开始</h2>
-    <div class="flex flex-wrap gap-4 mb-8">
-      <button onclick="showCode('nlp')" class="px-6 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700">📝 NLP：BERT 中文情感分析</button>
-      <button onclick="showCode('llm')" class="px-6 py-3 bg-purple-600 text-white rounded-lg font-medium hover:bg-purple-700">🤖 LLM：Ollama 本地运行大模型</button>
-      <button onclick="showCode('path')" class="px-6 py-3 bg-gray-600 text-white rounded-lg font-medium hover:bg-gray-700">📚 推荐学习顺序</button>
+  <section id="start" class="blk reveal">
+    <h2 class="blk-title"><span class="num">09</span>🚀 快速开始</h2>
+    <p class="blk-desc">想动手写代码？把下面这段复制到终端，就能搭好本站示例所需的环境（Python 3.9+）。</p>
+    <div class="btn-row" style="justify-content:flex-start;margin-bottom:18px">
+      <a href="nlp/index.html" class="btn btn-primary">📝 我是 NLP 新手，先看 NLP</a>
+      <a href="llm/index.html" class="btn btn-purple">🤖 我要直接学大模型</a>
+      <a href="playground.html" class="btn btn-outline">🎨 先随便玩玩</a>
     </div>
+<pre class="code"><span class="c"># 1) 建虚拟环境（推荐）</span>
+python -m venv .venv &amp;&amp; source .venv/bin/activate   <span class="c"># Windows: .venv\Scripts\activate</span>
 
-    <div id="codeNlp" class="code-block">
-<pre><code class="language-python"># 5行代码运行中文情感分析
-from transformers import pipeline
-classifier = pipeline("sentiment-analysis", 
-                      model="uer/roberta-base-finetuned-dianping-chinese")
-result = classifier("这个电影真的太好看了，强烈推荐！")
-print(result)  # [{'label': 'positive', 'score': 0.9998}]</code></pre>
-    </div>
+<span class="c"># 2) 安装核心依赖</span>
+pip install torch numpy matplotlib jieba gensim transformers datasets
 
-    <div id="codeLlm" class="code-block hidden">
-<pre><code class="language-bash"># 1行命令本地运行7B大模型（需8G显存）
-# 先安装ollama: curl -fsSL https://ollama.com/install.sh | sh
-ollama run qwen2:7b
-
-# 然后直接对话
->>> 写一首关于春天的诗
-春风轻抚柳丝长，
-桃李争妍满院香。
-燕子归来寻旧垒，
-人间最美是春光。</code></pre>
-    </div>
-
-    <div id="codePath" class="code-block hidden">
-<pre><code class="language-text"># 推荐学习顺序（从零到大模型工程师）
-1. NLP基础：文本预处理 → N-gram → HMM/CRF → 词向量
-2. 深度学习：RNN/LSTM → Seq2Seq → Attention → Transformer
-3. 预训练模型：BERT原理与微调 → GPT系列演进
-4. 大模型基础：Transformer Decoder详解 → Scaling Law
-5. 大模型训练：预训练 → SFT → RLHF/DPO对齐
-6. 高效微调：LoRA/QLoRA原理与实战
-7. 应用开发：Prompt工程 → RAG检索增强 → Agent开发
-8. 部署优化：量化技术 → vLLM推理加速 → 生产级部署</code></pre>
-    </div>
-
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-12">
-      <a href="nlp/index.html" class="card text-center hover:border-blue-400">
-        <div class="text-4xl mb-4">📝</div>
-        <h3 class="text-xl font-bold mb-2 text-blue-600">进入 NLP 子站开始学习</h3>
-        <p class="text-gray-600">从统计语言模型到Transformer，打好NLP基础</p>
-      </a>
-      <a href="llm/index.html" class="card text-center hover:border-purple-400">
-        <div class="text-4xl mb-4">🤖</div>
-        <h3 class="text-xl font-bold mb-2 text-purple-600">进入 LLM 子站开始学习</h3>
-        <p class="text-gray-600">从Scaling Law到RAG/Agent，掌握大模型全栈技术</p>
-      </a>
-    </div>
+<span class="c"># 3) 验证</span>
+python -c <span class="s">"import torch, jieba, transformers; print('ready:', torch.__version__)"</span>
+</pre>
+    <div class="hint good">💡 学习建议：不要一口气全看完。按"六级路径"一级一级来，每级亲手跑通一个最小例子，比刷十个视频都管用。</div>
   </section>
 </div>
 
+<footer class="site">
+  <p>💬 agent-nlp-llm · 自然语言技术本体论研究站 · 内容参考 <em>《从零构建大语言模型》</em> 与 <em>《深度学习入门 2：自制框架》</em></p>
+  <p style="margin-top:8px"><a href="https://github.com/yejinlei/agent-nlp-llm" target="_blank" rel="noopener">GitHub</a></p>
+</footer>
+
+<script src="js/site.js"></script>
 <script>
-// 滚动高亮目录
-const sections = document.querySelectorAll('section[id]');
-const navLinks = document.querySelectorAll('.sidebar a');
-window.addEventListener('scroll', () => {
-  let current = '';
-  sections.forEach(section => {
-    const sectionTop = section.offsetTop;
-    if (scrollY >= sectionTop - 100) current = section.getAttribute('id');
-  });
-  navLinks.forEach(link => {
-    link.classList.remove('active');
-    if (link.getAttribute('href') === '#' + current) link.classList.add('active');
-  });
-});
-
-// 平滑滚动
-document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-  anchor.addEventListener('click', function (e) {
-    e.preventDefault();
-    const target = document.querySelector(this.getAttribute('href'));
-    if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  });
-});
-
-// 代码显示切换
-function showCode(type) {
-  ['nlp', 'llm', 'path'].forEach(t => {
-    document.getElementById('code' + t.charAt(0).toUpperCase() + t.slice(1)).classList.add('hidden');
-  });
-  document.getElementById('code' + type.charAt(0).toUpperCase() + type.slice(1)).classList.remove('hidden');
-  hljs.highlightAll();
-}
-
-// N-gram可视化
-const ngramCanvas = document.getElementById('ngramCanvas');
-const ngramCtx = ngramCanvas.getContext('2d');
-ngramCanvas.width = ngramCanvas.offsetWidth;
-ngramCanvas.height = 200;
-function drawNgram() {
-  const n = parseInt(document.getElementById('ngramN').value);
-  document.getElementById('ngramNValue').textContent = n;
-  ngramCtx.clearRect(0, 0, ngramCanvas.width, ngramCanvas.height);
-  const words = ['我', '今天', '很', '开心', '因为', '天气', '好'];
-  const colors = ['#3b82f6', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981'];
-  const barWidth = ngramCanvas.width / words.length - 10;
-  words.forEach((word, i) => {
-    const prob = Math.pow(0.8, Math.abs(i - 3) * (5-n)/4) * (0.5 + Math.random()*0.5);
-    ngramCtx.fillStyle = colors[i % colors.length] + '80';
-    ngramCtx.fillRect(i * (barWidth + 10) + 20, 200 - prob * 160, barWidth, prob * 160);
-    ngramCtx.fillStyle = '#1f2937';
-    ngramCtx.font = '14px sans-serif';
-    ngramCtx.textAlign = 'center';
-    ngramCtx.fillText(word, i * (barWidth + 10) + 20 + barWidth/2, 190);
-    ngramCtx.fillText((prob*100).toFixed(0) + '%', i * (barWidth + 10) + 20 + barWidth/2, 200 - prob * 160 - 8);
-  });
-  ngramCtx.fillStyle = '#6b7280';
-  ngramCtx.font = '12px sans-serif';
-  ngramCtx.textAlign = 'left';
-  ngramCtx.fillText('"开心"一词的预测概率分布（上下文越长预测越准确）', 20, 20);
-}
-document.getElementById('ngramN').addEventListener('input', drawNgram);
-drawNgram();
-
-// 注意力热力图
-const heatmapCanvas = document.getElementById('heatmapCanvas');
-const heatmapCtx = heatmapCanvas.getContext('2d');
-heatmapCanvas.width = heatmapCanvas.offsetWidth;
-heatmapCanvas.height = 300;
-function drawAttention() {
-  const text = document.getElementById('attentionText').value.trim().split(/\s+/);
-  const n = text.length;
-  const cellSize = Math.min(50, (heatmapCanvas.width - 80) / n);
-  heatmapCtx.clearRect(0, 0, heatmapCanvas.width, heatmapCanvas.height);
-  for (let i = 0; i < n; i++) {
-    heatmapCtx.fillStyle = '#1f2937';
-    heatmapCtx.font = '12px sans-serif';
-    heatmapCtx.textAlign = 'right';
-    heatmapCtx.fillText(text[i], 60, i * cellSize + cellSize/2 + 4);
-    heatmapCtx.textAlign = 'center';
-    heatmapCtx.fillText(text[i], 70 + i * cellSize + cellSize/2, n * cellSize + 20);
-    for (let j = 0; j < n; j++) {
-      // 模拟注意力权重：自己对自己最高，相邻词次之
-      let weight = i === j ? 0.8 : (Math.abs(i-j) === 1 ? 0.4 : 0.15 + Math.random()*0.2);
-      if (text[i] === '自然' && text[j] === '语言') weight = 0.7;
-      if (text[i] === '语言' && text[j] === '处理') weight = 0.7;
-      const r = Math.floor(255 * weight);
-      const b = Math.floor(255 * (1 - weight));
-      heatmapCtx.fillStyle = `rgb(${r}, ${Math.floor(100+100*weight)}, ${b})`;
-      heatmapCtx.fillRect(70 + j * cellSize, i * cellSize, cellSize - 2, cellSize - 2);
-    }
+/* ---- Demo 1: N-gram ---- */
+(function(){
+  var tokens = ['小猫','追','老鼠','因为','它','饿','了'];
+  var range = document.getElementById('ngramRange');
+  var nEl = document.getElementById('ngramN');
+  var out = document.getElementById('ngramOut');
+  var hint = document.getElementById('ngramHint');
+  function render(){
+    var n = parseInt(range.value, 10);
+    nEl.textContent = n;
+    var html = '';
+    tokens.forEach(function(t, i){
+      var inWin = i >= tokens.length - n - 1 ? 'background:#e8f0ff;color:#2c4a8c' : 'background:#f1f3f8;color:#8b93a7';
+      html += '<span class="demo-cell" style="' + inWin + '">' + t + '</span>';
+    });
+    html += '<div style="margin-top:10px;font-size:.85rem;color:#5a6072">↑ 高亮的是模型预测"了"时能看到的历史（最近 ' + n + ' 个词）</div>';
+    out.innerHTML = html;
+    var tips = {
+      1: 'n=1（一元模型）：只看前 1 个词，几乎等于瞎猜，容易生成"狗吃了狗"这种无意义句子。',
+      2: 'n=2（二元模型）：能看前 2 个词，语法通顺了不少，但长距离依赖（比如"因为"后面的因果）还是抓不住。',
+      3: 'n=3（三元模型）：上下文更长了，生成质量提升，但符合语法的组合数按指数爆炸，数据严重稀疏。',
+      4: 'n=4：看起来更"聪明"，但数据稀疏问题更致命——很多 4 元组合在语料里根本没见过，概率直接为 0。'
+    };
+    hint.textContent = tips[n] || '';
+    hint.className = n >= 4 ? 'hint warn' : 'hint';
   }
-}
-drawAttention();
+  range.addEventListener('input', render);
+  render();
+})();
 
-// Scaling Law可视化
-const scalingCanvas = document.getElementById('scalingCanvas');
-const scalingCtx = scalingCanvas.getContext('2d');
-scalingCanvas.width = scalingCanvas.offsetWidth;
-scalingCanvas.height = 200;
-function drawScaling() {
-  const logParam = parseFloat(document.getElementById('paramSlider').value);
-  const param = Math.pow(10, logParam);
-  document.getElementById('paramValue').textContent = param >= 1000 ? (param/1000).toFixed(0) + 'T' : param.toFixed(0) + 'B';
-  scalingCtx.clearRect(0, 0, scalingCanvas.width, scalingCanvas.height);
-  // 画坐标轴
-  scalingCtx.strokeStyle = '#d1d5db';
-  scalingCtx.beginPath();
-  scalingCtx.moveTo(50, 20);
-  scalingCtx.lineTo(50, 170);
-  scalingCtx.lineTo(scalingCanvas.width - 20, 170);
-  scalingCtx.stroke();
-  // 幂律曲线 Loss = C * N^(-α)
-  scalingCtx.strokeStyle = '#10b981';
-  scalingCtx.lineWidth = 3;
-  scalingCtx.beginPath();
-  for (let x = 0; x < scalingCanvas.width - 80; x++) {
-    const logN = x / (scalingCanvas.width - 80) * 5;
-    const loss = 3 * Math.exp(-0.5 * logN) + 1;
-    const y = 170 - (loss - 1) / 3 * 140;
-    if (x === 0) scalingCtx.moveTo(50 + x, y);
-    else scalingCtx.lineTo(50 + x, y);
+/* ---- Demo 2: Self-Attention ---- */
+(function(){
+  var tokens = ['小猫','追','老鼠','因为','它','饿','了'];
+  var matrix = [
+    [.45,.20,.15,.05,.05,.05,.05],
+    [.10,.30,.30,.10,.05,.05,.10],
+    [.05,.20,.40,.05,.10,.10,.10],
+    [.05,.05,.05,.35,.30,.10,.10],
+    [.20,.05,.05,.25,.30,.10,.05],
+    [.05,.05,.05,.05,.10,.45,.25],
+    [.05,.05,.05,.05,.05,.30,.50]
+  ];
+  var box = document.getElementById('attnTokens');
+  var mat = document.getElementById('attnMatrix');
+  var hint = document.getElementById('attnHint');
+  function color(v){
+    var a = Math.min(1, v * 2.2);
+    return 'background:rgba(59,111,224,' + a + ');color:' + (a > .5 ? '#fff' : '#2c4a8c');
   }
-  scalingCtx.stroke();
-  // 当前点
-  const currentX = logParam / 5 * (scalingCanvas.width - 80);
-  const currentLoss = 3 * Math.exp(-0.5 * logParam) + 1;
-  const currentY = 170 - (currentLoss - 1) / 3 * 140;
-  scalingCtx.fillStyle = '#ef4444';
-  scalingCtx.beginPath();
-  scalingCtx.arc(50 + currentX, currentY, 8, 0, Math.PI*2);
-  scalingCtx.fill();
-  scalingCtx.fillStyle = '#1f2937';
-  scalingCtx.font = '12px sans-serif';
-  scalingCtx.fillText(`Loss: ${currentLoss.toFixed(2)}`, 50 + currentX + 12, currentY - 8);
-  // 轴标签
-  scalingCtx.fillStyle = '#6b7280';
-  scalingCtx.fillText('Loss', 20, 30);
-  scalingCtx.fillText('参数量 (log scale)', scalingCanvas.width/2 - 40, 190);
-  scalingCtx.fillText('1B', 50 + 1/5*(scalingCanvas.width-80), 185);
-  scalingCtx.fillText('1T', scalingCanvas.width - 60, 185);
-  // 涌现线
-  scalingCtx.setLineDash([5, 5]);
-  scalingCtx.strokeStyle = '#f59e0b';
-  scalingCtx.beginPath();
-  const emergeX = 2/5*(scalingCanvas.width-80);
-  scalingCtx.moveTo(50 + emergeX, 20);
-  scalingCtx.lineTo(50 + emergeX, 170);
-  scalingCtx.stroke();
-  scalingCtx.fillStyle = '#f59e0b';
-  scalingCtx.fillText('能力涌现临界点', 50 + emergeX - 30, 15);
-}
-document.getElementById('paramSlider').addEventListener('input', drawScaling);
-drawScaling();
+  tokens.forEach(function(t, i){
+    var el = document.createElement('span');
+    el.textContent = t;
+    el.className = 'demo-cell';
+    el.style.cssText = 'background:#eef3ff;color:#2c4a8c;cursor:pointer';
+    el.onclick = function(){ show(i); };
+    box.appendChild(el);
+  });
+  function show(row){
+    var html = '<table class="attn-heat"><tr><th style="font-size:.65rem;color:#8b93a7"></th>';
+    tokens.forEach(function(t){ html += '<th style="font-size:.65rem;color:#8b93a7">' + t + '</th>'; });
+    html += '</tr>';
+    matrix.forEach(function(r, i){
+      html += '<tr><th style="font-size:.65rem;color:#8b93a7;text-align:right;padding-right:4px">' + tokens[i] + '</th>';
+      r.forEach(function(v, j){
+        var st = color(v);
+        if (i === row) st += ';outline:1px solid #ec4899';
+        html += '<td style="' + st + '">' + v.toFixed(2) + '</td>';
+      });
+      html += '</tr>';
+    });
+    html += '</table>';
+    mat.innerHTML = html;
+    var top = matrix[row].map(function(v, i){ return { v: v, i: i }; })
+      .sort(function(a, b){ return b.v - a.v; }).slice(0, 2);
+    hint.innerHTML = '「<b>' + tokens[row] + '</b>」注意力最集中的是：<b>' + tokens[top[0].i] + '</b>（' +
+      top[0].v.toFixed(2) + '）、<b>' + tokens[top[1].i] + '</b>（' + top[1].v.toFixed(2) +
+      '）。这正是 Self-Attention 的威力——模型自己学会「它」该指代谁，而这个权重是<b>训练出来的</b>，不是人写的规则。';
+  }
+  show(4);
+})();
 
-// 公式渲染
-document.addEventListener('DOMContentLoaded', function() {
-  renderMathInElement(document.body, {delimiters: [{left: '$$', right: '$$', display: true}, {left: '$', right: '$', display: false}]});
-  hljs.highlightAll();
-});
+/* ---- Demo 3: 词向量类比 ---- */
+(function(){
+  var map = {
+    '国王':[0.8,0.9],'男人':[0.3,0.5],'女人':[-0.3,0.5],'北京':[0.7,-0.8],
+    '中国':[0.5,-0.7],'法国':[-0.6,-0.7],'猫':[-0.2,0.8],'小狗':[-0.4,0.7],'老虎':[-0.6,0.9]
+  };
+  document.getElementById('vecGo').onclick = function(){
+    var a = document.getElementById('vecA').value,
+        b = document.getElementById('vecB').value,
+        c = document.getElementById('vecC').value;
+    var va = map[a], vb = map[b], vc = map[c];
+    var r = [va[0]-vb[0]+vc[0], va[1]-vb[1]+vc[1]];
+    var best = null, bd = 1e9;
+    Object.keys(map).forEach(function(k){
+      if (k === a || k === b || k === c) return;
+      var dx = map[k][0]-r[0], dy = map[k][1]-r[1];
+      var d = dx*dx + dy*dy;
+      if (d < bd) { bd = d; best = k; }
+    });
+    var out = document.getElementById('vecOut');
+    out.className = 'hint good';
+    out.innerHTML = '<b>' + a + ' − ' + b + ' + ' + c + '</b> ≈ <b style="font-size:1.1rem">' + best +
+      '</b><br><span style="font-size:.86rem">向量的神奇在于：语义关系变成了空间里的方向。从"男人→女人"这个方向，加上去就得到"国王→女王"，模型完全靠数据自己学出来，没人教它。</span>';
+  };
+})();
 </script>
 </body>
 </html>

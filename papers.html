@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>经典论文精读 · agent-nlp-llm</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+<link rel="stylesheet" href="css/site.css">
+<style>
+  .paper-card { display: flex; flex-direction: column; }
+  .paper-card .pc-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; margin-bottom: 6px; }
+  .filt-btn { cursor: pointer; }
+  .filt-btn.on { background: linear-gradient(120deg,#3b6fe0,#7c3aed); color: #fff; }
+</style>
+</head>
+<body>
+
+<nav class="navbar">
+  <div class="nav-inner">
+    <a href="index.html" class="nav-logo">💬 agent-nlp-llm</a>
+    <button class="nav-toggle" onclick="document.querySelector('.nav-links').classList.toggle('open')" aria-label="菜单">☰</button>
+    <div class="nav-links">
+      <a href="index.html" class="nav-link">🏠 首页</a>
+      <a href="playground.html" class="nav-link">🎨 玩法</a>
+      <a href="nlp/index.html" class="nav-link">📝 NLP</a>
+      <a href="llm/index.html" class="nav-link">🤖 LLM</a>
+      <a href="bpe.html" class="nav-link">🔤 分词器</a>
+      <a href="embedding.html" class="nav-link">🧭 词向量</a>
+      <a href="attention.html" class="nav-link">🎯 注意力</a>
+      <a href="papers.html" class="nav-link active">📚 论文</a>
+      <a href="clinic.html" class="nav-link">🕵️ 诊所</a>
+      <a href="pitfalls.html" class="nav-link">💥 踩坑</a>
+      <a href="benchmark.html" class="nav-link">📊 选型</a>
+      <a href="universe.html" class="nav-link">🌌 宇宙</a>
+      <a href="https://github.com/yejinlei/agent-nlp-llm" target="_blank" rel="noopener" class="nav-gh" aria-label="GitHub"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg></a>
+    </div>
+  </div>
+</nav>
+
+<div class="wrap page">
+  <section class="hero reveal">
+    <h1>📚 10 篇必读论文</h1>
+    <p class="sub">NLP/LLM 的发展不是凭空冒出来的，而是被这些论文一步步推着走的。读懂它们的<strong>贡献、方法和影响</strong>，你就抓住了整条技术主线。</p>
+  </section>
+
+  <section class="blk reveal">
+    <div class="ctrl" id="filters">
+      <span style="font-weight:600;font-size:.9rem;color:var(--text-2)">按主题筛选：</span>
+      <button class="btn btn-outline filt-btn on" data-f="all">全部</button>
+      <button class="btn btn-outline filt-btn" data-f="vec">词表示</button>
+      <button class="btn btn-outline filt-btn" data-f="arch">架构</button>
+      <button class="btn btn-outline filt-btn" data-f="scale">规模化</button>
+      <button class="btn btn-outline filt-btn" data-f="align">对齐与训练</button>
+    </div>
+    <div class="grid g2" id="paperGrid"></div>
+  </section>
+
+  <section class="blk reveal">
+    <h2 class="blk-title"><span class="num">📖</span>论文阅读方法论</h2>
+    <details class="acc" open>
+      <summary>三遍法：一篇论文读三次，每次目的不同</summary>
+      <div class="acc-body">
+        <p><strong>第一遍（5–10 分钟）· 摸清轮廓</strong>：只读标题、摘要、引言最后一段、结论，加上所有图和表。目的是回答"这篇论文解决什么问题、大概怎么做的、值不值得深读"。读不懂的术语先跳过。</p>
+        <p style="margin-top:10px"><strong>第二遍（30–60 分钟）· 抓主干</strong>：读正文，但忽略证明细节。重点抓方法的核心公式和结构图，能在心里复述"输入→处理→输出"的流程。标记出不懂的引用和概念。</p>
+        <p style="margin-top:10px"><strong>第三遍（几小时）· 抠细节</strong>：尝试"虚拟复现"——假设我要实现它，哪一步会卡住？逐行推导关键公式，检查实验设置是否公平，思考局限性和可能的改进。这时才真正读懂。</p>
+      </div>
+    </details>
+    <details class="acc">
+      <summary>先看图表：论文的信息密度藏在图里</summary>
+      <div class="acc-body">
+        <p>好的论文，架构图和主要实验表格往往就讲清了 80% 的内容。先看图，建立"它长什么样"的直觉，再回头读文字，效率会高很多。特别注意：横纵坐标是什么、对比基线是谁、指标怎么定义——很多"震惊"的结论，一核对实验口径就平淡了。</p>
+      </div>
+    </details>
+    <details class="acc">
+      <summary>追问三个问题，避免"读了个寂寞"</summary>
+      <div class="acc-body">
+        <p>① <strong>它解决了前人的什么毛病？</strong>（没有这个问题，新方法就无意义）② <strong>凭什么有效？</strong>（是更聪明的结构，还是更多数据/算力？）③ <strong>什么情况下会失效？</strong>（作者通常写在 Limitations 里，这是最有价值的部分）。</p>
+      </div>
+    </details>
+  </section>
+</div>
+
+<footer class="site"><p>💬 agent-nlp-llm · 自然语言技术本体论研究站</p></footer>
+
+<script src="js/site.js"></script>
+<script>
+(function(){
+  var papers = [
+    {t:'Efficient Estimation of Word Representations in Vector Space', cn:'Word2Vec · 词向量革命', y:2013, f:'vec', hard:'入门', must:5,
+     contrib:'提出 CBOW 和 Skip-gram 两种高效训练词向量的方法，让"词 = 稠密向量"成为标配。',
+     problem:'One-Hot 表示无法刻画语义，词表巨大且稀疏。',
+     method:'用神经网络预测上下文，把权重矩阵当作词向量；配合层次 softmax 加速。',
+     impact:'开启词向量时代，语义类比（国王−男人+女人=女王）成为经典演示。',
+     link:'https://arxiv.org/abs/1301.3781'},
+    {t:'GloVe: Global Vectors for Word Representation', cn:'GloVe · 全局共现词向量', y:2014, f:'vec', hard:'入门', must:4,
+     contrib:'用全局共现矩阵的加权最小二乘目标，训练出高质量词向量。',
+     problem:'Word2Vec 只用局部窗口信息，没充分利用全局统计。',
+     method:'构造词共现矩阵，优化目标让内积逼近共现概率的对数。',
+     impact:'与 Word2Vec 并列为经典静态词向量，至今仍是类比和检索任务基线。',
+     link:'https://nlp.stanford.edu/papers/glove.pdf'},
+    {t:'Sequence to Sequence Learning with Neural Networks', cn:'Seq2Seq · 序列到序列', y:2014, f:'arch', hard:'进阶', must:4,
+     contrib:'用"编码器-解码器"框架，把变长输入映射到变长输出。',
+     problem:'此前方法难以处理长度不固定的输入输出映射（如翻译）。',
+     method:'两个 LSTM 分别做编码和解码，解码端自回归生成目标序列。',
+     impact:'机器翻译的范式奠基，也暴露了长句信息压缩的瓶颈（催生注意力）。',
+     link:'https://arxiv.org/abs/1409.3215'},
+    {t:'Attention Is All You Need', cn:'Transformer · 注意力就是一切', y:2017, f:'arch', hard:'必啃', must:5,
+     contrib:'提出完全基于注意力的 Transformer 架构，抛弃 RNN 的循环结构。',
+     problem:'RNN 顺序计算无法并行，训练慢且长距离依赖弱。',
+     method:'多头自注意力 + 位置编码 + 残差 + LayerNorm，纯前向可并行。',
+     impact:'大模型时代的地基，GPT/BERT/几乎所有现代 LLM 的骨架。',
+     link:'https://arxiv.org/abs/1706.03762'},
+    {t:'BERT: Pre-training of Deep Bidirectional Transformers', cn:'BERT · 双向预训练', y:2018, f:'arch', hard:'必啃', must:5,
+     contrib:'用掩码语言模型做双向预训练，刷新 11 项 NLP 任务。',
+     problem:'单向语言模型无法同时利用左右两侧上下文。',
+     method:'随机 mask 部分词让模型预测，配合下一句预测任务。',
+     impact:'确立"预训练 + 微调"范式，NLP 进入统一框架时代。',
+     link:'https://arxiv.org/abs/1810.04805'},
+    {t:'Language Models are Few-Shot Learners', cn:'GPT-3 · 少样本学习', y:2020, f:'scale', hard:'进阶', must:5,
+     contrib:'证明超大模型仅靠提示（few-shot）就能完成大量任务，无需微调。',
+     problem:'每个任务都要微调，成本高、泛化差。',
+     method:'把模型做到 1750 亿参数，用 in-context learning 完成任务。',
+     impact:'开启 in-context / prompt 时代，证明"规模本身就是能力"。',
+     link:'https://arxiv.org/abs/2005.14165'},
+    {t:'Training language models to follow instructions with human feedback', cn:'InstructGPT · RLHF 对齐', y:2022, f:'align', hard:'进阶', must:5,
+     contrib:'用人类反馈强化学习，让模型"听话"且更有用。',
+     problem:'纯预训练模型会输出有害、不贴合用户意图的内容。',
+     method:'收集人类偏好数据训奖励模型，再用 PPO 优化生成策略。',
+     impact:'ChatGPT 的直接技术基础，对齐成为大模型标准流程。',
+     link:'https://arxiv.org/abs/2203.02155'},
+    {t:'Chain-of-Thought Prompting Elicits Reasoning in LLMs', cn:'CoT · 思维链提示', y:2022, f:'align', hard:'入门', must:4,
+     contrib:'让模型"一步步想"，显著提升复杂推理能力。',
+     problem:'直接问答案，模型在多步推理任务上表现差。',
+     method:'在提示里给出中间推理步骤的范例，引导模型也先推理再作答。',
+     impact:'催生一大类推理增强方法，成为提示工程的核心技巧。',
+     link:'https://arxiv.org/abs/2201.11903'},
+    {t:'Training Compute-Optimal Large Language Models', cn:'Chinchilla · 计算最优缩放', y:2022, f:'scale', hard:'进阶', must:5,
+     contrib:'证明在固定算力下，模型大小与数据量应大致同比增加。',
+     problem:'此前 Scaling Law 过度偏向堆参数、喂的数据不够。',
+     method:'系统实验拟合参数与数据的等比例最优配比。',
+     impact:'纠正了"参数越大越好"的误区，训练 70B 可超越 280B。',
+     link:'https://arxiv.org/abs/2203.15556'},
+    {t:'LoRA: Low-Rank Adaptation of Large Language Models', cn:'LoRA · 低秩微调', y:2021, f:'align', hard:'入门', must:5,
+     contrib:'冻结原模型，只训练低秩增量矩阵，大幅降低微调成本。',
+     problem:'全量微调显存和存储开销巨大，每个任务都要存一份模型。',
+     method:'在权重旁挂两个小矩阵 A、B，只训练它们，推理时可合并回原权重。',
+     impact:'让消费级显卡也能微调大模型，成为最流行的 PEFT 方法。',
+     link:'https://arxiv.org/abs/2106.09685'},
+    {t:'FlashAttention: Fast and Memory-Efficient Exact Attention', cn:'FlashAttention · 高效注意力', y:2022, f:'scale', hard:'硬核', must:4,
+     contrib:'通过 IO 感知的分块计算，大幅加速注意力并省显存。',
+     problem:'标准注意力要物化 n×n 矩阵，长序列显存爆炸。',
+     method:'分块 + 在线 softmax，不落地完整注意力矩阵。',
+     impact:'现代大模型训练标配，让长上下文训练变得可行。',
+     link:'https://arxiv.org/abs/2205.14135'},
+    {t:'Retrieval-Augmented Generation for Knowledge-Intensive NLP', cn:'RAG · 检索增强生成', y:2020, f:'align', hard:'入门', must:4,
+     contrib:'把检索器和生成器结合，让模型能利用外部知识。',
+     problem:'模型知识固化在参数里，无法更新且易幻觉。',
+     method:'先用检索器找相关文档，再让生成器基于文档作答。',
+     impact:'企业落地大模型的主流方案，解决幻觉和知识时效问题。',
+     link:'https://arxiv.org/abs/2005.11401'}
+  ];
+
+  function hardTag(h){
+    var cls = h === '入门' ? 'tag-green' : (h === '硬核' ? 'tag-orange' : (h === '必啃' ? 'tag-purple' : 'tag-blue'));
+    return '<span class="tag ' + cls + '">' + h + '</span>';
+  }
+  function mustStars(m){
+    return '<span style="color:#f59e0b;font-size:.85rem">' + '★'.repeat(m) + '</span>';
+  }
+
+  var grid = document.getElementById('paperGrid');
+  function render(f){
+    var list = papers.filter(function(p){ return f === 'all' || p.f === f; });
+    grid.innerHTML = list.map(function(p){
+      return '<div class="card paper-card" data-f="' + p.f + '">' +
+        '<div class="pc-head"><h4 style="flex:1">' + p.cn + '</h4>' + hardTag(p.hard) + '</div>' +
+        '<p style="font-size:.83rem;color:var(--text-3);font-style:italic;margin-bottom:8px">' + p.t + ' · ' + p.y + '</p>' +
+        '<p style="font-size:.92rem;margin-bottom:8px"><b>💡 核心贡献：</b>' + p.contrib + '</p>' +
+        '<p style="font-size:.9rem;color:var(--text-2);margin-bottom:6px"><b>❓ 解决的问题：</b>' + p.problem + '</p>' +
+        '<p style="font-size:.9rem;color:var(--text-2);margin-bottom:6px"><b>🔧 关键方法：</b>' + p.method + '</p>' +
+        '<p style="font-size:.9rem;color:var(--text-2);margin-bottom:10px"><b>🌊 影响：</b>' + p.impact + '</p>' +
+        '<div style="margin-top:auto;display:flex;justify-content:space-between;align-items:center">' +
+        '<span style="font-size:.8rem;color:var(--text-3)">必读度 ' + mustStars(p.must) + '</span>' +
+        '<a href="' + p.link + '" target="_blank" rel="noopener" style="font-size:.86rem">读原文 →</a></div>' +
+        '</div>';
+    }).join('');
+  }
+  render('all');
+
+  document.querySelectorAll('.filt-btn').forEach(function(b){
+    b.onclick = function(){
+      document.querySelectorAll('.filt-btn').forEach(function(x){ x.classList.remove('on'); });
+      b.classList.add('on');
+      render(b.dataset.f);
+    };
+  });
+})();
+</script>
+</body>
+</html>

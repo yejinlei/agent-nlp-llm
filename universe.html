@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>技术宇宙 · NLP/LLM 70 年演进 · agent-nlp-llm</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+<link rel="stylesheet" href="css/site.css">
+<style>
+  .tl { position: relative; padding-left: 34px; }
+  .tl::before { content:''; position:absolute; left:11px; top:6px; bottom:6px; width:3px; background:linear-gradient(180deg,#3b6fe0,#7c3aed,#ec4899); border-radius:3px; }
+  .tl-node { position: relative; margin-bottom: 16px; }
+  .tl-node::before { content:''; position:absolute; left:-29px; top:9px; width:12px; height:12px; border-radius:50%; background:#fff; border:3px solid #3b6fe0; }
+  .tl-node.era2::before { border-color:#7c3aed; }
+  .tl-card { background:#fff; border:1px solid var(--border); border-radius:12px; padding:14px 18px; box-shadow:var(--shadow); transition:all .2s; }
+  .tl-node.dim .tl-card { opacity:.32; }
+  .tl-year { font-weight:800; color:#3b6fe0; font-family:var(--mono); margin-right:10px; }
+  .tl-node.era2 .tl-year { color:#7c3aed; }
+  .trav { background:linear-gradient(120deg,#f7f9ff,#faf7ff); border:1px dashed var(--border-2); border-radius:12px; padding:18px; }
+</style>
+</head>
+<body>
+
+<nav class="navbar">
+  <div class="nav-inner">
+    <a href="index.html" class="nav-logo">💬 agent-nlp-llm</a>
+    <button class="nav-toggle" onclick="document.querySelector('.nav-links').classList.toggle('open')" aria-label="菜单">☰</button>
+    <div class="nav-links">
+      <a href="index.html" class="nav-link">🏠 首页</a>
+      <a href="playground.html" class="nav-link">🎨 玩法</a>
+      <a href="nlp/index.html" class="nav-link">📝 NLP</a>
+      <a href="llm/index.html" class="nav-link">🤖 LLM</a>
+      <a href="bpe.html" class="nav-link">🔤 分词器</a>
+      <a href="embedding.html" class="nav-link">🧭 词向量</a>
+      <a href="attention.html" class="nav-link">🎯 注意力</a>
+      <a href="papers.html" class="nav-link">📚 论文</a>
+      <a href="clinic.html" class="nav-link">🕵️ 诊所</a>
+      <a href="pitfalls.html" class="nav-link">💥 踩坑</a>
+      <a href="benchmark.html" class="nav-link">📊 选型</a>
+      <a href="universe.html" class="nav-link active">🌌 宇宙</a>
+      <a href="https://github.com/yejinlei/agent-nlp-llm" target="_blank" rel="noopener" class="nav-gh" aria-label="GitHub"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg></a>
+    </div>
+  </div>
+</nav>
+
+<div class="wrap page">
+  <section class="hero reveal">
+    <h1>🌌 技术宇宙：NLP/LLM 70 年演进</h1>
+    <p class="sub">从 1950 年图灵测试到今天的万亿参数大模型，每一次跃迁都不是偶然——而是前一代方法的瓶颈逼出来的。拖动下方滑块，聚焦你感兴趣的时代。</p>
+  </section>
+
+  <section class="blk reveal">
+    <div class="ctrl">
+      <label style="flex:1;min-width:280px">时间聚焦（拖动看你感兴趣的时代）
+        <input type="range" id="eraRange" min="1950" max="2024" value="2024" step="1">
+      </label>
+      <span style="font-family:var(--mono);font-weight:700;font-size:1.1rem" id="eraLabel">2024</span>
+    </div>
+    <div class="hint" id="eraHint">滑块拖到越早的年份，越晚的事件会变暗，帮你聚焦。</div>
+    <div class="tl" id="timeline"></div>
+  </section>
+
+  <section class="blk reveal">
+    <h2 class="blk-title"><span class="num">🕰️</span>穿越回某年：那时人们怎么做 NLP？</h2>
+    <div class="trav">
+      <div class="ctrl">
+        <label>选择年份
+          <select id="timeTravel">
+            <option value="1966">1966</option>
+            <option value="1990">1990</option>
+            <option value="2003">2003</option>
+            <option value="2013">2013</option>
+            <option value="2017">2017</option>
+            <option value="2020">2020</option>
+          </select>
+        </label>
+      </div>
+      <div id="travOut" style="font-size:.95rem;color:var(--text-2)"></div>
+    </div>
+  </section>
+</div>
+
+<footer class="site"><p>💬 agent-nlp-llm · 自然语言技术本体论研究站</p></footer>
+
+<script src="js/site.js"></script>
+<script>
+(function(){
+  var events = [
+    {y:1950, t:'图灵测试', d:'图灵提出"机器能思考吗"，用对话作为智能的判据。为整个 NLP 领域埋下思想种子。', era:1},
+    {y:1957, t:'分布式假设', d:'Firth 提出"看一个词跟谁玩，就知道它是什么意思"。这是所有词向量方法的理论根基。', era:1},
+    {y:1966, t:'ELIZA 聊天机器人', d:'Weizenbaum 用模板匹配做出最早的对话程序。看起来像心理治疗师，其实只会反射句式。', era:1},
+    {y:1971, t:'SHRDLU 与规则时代', d:'用语法规则和逻辑推理理解积木世界，规则方法达到顶峰，也暴露了难以扩展的死穴。', era:1},
+    {y:1980, t:'专家系统兴起', d:'大量人工规则 + 知识库处理语言任务，工程味十足，但规则写不完、换领域就崩。', era:1},
+    {y:1990, t:'统计方法翻身', d:'IBM Candide 等系统证明：用大量语料统计，比手写规则更有效。NLP 从规则转向统计。', era:1},
+    {y:1998, t:'N-gram 与信息检索成熟', d:'基于词频的统计语言模型成为主流，但数据稀疏问题无解——很多组合在语料里根本没出现。', era:1},
+    {y:2003, t:'神经网络语言模型', d:'Bengio 用神经网络学词的连续表示，缓解了稀疏问题。但训练慢，长依赖仍然弱。', era:1},
+    {y:2007, t:'WordNet 与词典方法', d:'人工构建的语义词典达到巅峰，但构建成本极高、更新慢，难以覆盖新词新义。', era:1},
+    {y:2013, t:'Word2Vec', d:'把词变成有语义的稠密向量，语义类比成为潮流。词表示问题基本被解决。', era:1},
+    {y:2014, t:'Seq2Seq + Attention', d:'编码器-解码器框架让翻译等任务焕然一新，注意力首次登场，解决长句信息压缩瓶颈。', era:1},
+    {y:2014, t:'GloVe', d:'用全局共现统计训练词向量，与 Word2Vec 并列成为经典静态词向量方法。', era:1},
+    {y:2015, t:'ResNet 与深度学习爆发', d:'残差连接解决了深度网络难训练的问题，为后面更深更大的模型铺路。', era:1},
+    {y:2017, t:'Transformer', d:'"Attention Is All You Need" 诞生。抛弃 RNN 的循环结构，纯注意力 + 可并行，成为大模型地基。', era:1},
+    {y:2018, t:'BERT 与预训练范式', d:'双向掩码预训练刷新 11 项任务，"预训练 + 微调"成为统一范式，NLP 进入新时代。', era:2},
+    {y:2018, t:'GPT-1', d:'用 Transformer 解码器做生成式预训练，证明自回归语言模型也能迁移。', era:2},
+    {y:2019, t:'GPT-2 与 Scaling Law 雏形', d:'15 亿参数的 GPT-2 生成质量惊人，规模效应开始显现，但人们还在怀疑"大就是好"。', era:2},
+    {y:2020, t:'GPT-3 与少样本学习', d:'1750 亿参数，仅靠提示就能完成大量任务，无需微调。In-context learning 横空出世。', era:2},
+    {y:2020, t:'Scaling Laws', d:'Kaplan 等人给出算力、参数、数据与效果的经验规律，让"堆规模"有了理论依据。', era:2},
+    {y:2020, t:'RAG 检索增强生成', d:'把检索器和生成器结合，让模型能利用外部知识，直击知识固化与幻觉问题。', era:2},
+    {y:2021, t:'LoRA 与高效微调', d:'冻结原模型只训练低秩增量，消费级显卡也能微调大模型，微调成本大幅下降。', era:2},
+    {y:2022, t:'InstructGPT / RLHF', d:'用人类反馈让模型"听话"。ChatGPT 的技术前身，对齐成为大模型标准流程。', era:2},
+    {y:2022, t:'Chinchilla 缩放定律', d:'证明"参数和数据应同比增加"，纠正了只看参数的误区，70B 可超 280B。', era:2},
+    {y:2022, t:'FlashAttention / CoT', d:'IO 感知的注意力加速让长上下文可行；思维链提示大幅提升推理能力。', era:2},
+    {y:2023, t:'开源模型井喷', d:'Llama 系列、Qwen、Mistral 等开源模型快速逼近闭源水平，大模型进入普及时代。', era:2},
+    {y:2023, t:'多模态与长上下文', d:'模型开始同时理解文本、图像、语音，上下文窗口从几千扩展到几十万 token。', era:2},
+    {y:2024, t:'Agent 与推理模型', d:'从"回答问题"走向"自主完成任务"，推理增强、MoE、端侧部署成为新焦点。', era:2}
+  ];
+
+  var tl = document.getElementById('timeline');
+  tl.innerHTML = events.map(function(e){
+    return '<div class="tl-node ' + (e.era === 2 ? 'era2' : '') + '" data-y="' + e.y + '">' +
+      '<div class="tl-card"><span class="tl-year">' + e.y + '</span><b>' + e.t + '</b>' +
+      '<p style="font-size:.9rem;color:var(--text-2);margin-top:6px">' + e.d + '</p></div></div>';
+  }).join('');
+
+  var nodes = Array.prototype.slice.call(tl.querySelectorAll('.tl-node'));
+  var range = document.getElementById('eraRange');
+  var label = document.getElementById('eraLabel');
+  var eHint = document.getElementById('eraHint');
+
+  function focus(){
+    var v = +range.value;
+    label.textContent = v;
+    var shown = 0;
+    nodes.forEach(function(n){
+      var ny = +n.dataset.y;
+      var dim = ny > v;
+      n.classList.toggle('dim', dim);
+      if (!dim) shown++;
+    });
+    eHint.textContent = '已聚焦到 ' + v + ' 年，共显示 ' + shown + ' 个里程碑。' +
+      (v < 2017 ? '这是传统 NLP 主导的时代：规则、统计、词向量、RNN 各领风骚。' : '这是大模型时代：注意力、规模化、对齐、应用全面爆发。');
+  }
+  range.oninput = focus;
+  focus();
+
+  var trav = {
+    '1966': '回到 1966：你会看到 ELIZA 这样的模板匹配程序。研究者相信"语言 = 语法规则 + 符号逻辑"，写规则是主流。人们乐观地以为十年内就能造出通用翻译机——结果迎来了漫长的寒冬。',
+    '1990': '回到 1990：统计方法刚刚翻身。大家开始疯狂收集语料，用 N-gram 统计词序列概率。成败关键在于"语料够不够大"，而数据稀疏是所有人头上的乌云。',
+    '2003': '回到 2003：Bengio 刚提出用神经网络学词表示。研究者开始意识到"词的连续向量表示"能缓解稀疏问题，但训练一个模型要好几天，且长距离依赖依然难搞。',
+    '2013': '回到 2013：Word2Vec 引爆全网。大家兴奋地演示"国王−男人+女人=女王"。但同一个词永远只有一个向量，"苹果"到底是手机还是水果，还是没人能答。',
+    '2017': '回到 2017：Transformer 刚刚横空出世。注意力机制的并行能力让训练速度飞跃，但训练成本也水涨船高。大家还在试探它到底能走多远——没人想到它开启了大模型时代。',
+    '2020': '回到 2020：GPT-3 让人震撼——1750 亿参数，仅靠几个例子就能完成任务，不用微调。In-context learning 成了热词，"规模就是能力"开始被广泛接受，"提示"成了新技能。'
+  };
+  var tsel = document.getElementById('timeTravel');
+  var tout = document.getElementById('travOut');
+  function setTrav(){
+    tout.textContent = trav[tsel.value] || '';
+  }
+  tsel.onchange = setTrav;
+  setTrav();
+})();
+</script>
+</body>
+</html>

@@ -41,24 +41,32 @@ tr:hover td { background: #f9fafb; }
 h2 { margin-top: 48px; margin-bottom: 24px; padding-bottom: 12px; border-bottom: 2px solid #e5e7eb; }
 h4 { margin-top: 20px; margin-bottom: 12px; color: #1e40af; }
 </style>
+<link rel="stylesheet" href="../css/site.css">
 </head>
 <body>
 <!-- 导航栏 -->
-<nav class="nav-blur fixed top-0 left-0 right-0 z-50 h-16 px-6 flex items-center justify-between">
-  <div class="flex items-center gap-8">
-    <a href="../index.html" class="text-xl font-bold text-blue-600">💬 agent-nlp-llm</a>
-    <div class="hidden md:flex items-center gap-6">
-      <a href="../index.html" class="text-gray-700 hover:text-blue-600 font-medium">首页</a>
-      <a href="index.html" class="text-blue-600 font-medium">📝 NLP</a>
-      <a href="../llm/index.html" class="text-gray-700 hover:text-purple-600 font-medium">🤖 LLM</a>
-      <a href="#papers" class="text-gray-700 hover:text-blue-600 font-medium">论文</a>
-      <a href="#code" class="text-gray-700 hover:text-blue-600 font-medium">源码</a>
+<nav class="navbar">
+  <div class="nav-inner">
+    <a href="../index.html" class="nav-logo">💬 agent-nlp-llm</a>
+    <button class="nav-toggle" onclick="document.querySelector('.nav-links').classList.toggle('open')" aria-label="菜单">☰</button>
+    <div class="nav-links">
+      <a href="../index.html" class="nav-link">🏠 首页</a>
+      <a href="../playground.html" class="nav-link">🎨 玩法</a>
+      <a href="../nlp/index.html" class="nav-link active">📝 NLP</a>
+      <a href="../llm/index.html" class="nav-link">🤖 LLM</a>
+      <a href="../bpe.html" class="nav-link">🔤 分词器</a>
+      <a href="../embedding.html" class="nav-link">🧭 词向量</a>
+      <a href="../attention.html" class="nav-link">🎯 注意力</a>
+      <a href="../papers.html" class="nav-link">📚 论文</a>
+      <a href="../clinic.html" class="nav-link">🕵️ 诊所</a>
+      <a href="../pitfalls.html" class="nav-link">💥 踩坑</a>
+      <a href="../benchmark.html" class="nav-link">📊 选型</a>
+      <a href="../universe.html" class="nav-link">🌌 宇宙</a>
+      <a href="https://github.com/yejinlei/agent-nlp-llm" target="_blank" rel="noopener" class="nav-gh" aria-label="GitHub">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+      </a>
     </div>
   </div>
-  <a href="https://github.com/yejinlei/agent-nlp-llm" target="_blank" class="flex items-center gap-2 text-gray-600 hover:text-gray-900">
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
-    GitHub
-  </a>
 </nav>
 
 <!-- 侧边目录 -->
@@ -243,6 +251,49 @@ class SkipGram(nn.Module):
                               center_vec.unsqueeze(2)).squeeze()
         return -F.logsigmoid(pos_score).sum() - F.logsigmoid(neg_score).sum()</code></pre>
     </div>
+
+    <h4>🎯 负采样：把 100 万分类变成 5 分类</h4>
+    <p class="text-gray-600 mb-3">原始 Skip-gram 要对 <b>整个词表（几十万～上百万）</b> 做 softmax，算一步就要遍历所有词，慢到无法训练。书2《深度学习入门2：自制框架》第4章的精髓就是用 <b>负采样（Negative Sampling）</b> 把问题偷换成"二分类"：</p>
+    <div class="callout callout-info">
+      <div class="callout-line">不给模型"从 100 万词里挑对的"，而是问它"这个词对是不是真实共现的？"</div>
+      <div class="callout-note">正样本 = 真实上下文词；负样本 = 随机抽几个"噪声词"。于是每步只算 1 + k 个（k 通常 5~10）Sigmoid，计算量与词表大小彻底解耦。</div>
+    </div>
+    <pre class="code"><code class="language-python">import numpy as np
+
+def get_negative_samples(corpus, target_id, num_neg, vocab_size):
+    """书2第4章：从语料中按词频随机抽负样本，避开目标词本身"""
+    negs = []
+    while len(negs) < num_neg:
+        s = np.random.choice(corpus)          # corpus 是所有出现过的词 id 数组
+        if s != target_id:
+            negs.append(s)
+    return np.array(negs)
+
+# 损失 = 正样本"越接近1越好" + 负样本"越接近0越好"
+def sigmoid(x): return 1 / (1 + np.exp(-x))
+
+def negative_sampling_loss(score_pos, score_neg):
+    # score_pos 是正样本点积，score_neg 是负样本点积
+    loss = -np.log(sigmoid(score_pos)) - np.sum(np.log(sigmoid(-score_neg)))
+    return loss</code></pre>
+
+    <h4>📐 怎么判断两个词"像不像"？—— 余弦相似度</h4>
+    <p class="text-gray-600 mb-3">词向量有长度（模），直接比距离会受词频影响。我们只关心<b>方向</b>是否一致，所以用夹角余弦——这正是 <code>king - man + woman ≈ queen</code> 能成立的度量基础：</p>
+    <div class="callout callout-info">
+      <div class="callout-line">cos(a, b) = (a · b) / (‖a‖ · ‖b‖)　∈ [−1, 1]</div>
+      <div class="callout-note">= 1 方向完全相同（同义）；= 0 正交无关；= −1 完全相反。除以两个模长就抹掉了"词频"带来的长度差异。</div>
+    </div>
+    <pre class="code"><code class="language-python">def cosine_similarity(x, y):
+    """书2第3章的相似度计算，逐元素实现，不用现成库"""
+    nx = x / np.sqrt(np.sum(x ** 2))     # 单位化：除以自身模长
+    ny = y / np.sqrt(np.sum(y ** 2))
+    return np.dot(nx, ny)
+
+# 实战：找出与 "king" 最相近的词
+def most_similar(query_id, word_vecs, word_to_id, top=5):
+    sims = [(w, cosine_similarity(word_vecs[query_id], word_vecs[i]))
+            for w, i in word_to_id.items() if w != list(word_to_id)[query_id]]
+    return sorted(sims, key=lambda t: t[1], reverse=True)[:top]</code></pre>
   </section>
 
   <!-- LSTM -->
@@ -259,6 +310,40 @@ class SkipGram(nn.Module):
     </table>
 
     <p class="text-gray-600">LSTM虽然能捕捉长距离依赖，但本质还是循环结构，无法并行计算，长距离（超过几百字）效果还是会衰减，后来被自注意力机制彻底取代。</p>
+
+    <h4>⚠️ 梯度消失的数学根源：连乘的衰减</h4>
+    <p class="text-gray-600 mb-3">书2《深度学习入门2：自制框架》第5～6章专门拆解了这个问题。RNN 反向传播要沿时间<b>一步步回传</b>，梯度里会出现一连串雅可比矩阵的连乘：</p>
+    <div class="callout callout-warn">
+      <div class="callout-line">∂L/∂h₁ = ∂L/∂h<sub>T</sub> · ∏<sub>t=2..T</sub> ∂h<sub>t</sub>/∂h<sub>t−1</sub></div>
+      <div class="callout-note">每一步的雅可比若"谱范数 < 1"，连乘 T 次就指数级趋近 0（梯度消失，学不到远距离依赖）；若 > 1 则指数爆炸（梯度爆炸，训练发散）。这就是 RNN 记不住长句的根本原因。</div>
+    </div>
+
+    <h4>✂️ 截断反向传播（Truncated BPTT）：工程上的折中</h4>
+    <p class="text-gray-600 mb-3">理论要对整个序列反向传播，但序列可能上万步，显存和时间都扛不住。书2的做法是：<b>把长序列切成固定长度的"块"</b>，块内完整反向传播，块与块之间只传递隐藏状态、<b>不跨块回传梯度</b>。代价是丢失超长依赖，收益是显存可控、可并行流水。这正是所有 RNN 类模型训练的标配。</p>
+    <pre class="code"><code class="language-python">class SimpleRnnlm:
+    """书2第5章：截断 BPTT —— 状态在块间延续，梯度只在块内回传"""
+    def __init__(self, vocab_size, wordvec_size, hidden_size, bptt_len=10):
+        V, D, H = vocab_size, wordvec_size, hidden_size
+        self.bptt_len = bptt_len                     # 每个块的长度
+        # 书里的 Xavier 初始化：让前向信号方差不随层数爆炸
+        self.Wx  = np.random.randn(V, H) / np.sqrt(V) * 0.01
+        self.Wh  = np.random.randn(H, H) / np.sqrt(H)
+        self.b   = np.zeros(H)
+
+    def forward(self, xs, hs):                       # xs: (B, T, V)
+        B, T, _ = xs.shape
+        # 关键：h 的"接力棒"从上一块的状态 hs[0] 开始，而不是每次清零
+        for t in range(T):
+            hs[t+1] = np.tanh(xs[:, t] @ self.Wx + hs[t] @ self.Wh + self.b)
+        return hs
+
+# 训练循环的核心：块内算梯度，块间只搬运状态
+# for chunk in chunks:
+#     loss = model.forward(chunk, hs)     # 前向：状态延续
+#     model.backward()                     # 反向：只在当前块内
+#     model.update()                       # 更新
+#     hs[0] = hs[-1]                       # 把最后状态递交给下一块</code></pre>
+    <p class="text-gray-600">💡 <b>LSTM 为什么能缓解？</b> 它用<b>遗忘门</b>把连乘换成了"加法式累积"（细胞状态 C 的更新是 <code>C_t = f_t·C_{t−1} + i_t·C̃_t</code>），梯度沿 C 回传时是乘上接近 1 的 f，而不是一长串小于 1 的连乘，所以记忆能延续几百步。但门控再巧也改不了"串行"的本质，最终仍被可并行的<b>自注意力</b>取代。</p>
   </section>
 
   <!-- Attention -->
@@ -548,5 +633,6 @@ document.addEventListener('DOMContentLoaded', function() {
   hljs.highlightAll();
 });
 </script>
+<script src="../js/site.js"></script>
 </body>
 </html>

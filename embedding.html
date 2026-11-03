@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>词向量 · 把词变成能算数的东西 · agent-nlp-llm</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+<link rel="stylesheet" href="css/site.css">
+<style>
+  canvas { max-width: 100%; border-radius: 12px; background: #fbfcff; border: 1px solid var(--border); }
+  .vec-out { font-family: var(--mono); font-size: 1rem; }
+</style>
+</head>
+<body>
+
+<nav class="navbar">
+  <div class="nav-inner">
+    <a href="index.html" class="nav-logo">💬 agent-nlp-llm</a>
+    <button class="nav-toggle" onclick="document.querySelector('.nav-links').classList.toggle('open')" aria-label="菜单">☰</button>
+    <div class="nav-links">
+      <a href="index.html" class="nav-link">🏠 首页</a>
+      <a href="playground.html" class="nav-link">🎨 玩法</a>
+      <a href="nlp/index.html" class="nav-link">📝 NLP</a>
+      <a href="llm/index.html" class="nav-link">🤖 LLM</a>
+      <a href="bpe.html" class="nav-link">🔤 分词器</a>
+      <a href="embedding.html" class="nav-link active">🧭 词向量</a>
+      <a href="attention.html" class="nav-link">🎯 注意力</a>
+      <a href="papers.html" class="nav-link">📚 论文</a>
+      <a href="clinic.html" class="nav-link">🕵️ 诊所</a>
+      <a href="pitfalls.html" class="nav-link">💥 踩坑</a>
+      <a href="benchmark.html" class="nav-link">📊 选型</a>
+      <a href="universe.html" class="nav-link">🌌 宇宙</a>
+      <a href="https://github.com/yejinlei/agent-nlp-llm" target="_blank" rel="noopener" class="nav-gh" aria-label="GitHub"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg></a>
+    </div>
+  </div>
+</nav>
+
+<aside class="toc">
+  <h4>导览</h4>
+  <a href="#intuition" class="on">① 直觉</a>
+  <a href="#math">② 数学</a>
+  <a href="#code">③ 代码</a>
+  <a href="#practice">④ 实战</a>
+  <a href="#play">🧭 类比游戏</a>
+</aside>
+
+<div class="wrap page">
+  <section class="hero reveal">
+    <h1>🧭 词向量：把词变成能算数的东西</h1>
+    <p class="sub">计算机不认识"国王""女人"，只认识数字。词向量做的事情，就是把每个词变成一串数字，而且让<strong>意思相近的词，数字也相近</strong>——近到可以用加减法推理语义。</p>
+  </section>
+
+  <!-- ① 直觉 -->
+  <section id="intuition" class="blk reveal">
+    <h2 class="blk-title"><span class="num">①</span>直觉：从"符号"到"坐标"</h2>
+    <p class="blk-desc">最早的做法是 One-Hot：词表里第 3 个词就编码成 <code class="inline">[0,0,1,0,0,...]</code>。问题是——任意两个不同的词，距离都一样远，"猫"和"狗"的距离跟"猫"和"民主"的距离完全相同。这完全丢掉了语义。</p>
+    <div class="insight"><b>一句话直觉：</b> 词向量把每个词放到一个高维空间里的一个点上。意思相近的词，点挨得近；语义关系（比如"性别"、"国别"）会变成空间里<strong>固定的方向</strong>。于是"国王 − 男人 + 女人"才会算出来等于"女王"。</div>
+    <h3 style="margin:22px 0 10px">分布式假设：词义藏在它的邻居里</h3>
+    <p style="color:var(--text-2)">1957 年语言学家 Firth 说过一句名言：<em>"You shall know a word by the company it keeps."</em>（看一个词跟谁玩，就知道它是什么人。）"银行"总跟"存款、利率、贷款"一起出现，"河岸"总跟"河流、水流、泥沙"一起出现——<strong>上下文分布不同，词义就不同</strong>。这就是所有词向量方法的理论根基。</p>
+    <div class="grid g3" style="margin-top:16px">
+      <div class="card"><h4>基于计数</h4><p style="font-size:.9rem;color:var(--text-2)">统计共现次数，构建共现矩阵，再做降维。代表：LSA、GloVe。稳定但矩阵巨大。</p></div>
+      <div class="card"><h4>基于预测</h4><p style="font-size:.9rem;color:var(--text-2)">用神经网络预测上下文，把权重当向量。代表：Word2Vec。快、效果好。</p></div>
+      <div class="card"><h4>上下文相关</h4><p style="font-size:.9rem;color:var(--text-2)">同一个词在不同句子里给不同向量。代表：ELMo、BERT。解决一词多义。</p></div>
+    </div>
+  </section>
+
+  <!-- ② 数学 -->
+  <section id="math" class="blk reveal">
+    <h2 class="blk-title"><span class="num">②</span>数学：目标函数到底在优化什么</h2>
+    <h3 style="margin:18px 0 10px">共现矩阵与相似度</h3>
+    <p style="color:var(--text-2)">先统计词与词在同一窗口里共现的次数，得到矩阵 <span class="math">\\( M \in \mathbb{R}^{|V|\times|V|} \\)</span>。衡量两个词向量相似度最常用<strong>余弦相似度</strong>：</p>
+    <div class="math">\\( \text{sim}(u,v)=\cos\theta=\dfrac{u\cdot v}{\|u\|\,\|v\|}=\dfrac{\sum_i u_i v_i}{\sqrt{\sum_i u_i^2}\sqrt{\sum_i v_i^2}} \\)</div>
+    <p style="color:var(--text-2)">它只看方向、不看长度——因为词频高低不该影响"意思像不像"。</p>
+
+    <h3 style="margin:22px 0 10px">CBOW 与 Skip-gram</h3>
+    <p style="color:var(--text-2)"><strong>CBOW</strong>：拿上下文预测中心词（小上下文窗口，更快）。<strong>Skip-gram</strong>：拿中心词预测上下文（对低频词更好）。以 CBOW 为例，目标是让"给定上下文预测中心词"的条件概率最大：</p>
+    <div class="math">\\( \mathcal{L}=-\dfrac{1}{T}\sum_{t=1}^{T}\log p(w_t \mid w_{t-m},\dots,w_{t+m}) \\)
+    \\( p(w_t\mid \text{ctx})=\dfrac{\exp(u_{w_t}^{\top} h)}{\sum_{w'=1}^{|V|}\exp(u_{w'}^{\top} h)} \\)</div>
+    <p style="color:var(--text-2)">其中 <span class="math">\\( h \\)</span> 是上下文向量的平均。分母要对整个词表求和——词表几万到几十万，这一步太慢，所以有了下面的加速。</p>
+
+    <h3 style="margin:22px 0 10px">负采样：把"几十万分类"变成"一个是非题"</h3>
+    <p style="color:var(--text-2)">不预测"到底是哪个词"，只判断"真实搭配 vs 随机乱配"。这就是从多分类变成二分类，核心损失：</p>
+    <div class="math">\\( \mathcal{L}=-\log\sigma(u_o^{\top}h)-\sum_{k=1}^{K}\mathbb{E}_{w_k\sim P_n(w)}\big[\log\sigma(-u_{w_k}^{\top}h)\big] \\)</div>
+    <div class="insight"><b>为什么有效？</b> 分母那个巨大求和没了，每次只抽 K 个（通常 5–15 个）负样本。训练速度提升几十倍，效果几乎不损失。这是 word2vec 能流行的关键工程技巧。</div>
+  </section>
+
+  <!-- ③ 代码 -->
+  <section id="code" class="blk reveal">
+    <h2 class="blk-title"><span class="num">③</span>代码：从零实现 Skip-gram + 负采样</h2>
+<pre class="code"><span class="k">import</span> torch, torch.nn <span class="k">as</span> nn, torch.nn.functional <span class="k">as</span> F
+
+<span class="k">class</span> <span class="f">SkipGramNeg</span>(nn.Module):
+    <span class="k">def</span> <span class="f">__init__</span>(self, vocab_size, dim=<span class="n">128</span>):
+        super().__init__()
+        <span class="c"># 每个词两套向量：作为中心词(in) 和 作为上下文(out)</span>
+        self.in_emb  = nn.Embedding(vocab_size, dim)
+        self.out_emb = nn.Embedding(vocab_size, dim)
+        <span class="c"># 初始化为小随机值，避免一开始就“太自信”</span>
+        nn.init.uniform_(self.in_emb.weight, -<span class="n">0.5</span>/dim, <span class="n">0.5</span>/dim)
+        nn.init.zeros_(self.out_emb.weight)
+
+    <span class="k">def</span> <span class="f">forward</span>(self, center, context, negatives):
+        <span class="c"># center: [B]   context: [B]   negatives: [B, K]</span>
+        v  = self.in_emb(center)                       <span class="c"># [B, D] 中心词向量</span>
+        u  = self.out_emb(context)                     <span class="c"># [B, D] 正样本上下文向量</span>
+        u_neg = self.out_emb(negatives)                <span class="c"># [B, K, D] 负样本</span>
+
+        pos = (v * u).sum(-<span class="n">1</span>)                       <span class="c"># 正样本得分 [B]</span>
+        neg = torch.bmm(u_neg, v.unsqueeze(-<span class="n">1</span>)).squeeze(-<span class="n">1</span>)  <span class="c"># [B, K]</span>
+
+        <span class="c"># 正样本越像越好，负样本越不像越好（logsigmoid 数值更稳）</span>
+        loss = -F.logsigmoid(pos).mean() - F.logsigmoid(-neg).mean()
+        <span class="k">return</span> loss
+
+<span class="c"># 训练循环示意</span>
+model = <span class="f">SkipGramNeg</span>(vocab_size=<span class="n">30000</span>, dim=<span class="n">128</span>)
+opt = torch.optim.Adam(model.parameters(), lr=<span class="n">2e-3</span>)
+<span class="k">for</span> center, context <span class="k">in</span> data_loader:          <span class="c"># 滑窗切出的正样本对</span>
+    negatives = torch.randint(<span class="n">0</span>, <span class="n">30000</span>, (center.size(<span class="n">0</span>), <span class="n">10</span>))  <span class="c"># K=10</span>
+    loss = model(center, context, negatives)
+    opt.zero_grad(); loss.backward(); opt.step()
+</pre>
+    <div class="hint">💡 关键点：正样本来自真实语料的滑窗，负样本从词表里随机抽。<code class="inline">logsigmoid</code> 而不是 <code class="inline">log(sigmoid(x))</code>，是因为后者在 x 很负时会下溢成 <code class="inline">-inf</code>。</div>
+  </section>
+
+  <!-- ④ 实战 -->
+  <section id="practice" class="blk reveal">
+    <h2 class="blk-title"><span class="num">④</span>实战：怎么选、怎么用、坑在哪</h2>
+    <div class="grid g2">
+      <div class="card">
+        <h4>维度选多少？</h4>
+        <p style="font-size:.92rem;color:var(--text-2)">经验值：几十万词表用 100–300 维，小语料 50–100 维就够。维度越高表达力越强，但更容易过拟合、更耗显存。<strong>别盲目上 768/1024</strong>，那通常是给 Transformer 用的。</p>
+      </div>
+      <div class="card">
+        <h4>GloVe 和 Word2Vec 谁好？</h4>
+        <p style="font-size:.92rem;color:var(--text-2)">实践中差别不大，GloVe 用全局共现统计，Word2Vec 用局部滑窗预测。选哪个主要看训练资源和语料规模。真正质的飞跃是 ELMo/BERT 的<strong>上下文相关向量</strong>。</p>
+      </div>
+      <div class="card">
+        <h4>典型用途</h4>
+        <p style="font-size:.92rem;color:var(--text-2)">语义检索（把 query 和文档都转成向量做近邻搜索）、文本聚类、推荐（item2vec）、冷启动特征。在 LLM 时代，embedding 仍是 <strong>RAG 检索的第一块基石</strong>。</p>
+      </div>
+      <div class="card">
+        <h4>常见坑</h4>
+        <p style="font-size:.92rem;color:var(--text-2)">① 静态词向量无法处理一词多义（"苹果"手机 vs 水果）；② 未登录词只能给 UNK 或按子词拼；③ 类比运算在很多语料上并不稳定，别当成万能定律；④ 训练语料有偏，向量里会隐含偏见。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 类比游戏 -->
+  <section id="play" class="blk reveal">
+    <h2 class="blk-title"><span class="num">🧭</span>类比游戏：亲手算一次向量运算</h2>
+    <p class="blk-desc">下面用真实的二维向量表（简化示意，真实维度通常 100–4096）来演示。选三个词做 <span class="math">\\( \vec{A}-\vec{B}+\vec{C} \\)</span>，看看最近的是谁。</p>
+    <div class="ctrl">
+      <select id="vA"><option>国王</option><option>男人</option><option>北京</option><option>猫</option><option>走</option></select>
+      <span style="font-weight:800">−</span>
+      <select id="vB"><option>男人</option><option>国王</option><option>中国</option><option>小狗</option><option>跑</option></select>
+      <span style="font-weight:800">+</span>
+      <select id="vC"><option>女人</option><option>女王</option><option>法国</option><option>老虎</option><option>跳</option></select>
+      <button class="btn btn-primary" id="vGo">计算 ≈ ?</button>
+      <button class="btn btn-outline" id="vReset">重置</button>
+    </div>
+    <div class="hint good" id="vOut">👉 点击"计算"看结果。</div>
+    <canvas id="vecCanvas" width="820" height="460"></canvas>
+    <div class="hint" id="vHint">图中每个点是二维空间里的一个词。计算结果后，参与运算的词会被圈出，结果落点用虚线标出。真实词向量在几百维空间里，但"语义关系 = 方向"这件事，二维图就能让你看懂。</div>
+  </section>
+</div>
+
+<footer class="site"><p>💬 agent-nlp-llm · 自然语言技术本体论研究站</p></footer>
+
+<script src="js/site.js"></script>
+<script>
+(function(){
+  // 二维示意向量表（手工构造，保证语义关系合理）
+  var VEC = {
+    '国王':[3.6,3.0], '女王':[3.4,1.2], '男人':[2.2,3.0], '女人':[2.0,1.2],
+    '北京':[-2.8,2.6], '中国':[-2.2,1.4], '法国':[-3.2,-0.6], '巴黎':[-3.8,0.6],
+    '猫':[0.6,3.2], '小狗':[0.2,3.4], '老虎':[-0.2,3.6],
+    '走':[-1.0,-2.6], '跑':[-0.6,-3.0], '跳':[-1.8,-2.8]
+  };
+  var canvas = document.getElementById('vecCanvas');
+  var ctx = canvas ? canvas.getContext('2d') : null;
+  var W = canvas.width, H = canvas.height;
+  function ensureCtx(){
+    if (!ctx && canvas) ctx = canvas.getContext('2d');
+    return ctx;
+  }
+  var pad = 46;
+  var xs = Object.keys(VEC).map(function(k){ return VEC[k][0]; });
+  var ys = Object.keys(VEC).map(function(k){ return VEC[k][1]; });
+  var xmin = Math.min.apply(null, xs), xmax = Math.max.apply(null, xs);
+  var ymin = Math.min.apply(null, ys), ymax = Math.max.apply(null, ys);
+  function mapX(x){ return pad + (x - xmin) / (xmax - xmin + 1e-6) * (W - 2*pad); }
+  function mapY(y){ return H - pad - (y - ymin) / (ymax - ymin + 1e-6) * (H - 2*pad); }
+
+  var state = { a:null, b:null, c:null, res:null, best:null };
+
+  function draw(){
+    var c = ensureCtx();
+    if (!c) return;
+    ctx = c;
+    ctx.clearRect(0, 0, W, H);
+    // 坐标轴
+    ctx.strokeStyle = '#e6e9f2'; ctx.lineWidth = 1;
+    for (var i = 0; i <= 6; i++) {
+      var gx = pad + i * (W - 2*pad) / 6, gy = pad + i * (H - 2*pad) / 6;
+      ctx.beginPath(); ctx.moveTo(gx, pad); ctx.lineTo(gx, H - pad); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(pad, gy); ctx.lineTo(W - pad, gy); ctx.stroke();
+    }
+    // 结果点
+    if (state.res) {
+      var rx = mapX(state.res[0]), ry = mapY(state.res[1]);
+      ctx.fillStyle = 'rgba(236,72,153,.16)';
+      ctx.beginPath(); ctx.arc(rx, ry, 20, 0, Math.PI*2); ctx.fill();
+      ctx.strokeStyle = '#ec4899'; ctx.setLineDash([5,4]); ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.arc(rx, ry, 14, 0, Math.PI*2); ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle = '#ec4899'; ctx.font = 'bold 13px sans-serif';
+      ctx.fillText('结果落点', rx - 26, ry - 20);
+    }
+    // 所有词
+    Object.keys(VEC).forEach(function(k){
+      var x = mapX(VEC[k][0]), y = mapY(VEC[k][1]);
+      var isPart = (k === state.a || k === state.b || k === state.c);
+      var isBest = (k === state.best);
+      ctx.beginPath(); ctx.arc(x, y, isBest ? 8 : 5.5, 0, Math.PI*2);
+      ctx.fillStyle = isBest ? '#10a37f' : (isPart ? '#3b6fe0' : '#aab3c8');
+      ctx.fill();
+      if (isPart || isBest) {
+        ctx.strokeStyle = isBest ? '#10a37f' : '#3b6fe0'; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.arc(x, y, isBest ? 12 : 9, 0, Math.PI*2); ctx.stroke();
+      }
+      ctx.fillStyle = isBest ? '#0a6b53' : (isPart ? '#2c4a8c' : '#8b93a7');
+      ctx.font = (isBest || isPart ? 'bold ' : '') + '13px sans-serif';
+      ctx.fillText(k + (isBest ? ' ✓' : ''), x + 10, y + 4);
+    });
+    // 向量箭头（A→B 方向，再落到结果）
+    if (state.a && state.b && state.c) {
+      var ax = mapX(VEC[state.a][0]), ay = mapY(VEC[state.a][1]);
+      var bx = mapX(VEC[state.b][0]), by = mapY(VEC[state.b][1]);
+      arrow(ax, ay, bx, by, 'rgba(59,111,224,.5)');
+      var cx = mapX(VEC[state.c][0]), cy = mapY(VEC[state.c][1]);
+      arrow(cx, cy, mapX(state.res[0]), mapY(state.res[1]), 'rgba(236,72,153,.6)');
+    }
+  }
+  function arrow(x1, y1, x2, y2, color){
+    if (!ctx) return;
+    ctx.strokeStyle = color; ctx.lineWidth = 2; ctx.beginPath();
+    ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+  }
+
+  function run(){
+    var a = document.getElementById('vA').value,
+        b = document.getElementById('vB').value,
+        c = document.getElementById('vC').value;
+    if (a === b || b === c || a === c) {
+      document.getElementById('vOut').className = 'hint warn';
+      document.getElementById('vOut').textContent = '⚠️ 三个词请选不同的，否则运算没意义。';
+      return;
+    }
+    var r = [VEC[a][0] - VEC[b][0] + VEC[c][0], VEC[a][1] - VEC[b][1] + VEC[c][1]];
+    var best = null, bd = 1e9;
+    Object.keys(VEC).forEach(function(k){
+      if (k === a || k === b || k === c) return;
+      var dx = VEC[k][0] - r[0], dy = VEC[k][1] - r[1];
+      var d = dx*dx + dy*dy;
+      if (d < bd) { bd = d; best = k; }
+    });
+    state = { a:a, b:b, c:c, res:r, best:best };
+    draw();
+    var out = document.getElementById('vOut');
+    out.className = 'hint good';
+    out.innerHTML = '<span class="vec-out">' + a + ' − ' + b + ' + ' + c + ' ≈ <b style="font-size:1.25rem">' + best +
+      '</b></span><br><span style="font-size:.88rem">从「' + b + '」到「' + c + '」这个<b>方向</b>，搬到「' + a +
+      '」身上，就得到了「' + best + '」。模型完全靠统计数据自己学出这个方向，没人教它什么是一对。这就是词向量最迷人的地方。</span>';
+  }
+  document.getElementById('vGo').onclick = run;
+  document.getElementById('vReset').onclick = function(){
+    state = { a:null, b:null, c:null, res:null, best:null };
+    draw();
+    document.getElementById('vOut').className = 'hint good';
+    document.getElementById('vOut').textContent = '👉 点击"计算"看结果。';
+  };
+  draw();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,1548 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🔤 BPE 分词器：大模型是怎么切词的 · agent-nlp-llm</title>
+<meta name="description" content="从直觉、数学、代码到实战，四步讲透 Byte Pair Encoding。内含可真实交互的 BPE 训练演示：输入任意文本，逐步骤看相邻符号对如何被合并成子词。">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+<link rel="stylesheet" href="css/site.css">
+<style>
+  .reveal { opacity: 0; transform: translateY(18px); transition: opacity .55s ease, transform .55s ease; }
+  .reveal.revealed { opacity: 1; transform: none; }
+
+  /* ---- BPE 演示台 ---- */
+  .bpe-stage {
+    background: #0f1424; border-radius: 14px; padding: 20px 22px; margin: 16px 0;
+    font-family: var(--mono); overflow-x: auto;
+  }
+  .bpe-stage .stage-title {
+    color: #7d8bb0; font-size: .76rem; letter-spacing: .1em;
+    text-transform: uppercase; margin-bottom: 14px;
+  }
+  .bpe-word { margin: 9px 0; display: flex; align-items: center; flex-wrap: wrap; gap: 5px; }
+  .bpe-word .wlabel {
+    color: #6f7da4; font-size: .78rem; min-width: 74px; flex: 0 0 auto;
+  }
+  .sym {
+    display: inline-flex; align-items: center; padding: 4px 9px; border-radius: 7px;
+    font-size: .86rem; background: #1c2440; color: #cfd8ee; border: 1px solid #2a3355;
+    transition: all .2s; white-space: pre;
+  }
+  .sym.tail { background: #2a1f3d; color: #c792ea; border-color: #43305e; }
+  .sym.new { background: #10382c; color: #7ee0b5; border-color: #1d6b4f; }
+  .sym.flash { background: #3a3410; color: #ffe08a; border-color: #8a7a20; transform: scale(1.12); }
+
+  .stepbar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin: 14px 0 6px; }
+  .step-dot {
+    width: 30px; height: 30px; border-radius: 9px; display: flex; align-items: center;
+    justify-content: center; font-size: .76rem; font-weight: 700;
+    background: #eef1f8; color: var(--text-3); cursor: pointer; transition: all .18s;
+    border: 1px solid transparent; font-family: var(--mono);
+  }
+  .step-dot:hover { border-color: var(--blue); color: var(--blue); }
+  .step-dot.done { background: var(--blue-lt); color: var(--blue); }
+  .step-dot.on { background: linear-gradient(120deg, #3b6fe0, #6d5ce8); color: #fff; }
+
+  .merges-log { max-height: 260px; overflow-y: auto; }
+  .merges-log .mline {
+    display: flex; gap: 10px; align-items: baseline; padding: 6px 10px;
+    border-radius: 8px; font-family: var(--mono); font-size: .84rem;
+  }
+  .merges-log .mline:nth-child(odd) { background: #fafbff; }
+  .merges-log .mno { color: var(--text-3); flex: 0 0 34px; }
+  .merges-log .mfrom { color: #b5326e; }
+  .merges-log .mto { color: var(--green); font-weight: 700; }
+  .merges-log .mcnt { color: var(--text-3); margin-left: auto; font-size: .78rem; }
+
+  .vocab-chips { display: flex; flex-wrap: wrap; gap: 6px; max-height: 180px; overflow-y: auto; }
+  .vchip {
+    font-family: var(--mono); font-size: .78rem; padding: 3px 8px; border-radius: 7px;
+    background: #eef1f8; color: var(--text-2); border: 1px solid var(--border);
+  }
+  .vchip.vnew { background: var(--green-lt); color: var(--green); border-color: #bfe8db; }
+  .vchip.vtail { background: var(--purple-lt); color: var(--purple); border-color: #ddd0f7; }
+
+  .statrow { display: flex; gap: 22px; flex-wrap: wrap; margin: 12px 0 4px; }
+  .statrow div { text-align: left; }
+  .statrow b {
+    display: block; font-size: 1.5rem; font-weight: 800; font-family: var(--mono);
+    color: var(--blue); line-height: 1.2;
+  }
+  .statrow span { font-size: .78rem; color: var(--text-3); }
+
+  .freqbar { height: 8px; border-radius: 4px; background: linear-gradient(90deg, #3b6fe0, #7c3aed); }
+  .freqrow { margin: 7px 0; font-family: var(--mono); font-size: .84rem; }
+  .freqrow .fl { display: flex; justify-content: space-between; margin-bottom: 3px; }
+  .freqrow .fn { color: var(--text-3); }
+
+  .code-wrap pre.code { max-height: 460px; }
+  .cmp-table td:first-child { font-weight: 600; }
+  .katex-line { overflow-x: auto; }
+</style>
+</head>
+<body>
+
+<nav class="navbar">
+  <div class="nav-inner">
+    <a href="index.html" class="nav-logo">💬 agent-nlp-llm</a>
+    <button class="nav-toggle" onclick="document.querySelector('.nav-links').classList.toggle('open')" aria-label="菜单">☰</button>
+    <div class="nav-links">
+      <a href="index.html" class="nav-link">🏠 首页</a>
+      <a href="playground.html" class="nav-link">🎨 玩法</a>
+      <a href="nlp/index.html" class="nav-link">📝 NLP</a>
+      <a href="llm/index.html" class="nav-link">🤖 LLM</a>
+      <a href="bpe.html" class="nav-link active">🔤 分词器</a>
+      <a href="embedding.html" class="nav-link">🧭 词向量</a>
+      <a href="attention.html" class="nav-link">🎯 注意力</a>
+      <a href="papers.html" class="nav-link">📚 论文</a>
+      <a href="clinic.html" class="nav-link">🕵️ 诊所</a>
+      <a href="pitfalls.html" class="nav-link">💥 踩坑</a>
+      <a href="benchmark.html" class="nav-link">📊 选型</a>
+      <a href="universe.html" class="nav-link">🌌 宇宙</a>
+      <a href="https://github.com/yejinlei/agent-nlp-llm" target="_blank" rel="noopener" class="nav-gh" aria-label="GitHub"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg></a>
+    </div>
+  </div>
+</nav>
+
+<aside class="toc">
+  <h4>四步教学法</h4>
+  <a href="#step1" class="on">① 直觉：从下往上粘</a>
+  <a href="#lab">🧪 互动演示台</a>
+  <a href="#why">⚖️ 为什么是子词</a>
+  <a href="#step2">② 数学：贪心合并算法</a>
+  <a href="#tradeoff">📉 词表大小 vs 压缩率</a>
+  <a href="#step3">③ 代码：Python 实现</a>
+  <a href="#step4">④ 实战：GPT/LLaMA 词表</a>
+  <a href="#bytetop">🔬 byte-level vs 普通 BPE</a>
+  <a href="#gotcha">⚠️ 工程坑点</a>
+</aside>
+
+<div class="wrap page">
+
+  <!-- ===== Hero ===== -->
+  <section class="hero reveal">
+    <h1>🔤 BPE 分词器：大模型是怎么切词的</h1>
+    <p class="sub">
+      在你把一句话送给大模型之前，它已经被切成了一串整数。<strong>怎么切</strong>这件事，
+      决定了你的上下文能装多少字、你的账单要花多少钱、你的中文会不会被拆得七零八落。
+      这一页用「直觉 → 数学 → 代码 → 实战」四步，把 BPE 拆到你能自己写出来。
+    </p>
+    <div class="btn-row">
+      <a href="#lab" class="btn btn-primary">🧪 直接开始玩演示台</a>
+      <a href="#step1" class="btn btn-purple">📖 从直觉读起</a>
+      <a href="playground.html" class="btn btn-outline">🎨 回到玩法广场</a>
+    </div>
+    <div style="margin-top:26px">
+      <span class="tag tag-blue">Sennrich et al., ACL 2016</span>
+      <span class="tag tag-purple">1994 年源于数据压缩</span>
+      <span class="tag tag-green">GPT / LLaMA / Qwen 都在用</span>
+      <span class="tag tag-orange">有真实可交互 Demo</span>
+    </div>
+  </section>
+
+  <!-- ===== STEP 1 直觉 ===== -->
+  <section id="step1" class="blk reveal">
+    <h2 class="blk-title"><span class="num">① 直觉</span>从下往上，把最常见的邻居粘起来</h2>
+    <p class="blk-desc">
+      先忘掉所有公式。BPE 的全部思想，可以压缩成一句人话：
+      <strong>反复找出当前序列里最常挨在一起的两个符号，把它们粘成一个新符号。</strong>
+      仅此而已。没有神经网络、没有梯度、没有概率——它是一个纯粹的计数加合并的贪心过程。
+    </p>
+
+    <div class="grid g2">
+      <div class="card">
+        <h4>一个玩具语料</h4>
+        <p style="font-size:.9rem;color:var(--text-2);margin-bottom:12px">
+          假设训练语料里只有四个词，出现次数如括号所示。BPE 的第一件事，是把每个词<b>拆成单个字符</b>，
+          并在词尾加上一个特殊标记 <code class="inline">&lt;/w&gt;</code>（word boundary）：
+        </p>
+        <pre class="code">low      (5)   →  l o w &lt;/w&gt;
+lower    (2)   →  l o w e r &lt;/w&gt;
+newest   (6)   →  n e w e s t &lt;/w&gt;
+widest   (3)   →  w i d e s t &lt;/w&gt;</pre>
+        <p style="font-size:.9rem;color:var(--text-2);margin-top:12px">
+          为什么要加 <code class="inline">&lt;/w&gt;</code>？因为如果只统计 "e" 和 "s"，
+          BPE 会分不清 "newest" 结尾的 "st" 和 "widest" 中间出现的 "st"。
+          有了词尾标记，<b>"est&lt;/w&gt;" 和 "est" 就是两个不同的东西</b>，
+          分词结果才能无歧义地还原回原句。
+        </p>
+      </div>
+
+      <div class="card">
+        <h4>第一轮：数一数谁最爱挨着谁</h4>
+        <p style="font-size:.9rem;color:var(--text-2);margin-bottom:12px">
+          把四个词展开成符号流，统计所有<b>相邻对</b>（bigram）的出现次数：
+        </p>
+        <div class="kv"><span>(e, s) —— 出现在 n<b>e</b>w<b>e</b>st 与 wid<b>e</b>st 的 e→s 处</span><span>9</span></div>
+        <div class="kv"><span>(e, s t&lt;/w&gt; 里的 s, t) </span><span>9</span></div>
+        <div class="kv"><span>(l, o) —— low, lower</span><span>7</span></div>
+        <div class="kv"><span>(o, w) —— low, lower</span><span>7</span></div>
+        <div class="kv"><span>(w, e) —— newest, widest</span><span>9</span></div>
+        <div class="kv"><span>(e, s t&lt;/w&gt;) 的 t, &lt;/w&gt;</span><span>9</span></div>
+        <div class="hint good" style="margin-top:14px">
+          🎯 在本例中 <code class="inline">(e, s)</code> 出现 9 次，是最高频对之一。
+          于是 BPE 执行第一次合并，把 <b>e 和 s 粘成新符号 "es"</b>。
+        </div>
+      </div>
+    </div>
+
+    <div class="insight">
+      <b>Aha 时刻：</b>所谓"分词器",并不认识任何语言学概念。它不知道什么是词根、什么是后缀、什么是复数。
+      它只知道哪些字符喜欢挨在一起。但正因为"est"、"ing"、"tion" 这些<b>语言学上真实存在的后缀在语料里确实高频共现</b>，
+      纯统计的贪心合并，最终会自己"长出"一套近似词法的切分方案。
+    </div>
+
+    <div class="hint">
+      📌 <b>"从下往上"是什么意思：</b>跟传统分词（先定好词典，再拿词典去切句子）相反，
+      BPE 是从最小的字符级出发，一步步往上长出越来越长的单位。
+      起点是确定的（字符或字节），终点由合并次数决定，中间过程完全由数据决定。
+      这叫 <b>bottom-up（自底向上）</b>，和 WordPiece 的启发式、Unigram 的自顶向下正好相对。
+    </div>
+  </section>
+
+  <!-- ===== 互动演示台 ===== -->
+  <section id="lab" class="blk reveal">
+    <h2 class="blk-title"><span class="num">🧪 </span>互动演示台：亲手跑一遍 BPE</h2>
+    <p class="blk-desc">
+      下面这个演示台<b>真的在跑 BPE</b>——它会在你的浏览器里解析你输入的语料、构造字符级初始词表、
+      统计相邻对、并逐步执行合并。你改一个字母，整个合并历史都会跟着变。用「下一步」单步观察，
+      或用「一次跑完」看全局。
+    </p>
+
+    <div class="demo-box">
+      <!-- 控制区 -->
+      <div class="ctrl" style="align-items:flex-end">
+        <label style="flex:1;min-width:280px">
+          训练语料（每行一个词，可用 "词 频次" 指定权重；也可用逗号分隔）
+          <textarea id="corpus" rows="4" style="width:100%;font-family:var(--mono);font-size:.86rem">low lower lowest
+newest widest
+slow slower</textarea>
+        </label>
+        <button class="btn btn-primary" id="btnRun">🚀 运行 BPE 合并步骤</button>
+        <button class="btn btn-purple" id="btnNext">▶ 下一步</button>
+        <button class="btn btn-outline" id="btnAll">⏩ 一次跑完</button>
+        <button class="btn btn-outline" id="btnReset">↺ 重置</button>
+      </div>
+
+      <div class="ctrl" style="margin-top:2px">
+        <label>目标合并步数（词表增长率）
+          <input type="range" id="mergeRange" min="1" max="40" value="15">
+        </label>
+        <span style="font-weight:700;font-family:var(--mono);color:var(--blue)">步数 = <span id="mergeRangeVal">15</span></span>
+        <label>词尾标记
+          <select id="tailSel">
+            <option value="</w>" selected>&lt;/w&gt; （经典 BPE）</option>
+            <option value="▁">▁ （SentencePiece 风格）</option>
+            <option value="">不加（纯字符 BPE）</option>
+          </select>
+        </label>
+      </div>
+
+      <!-- 状态统计 -->
+      <div class="statrow">
+        <div><b id="stStep">0</b><span>当前步骤</span></div>
+        <div><b id="stVocab">0</b><span>词表大小（符号）</span></div>
+        <div><b id="stCorpus">0</b><span>语料总符号数</span></div>
+        <div><b id="stRatio">—</b><span>压缩率（原字符/符号）</span></div>
+        <div><b id="stPair">—</b><span>当前最高频对</span></div>
+      </div>
+
+      <!-- 步骤点 -->
+      <div class="stepbar" id="stepDots"></div>
+
+      <!-- 主舞台 -->
+      <div class="bpe-stage">
+        <div class="stage-title" id="stageTitle">当前符号序列（每个词一行）</div>
+        <div id="stageBody"><span style="color:#7d8bb0">点「运行 BPE 合并步骤」开始。</span></div>
+      </div>
+
+      <div class="hint" id="labHint">
+        📌 <b>玩法提示：</b>先用默认语料跑一遍，看 "low"、"est" 是怎么被粘出来的。
+        然后把语料换成你自己的句子，或者把"词尾标记"改成"不加"，观察合并结果有什么变化。
+      </div>
+
+      <div class="grid g2" style="margin-top:18px">
+        <div class="card">
+          <h4>📋 合并记录（这就是"词表扩张日志"）</h4>
+          <p style="font-size:.86rem;color:var(--text-2);margin:6px 0 10px">
+            每一行代表一次合并操作，也就是词表新增的一个 token。
+            真实模型的 <code class="inline">merges.txt</code> 就是这样一个长列表。
+          </p>
+          <div class="merges-log" id="mergesLog">
+            <div style="color:var(--text-3);font-size:.86rem">还没有合并记录。</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h4>📈 当前相邻对频次排行</h4>
+          <p style="font-size:.86rem;color:var(--text-2);margin:6px 0 10px">
+            每一次合并前，BPE 都会重新统计全部相邻对。<b>最上面那一行就是下一个要被合并的对象</b>。
+          </p>
+          <div id="freqList">
+            <div style="color:var(--text-3);font-size:.86rem">等待运行。</div>
+          </div>
+          <h4 style="margin-top:18px">🏷️ 当前词表增量</h4>
+          <div class="vocab-chips" id="vocabChips">
+            <span style="color:var(--text-3);font-size:.84rem">等待运行。</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="hint warn">
+      ⚠️ <b>注意口径：</b>这个演示台是教学用的简化版 BPE。真实 GPT-2 / LLaMA 分词器的起点不是"字符"，
+      而是 <b>256 个字节</b>（byte-level BPE），并且在合并前会先做正则预切分
+      （把 "don't" 拆成 "don" 和 "'t" 这类）。但核心循环——统计、取最大、合并、重复——是完全一样的。
+    </div>
+  </section>
+
+  <!-- ===== 为什么是子词 ===== -->
+  <section id="why" class="blk reveal">
+    <h2 class="blk-title"><span class="num">01.5</span>⚖️ 为什么大模型不用"词"，也不用"字"？</h2>
+    <p class="blk-desc">
+      分词粒度只有三档可选：词（word）、字符（char）、子词（subword）。
+      前两档各有致命伤，子词是唯一能同时活下来的选项。这不是偏好问题，是约束问题。
+    </p>
+
+    <div class="grid g3">
+      <div class="card" style="border-top:3px solid #ef4444">
+        <h4>❌ 词级（word-level）</h4>
+        <p style="font-size:.88rem;color:var(--text-2)">
+          假装语言是由空格分开的整词组成。<br><br>
+          <b>问题 1 · 词表爆炸：</b>英语的屈折变化（run/runs/ran/running）、复合词、
+          专有名词、拼写错误……词表规模近似无限。<br>
+          <b>问题 2 · OOV 无解：</b>训练时没见过的词一律变成 <code class="inline">&lt;UNK&gt;</code>，
+          模型直接丢失信息。一个新药名或一个新用户名就能让模型失明。<br>
+          <b>问题 3 · 形态信息浪费：</b>run/runs/ran 明明是同一个词根，
+          却被分配成三个互不相干的 embedding，各自都训练不充分。
+        </p>
+      </div>
+
+      <div class="card" style="border-top:3px solid #ef4444">
+        <h4>❌ 字符级（char-level）</h4>
+        <p style="font-size:.88rem;color:var(--text-2)">
+          把每个字母当 token。<br><br>
+          <b>优点：</b>词表极小（英文 26 个字母），永无 OOV。<br>
+          <b>问题 1 · 序列太长：</b>一句话的 token 数是词级的 4–5 倍。
+          注意力复杂度是 <span class="math">\( O(n^2) \)</span>，序列翻 4 倍，计算量翻 16 倍。<br>
+          <b>问题 2 · 单字符没语义：</b>"猫"和"狗"在字符层面毫无关系，
+          模型必须花大量层数去学习"把字符拼成有意义的单位"这件事，纯属浪费容量。<br>
+          <b>问题 3 · 上下文窗口被挤爆：</b>同样的 8K 窗口，词级能装约 6000 词，字符级只能装 1300 词左右。
+        </p>
+      </div>
+
+      <div class="card" style="border-top:3px solid #10a37f">
+        <h4>✅ 子词（subword）</h4>
+        <p style="font-size:.88rem;color:var(--text-2)">
+          <b>原则：</b>高频的词，整块保留；低频的词，拆成有意义的碎片。<br><br>
+          <b>同时解决三件事：</b><br>
+          · <b>词表可控：</b>大小是超参数，你想 32K 就 32K，想 128K 就 128K。<br>
+          · <b>没有 OOV：</b>最坏情况退化成字符或字节，任何输入都能编码。<br>
+          · <b>形态可泛化：</b>"lowest" 见过之后，"low" 和 "est" 都学会了，
+          "slowest" 即使没在训练集里出现过，也能被正确拆成 "s"+"low"+"est"。<br><br>
+          <span class="tag tag-green">这正是 BPE 出场的理由</span>
+        </p>
+      </div>
+    </div>
+
+    <div class="insight">
+      <b>一句话总结这个权衡：</b>粒度越粗，序列越短、语义单元越完整，但词表越大、泛化越差；
+      粒度越细，词表越小、泛化越好，但序列越长、单 token 越无意义。
+      子词不是在两端选一个点，而是<b>让同一套词表在不同词上取不同的粒度</b>——
+      "the" 一个 token，"antidisestablishmentarianism" 拆成七八个碎片。这才是它赢的原因。
+    </div>
+  </section>
+
+  <!-- ===== STEP 2 数学 ===== -->
+  <section id="step2" class="blk reveal">
+    <h2 class="blk-title"><span class="num">② 数学</span>BPE 的贪心合并算法，写清楚每一步</h2>
+    <p class="blk-desc">
+      BPE 没有需要优化的损失函数，它是一个<b>确定性的贪心程序</b>。
+      下面用形式化的语言把它的每一步写清楚——写完你会发现，它比任何"算法"都简单，
+      难的是理解它为什么有效。
+    </p>
+
+    <div class="card">
+      <h4>符号约定</h4>
+      <div class="math katex-line">
+        \[ \mathcal{X} = \{x_1, x_2, \dots, x_{|\mathcal{X}|}\} \quad \text{初始符号集（字符或字节）} \]
+      </div>
+      <div class="math katex-line">
+        \[ \mathcal{C} = \{(w_1, c_1), (w_2, c_2), \dots, (w_n, c_n)\} \quad \text{语料：词 } w_i \text{ 与频次 } c_i \]
+      </div>
+      <div class="math katex-line">
+        \[ V_0 = \mathcal{X} \cup \{\texttt{&lt;/w&gt;}\} \quad \text{初始词表} \]
+      </div>
+      <div class="math katex-line">
+        \[ s_i^{(0)} = (\sigma_1, \sigma_2, \dots, \sigma_{L_i}, \texttt{&lt;/w&gt;}), \quad \sigma_j \in \mathcal{X} \quad \text{每个词初始为字符序列 + 词尾标记} \]
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:18px">
+      <h4>核心循环（迭代 <span class="math">\( t = 1, 2, \dots, k \)</span>）</h4>
+
+      <p style="font-size:.93rem;margin:10px 0 4px"><b>第 1 步 · 统计相邻对频次</b></p>
+      <div class="math katex-line">
+        \[ \mathrm{cnt}_t(a, b) \;=\; \sum_{i=1}^{n} c_i \cdot \#\Big\{\, j \;\Big|\; s_i^{(t-1)}[j] = a,\; s_i^{(t-1)}[j+1] = b \,\Big\} \]
+      </div>
+      <p style="font-size:.9rem;color:var(--text-2);margin:6px 0 0">
+        对语料中每个词，数出符号对 <span class="math">\( (a,b) \)</span> 在它内部相邻出现的次数，
+        再乘以该词的词频 <span class="math">\( c_i \)</span>，最后全语料累加。
+        <b>词频必须参与加权</b>——否则一个只出现一次的罕见词会和出现百万次的 "the" 获得同样的投票权。
+      </p>
+
+      <p style="font-size:.93rem;margin:18px 0 4px"><b>第 2 步 · 贪心选出最高频对</b></p>
+      <div class="math katex-line">
+        \[ (a^\star, b^\star) \;=\; \arg\max_{(a,b)} \; \mathrm{cnt}_t(a, b) \]
+      </div>
+      <p style="font-size:.9rem;color:var(--text-2);margin:6px 0 0">
+        出现的平局（tie）需要一条确定性的打破规则，否则同样的语料可能训出不同的词表。
+        工业实现通常按符号对在词表中首次出现的顺序（即字典序或 id 序）决定优先级。
+      </p>
+
+      <p style="font-size:.93rem;margin:18px 0 4px"><b>第 3 步 · 合并：新符号加入词表，序列中所有该对都粘起来</b></p>
+      <div class="math katex-line">
+        \[ m_t = a^\star \Vert b^\star, \qquad V_t = V_{t-1} \cup \{m_t\} \]
+      </div>
+      <div class="math katex-line">
+        \[ s_i^{(t)} = \mathrm{replace}\Big(s_i^{(t-1)},\; (a^\star, b^\star) \to m_t\Big), \quad \forall i \]
+      </div>
+      <p style="font-size:.9rem;color:var(--text-2);margin:6px 0 0">
+        注意 <span class="math">\( V_{t-1} \to V_t \)</span> 是<b>只增不减</b>的：
+        原来那些单个字符依然保留在词表里（这是后面能"回退"到字符级、保证无 OOV 的原因），
+        新符号只是<b>追加</b>进去。
+      </p>
+
+      <p style="font-size:.93rem;margin:18px 0 4px"><b>第 4 步 · 终止条件</b></p>
+      <div class="math katex-line">
+        \[ |V_k| \;=\; |\mathcal{X}| + 1 + k \quad \Longrightarrow \quad k \;=\; |V_k| - |\mathcal{X}| - 1 \]
+      </div>
+      <p style="font-size:.9rem;color:var(--text-2);margin:6px 0 0">
+        这就是那个关键等式：<b>目标词表大小和合并次数是同一件事的两种说法。</b>
+        想要 32,000 的词表、初始符号 256 个 + 1 个词尾标记，就合并
+        <span class="math">\( 32000 - 257 = 31743 \)</span> 次。
+        <b>合并次数是 BPE 唯一的超参数</b>，也是唯一的"旋钮"。
+      </p>
+    </div>
+
+    <div class="grid g2" style="margin-top:18px">
+      <div class="card">
+        <h4>复杂度：为什么训练慢、但用起来快</h4>
+        <p style="font-size:.9rem;color:var(--text-2)">
+          <b>训练阶段：</b>朴素实现每合并一次就重扫一遍全语料，复杂度约
+          <span class="math">\( O(k \cdot n \cdot L) \)</span>（<span class="math">\( k \)</span> 为合并次数，
+          <span class="math">\( n \)</span> 为词种数，<span class="math">\( L \)</span> 为平均词长）。
+          在几十 GB 语料上做几万次合并，这就是为什么工业实现都要上
+          <b>增量统计 + 优先队列</b>：只更新受影响的 pair，把复杂度压到接近
+          <span class="math">\( O(n L \log n) \)</span>。HuggingFace <code class="inline">tokenizers</code>
+          把核心逻辑用 Rust 重写，也正是为了这一刻。
+        </p>
+      </div>
+      <div class="card">
+        <h4>编码：拥有 <span class="math">\( V_k \)</span> 之后怎么切新句子</h4>
+        <p style="font-size:.9rem;color:var(--text-2)">
+          编码（encode）时<b>不再做统计</b>，而是按<b>训练时记录的合并顺序</b>依次应用：
+          先把输入拆成字符（或字节），然后遍历
+          <span class="math">\( m_1, m_2, \dots, m_k \)</span>，
+          能合并就合并。<br><br>
+          这就是为什么合并的<b>顺序</b>必须存下来——真实模型的
+          <code class="inline">vocab.json</code>（符号→id）配套一个
+          <code class="inline">merges.txt</code>（有序的合并规则表），
+          两者缺一不可。顺序本身就是信息。
+        </p>
+      </div>
+    </div>
+
+    <div class="hint">
+      🔍 <b>为什么贪心能work？</b>BPE 显然不是全局最优的分词方案——它是一个纯粹的局部贪心。
+      但它有一个非常实用的性质：<b>贪心于"最高频共现"等价于贪心于"最大压缩收益"</b>。
+      每次合并都让整个语料的符号总数下降最多，因此 k 次合并后得到的词表，
+      在"给定词表大小下让语料最短"这个目标上是一个相当好的近似解。够好，而且极快。
+    </div>
+  </section>
+
+  <!-- ===== 权衡 ===== -->
+  <section id="tradeoff" class="blk reveal">
+    <h2 class="blk-title"><span class="num">02.5</span>📉 词表大小 vs 压缩率：唯一真正要调的旋钮</h2>
+    <p class="blk-desc">
+      既然合并次数是唯一超参数，那么"设多少"就变成了最重要的工程决策。它同时影响三件事：
+      训练成本、推理成本、以及模型对低资源语言的能力。
+    </p>
+
+    <table class="tb cmp-table">
+      <thead>
+        <tr>
+          <th style="width:22%">词表大小</th>
+          <th>序列长度</th>
+          <th>嵌入层参数量</th>
+          <th>低频 token 训练充分度</th>
+          <th>典型选择</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>太小（&lt; 20K）</td>
+          <td>↑↑ 常见词被拆成多个碎片，序列显著变长</td>
+          <td>↓ 小</td>
+          <td>较好（每个 token 都被频繁看到）</td>
+          <td>早期的字符级 / 小语种专用模型</td>
+        </tr>
+        <tr>
+          <td>中等（32K–50K）</td>
+          <td>= 平衡点</td>
+          <td>= 中等</td>
+          <td>好</td>
+          <td>LLaMA 1/2（32K）、GPT-2（50,257）</td>
+        </tr>
+        <tr>
+          <td>较大（100K–130K）</td>
+          <td>↓ 更多词组能整块命中</td>
+          <td>↑ 变大</td>
+          <td>一般，长尾 token 见得少</td>
+          <td>GPT-4 的 cl100k（100,277）、LLaMA 3（128K）</td>
+        </tr>
+        <tr>
+          <td>极大（200K）</td>
+          <td>↓↓ 压缩率最高</td>
+          <td>↑↑ 嵌入矩阵显著膨胀</td>
+          <td>差，尾部常见"垃圾 token"</td>
+          <td>GPT-4o 的 o200k（200,019）</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="grid g2">
+      <div class="card">
+        <h4>压缩率怎么算</h4>
+        <div class="math katex-line">
+          \[ \text{压缩率} = \frac{\text{原始字符数}}{\text{token 数}} \]
+        </div>
+        <p style="font-size:.9rem;color:var(--text-2)">
+          这个数字直接决定你的成本。举例：Llama 2 的 32K SentencePiece 词表，
+          平均每个 token 表示 <b>3.17</b> 个字符；Llama 3 换成 128K 的 tiktoken 词表之后，
+          上升到 <b>3.94</b> 个字符。也就是说同样一段英文，
+          Llama 3 需要的 token 数少了约 <span class="math">\( 1 - 3.17/3.94 \approx 20\% \)</span>。
+          在"每 token 多少钱"和"上下文窗口能装多少"这两个维度上，这都是实打实的收益。
+        </p>
+      </div>
+      <div class="card">
+        <h4>但词表不是越大越好</h4>
+        <p style="font-size:.9rem;color:var(--text-2)">
+          <b>成本一 · 嵌入矩阵膨胀：</b>embedding 参数量
+          <span class="math">\( \approx |V| \times d_{\text{model}} \)</span>。
+          词表从 32K 到 200K 翻了 6 倍，如果 <span class="math">\( d_{\text{model}} = 4096 \)</span>，
+          嵌入层就从约 1.3 亿参数涨到约 8.2 亿参数——而且输出层的 logits 计算量也同比例上升。<br><br>
+          <b>成本二 · 长尾训练不充分：</b>词表翻倍意味着每个 token 的平均出现次数腰斩。
+          那些只出现几十次的"长尾 token"学不到稳定表示，
+          而且词表越大，<b>越容易收录到垃圾语料里的碎片</b>（这在真实词表里确实发生过）。<br><br>
+          <b>成本三 · 跨语言不均衡：</b>如果词表主要在英文语料上训练，
+          中文会被拆得非常碎——一个汉字可能占 2–3 个 token。这是中文场景最大的隐形成本。
+        </p>
+      </div>
+    </div>
+
+    <div class="hint warn">
+      ⚠️ <b>最容易踩的坑：</b>tokenizer 的训练语料分布，必须和模型预训练语料的分布一致。
+      如果分词器在英文为主的语料上训练，而模型主要处理中文，那么中文的 token 效率会低得离谱——
+      一个汉字要占三四个 token，上下文窗口被白白吃掉 70%。
+      这是"训练第一步就要做对"的典型决策：<b>分词器定错，后面全白搭。</b>
+    </div>
+  </section>
+
+  <!-- ===== STEP 3 代码 ===== -->
+  <section id="step3" class="blk reveal">
+    <h2 class="blk-title"><span class="num">③ 代码</span>一个能跑的 Python BPE 实现</h2>
+    <p class="blk-desc">
+      下面这段代码是 BPE 论文（Sennrich et al., 2016）里那套实现的完整注解版。
+      它只有 40 行，没有任何外部依赖，你可以直接复制到本地跑。
+      <b>本页演示台的 JavaScript 就是按这个逻辑翻译过去的。</b>
+    </p>
+
+    <div class="code-wrap">
+<pre class="code"><span class="c">#!/usr/bin/env python3</span>
+<span class="c"># -*- coding: utf-8 -*-</span>
+<span class="s">"""
+BPE (Byte Pair Encoding) 最小可运行实现
+参考: Sennrich, Haddow, Birch. "Neural Machine Translation of Rare Words
+      with Subword Units." ACL 2016.  (原始字节对编码思想来自 Gage, 1994)
+
+核心只有两件事:
+  1) get_stats()  —— 统计所有相邻符号对的加权频次
+  2) merge_vocab()—— 把最高频的那一对在所有出现位置粘起来
+"""</span>
+<span class="k">import</span> re
+<span class="k">import</span> collections
+
+
+<span class="k">def</span> <span class="f">get_stats</span>(vocab):
+    <span class="s">"""统计相邻符号对频次。
+
+    vocab 形如 {'l o w &lt;/w&gt;': 5, 'l o w e r &lt;/w&gt;': 2, ...}
+    键是"用空格分开的符号序列"，值是这个词在语料中的频次。
+
+    返回: {(符号a, 符号b): 加权出现次数}
+    """</span>
+    pairs = collections.defaultdict(<span class="k">int</span>)
+    <span class="k">for</span> word, freq <span class="k">in</span> vocab.items():
+        symbols = word.split()                 <span class="c"># 'l o w &lt;/w&gt;' -&gt; ['l','o','w','&lt;/w&gt;']</span>
+        <span class="k">for</span> i <span class="k">in</span> <span class="k">range</span>(<span class="k">len</span>(symbols) - <span class="n">1</span>):
+            <span class="c"># 注意: 累加的是 freq 而不是 1 —— 词频就是这一对的投票权重</span>
+            pairs[symbols[i], symbols[i + <span class="n">1</span>]] += freq
+    <span class="k">return</span> pairs
+
+
+<span class="k">def</span> <span class="f">merge_vocab</span>(pair, v_in):
+    <span class="s">"""把 pair 在所有词中合并成一个新符号，返回新的 vocab。
+
+    这是本算法里唯一稍难的一行:
+      re.escape(' '.join(pair))     -&gt; 把 ('e','s') 变成正则 'e\\ s'
+      (?&lt;!\\S) ... (?!\\S)            -&gt; 负向断言，保证只匹配"完整的符号"
+                                        (左右必须是空白或边界)
+      p.sub(''.join(pair), word)    -&gt; 把 'e s' 替换成 'es'
+    """</span>
+    v_out = {}
+    bigram = re.escape(<span class="s">' '</span>.join(pair))
+    p = re.compile(<span class="s">r'(?&lt;!\S)'</span> + bigram + <span class="s">r'(?!\S)'</span>)
+    <span class="k">for</span> word <span class="k">in</span> v_in:
+        w_out = p.sub(<span class="s">''</span>.join(pair), word)
+        v_out[w_out] = v_in[word]
+    <span class="k">return</span> v_out
+
+
+<span class="k">if</span> __name__ == <span class="s">'__main__'</span>:
+    <span class="c"># ---- 1) 准备语料: 字符级展开 + 词尾标记 ----</span>
+    <span class="c"># '&lt;/w&gt;' 用来标记词的结束，让分词结果可以无歧义地还原</span>
+    vocab = {
+        <span class="s">'l o w &lt;/w&gt;'</span>: <span class="n">5</span>,
+        <span class="s">'l o w e r &lt;/w&gt;'</span>: <span class="n">2</span>,
+        <span class="s">'n e w e s t &lt;/w&gt;'</span>: <span class="n">6</span>,
+        <span class="s">'w i d e s t &lt;/w&gt;'</span>: <span class="n">3</span>,
+    }
+
+    num_merges = <span class="n">10</span>          <span class="c"># BPE 唯一的超参数: 合并次数</span>
+    merges = []             <span class="c"># 记录合并顺序 —— 这就是 merges.txt 的内容</span>
+
+    <span class="k">print</span>(<span class="s">'初始词表:'</span>, sorted(vocab.keys()))
+    <span class="k">for</span> i <span class="k">in</span> <span class="k">range</span>(num_merges):
+        pairs = get_stats(vocab)
+        <span class="k">if</span> <span class="k">not</span> pairs:
+            <span class="k">break</span>                                   <span class="c"># 已无可合并的对</span>
+        best = <span class="k">max</span>(pairs, key=pairs.get)              <span class="c"># 贪心: 取频次最高的一对</span>
+        vocab = merge_vocab(best, vocab)
+        merges.append(best)
+        <span class="k">print</span>(<span class="s">f'第 {i+1:2d} 步合并 {best} (频次 {pairs[best]}), 词表 +1'</span>)
+
+    <span class="k">print</span>(<span class="s">'\n最终词表:'</span>)
+    <span class="k">for</span> w <span class="k">in</span> sorted(vocab):
+        <span class="k">print</span>(<span class="s">'  '</span>, w)
+
+    <span class="c"># ---- 2) 编码新文本: 按训练时的合并顺序依次应用 ----</span>
+    <span class="k">def</span> <span class="f">encode</span>(word, merges):
+        symbols = <span class="k">list</span>(word) + [<span class="s">'&lt;/w&gt;'</span>]   <span class="c"># 字符级起点</span>
+        <span class="k">for</span> a, b <span class="k">in</span> merges:              <span class="c"># 必须按训练时的顺序来</span>
+            i = <span class="n">0</span>
+            <span class="k">while</span> i &lt; <span class="k">len</span>(symbols) - <span class="n">1</span>:
+                <span class="k">if</span> symbols[i] == a <span class="k">and</span> symbols[i + <span class="n">1</span>] == b:
+                    symbols[i:i + <span class="n">2</span>] = [a + b]        <span class="c"># 粘合</span>
+                <span class="k">else</span>:
+                    i += <span class="n">1</span>
+        <span class="k">return</span> symbols
+
+    <span class="c"># 'lowest' 训练时没见过，但 'low' 和 'est&lt;/w&gt;' 已经学过了</span>
+    <span class="k">print</span>(<span class="s">'\n编码 lowest  -&gt;'</span>, encode(<span class="s">'lowest'</span>, merges))
+    <span class="k">print</span>(<span class="s">'编码 slowest -&gt;'</span>, encode(<span class="s">'slowest'</span>, merges))
+</pre>
+    </div>
+
+    <div class="grid g2">
+      <div class="card">
+        <h4>这段代码里最值得盯住的三个细节</h4>
+        <p style="font-size:.9rem;color:var(--text-2)">
+          <b>① <code class="inline">pairs[symbols[i], symbols[i+1]] += freq</code></b><br>
+          累加的是词频而不是 1。很多初学者在这里写成 <code class="inline">+= 1</code>，
+          结果统计的是"有多少种不同的词包含这一对"，而不是"这一对总共出现多少次"，
+          得到的词表会明显变差。<br><br>
+          <b>② 正则里的 <code class="inline">(?&lt;!\S) ... (?!\S)</code></b><br>
+          这两段是"负向后顾/前顾断言"，作用是保证只匹配<b>完整的符号</b>。
+          否则在合并 <code class="inline">('e','s')</code> 时，
+          会把 "newest" 里已经粘好的 "est" 中的 "es" 也错误地替换掉，
+          得到非法的中间状态。<br><br>
+          <b>③ <code class="inline">encode()</code> 必须按 merges 列表的顺序执行</b><br>
+          合并顺序本身就是训练产出的信息。跳过顺序、或者按频次重排，都会得到错误的分词。
+        </p>
+      </div>
+      <div class="card">
+        <h4>从 40 行到工业级：还缺什么</h4>
+        <p style="font-size:.9rem;color:var(--text-2)">
+          上面这段能在 0.03 秒内跑完四个词。要让它跑 30 GB 语料，需要补齐这些：<br><br>
+          <span class="tag tag-gray">1. 增量统计</span>合并一次不重扫全语料，只更新相邻受影响的 pair。<br>
+          <span class="tag tag-gray">2. 优先队列</span>用最大堆维护 pair 频次，避免每步 O(n) 找最大。<br>
+          <span class="tag tag-gray">3. 预切分</span>用正则先把文本切成"词级块"，避免跨标点、跨空格合并。<br>
+          <span class="tag tag-gray">4. 字节级起点</span>初始词表换成 256 个 byte，彻底消灭 OOV。<br>
+          <span class="tag tag-gray">5. Rust/C++ 重写</span>Python 在几十 GB 语料上不可接受，
+          HuggingFace <code class="inline">tokenizers</code> 与 OpenAI <code class="inline">tiktoken</code>
+          的核心都在这里。<br>
+          <span class="tag tag-gray">6. 特殊 token</span><code class="inline">&lt;|endoftext|&gt;</code>、
+          <code class="inline">&lt;s&gt;</code>、<code class="inline">&lt;|im_start|&gt;</code>
+          等要专门保留 id，且绝不能参与合并。
+        </p>
+      </div>
+    </div>
+
+    <div class="hint good">
+      ✅ <b>自己动手的建议：</b>把上面代码复制到本地，把语料换成一段中文（按字展开），
+      合并 200 次，然后打印最终词表。你会直观看到 BPE 自己发现了哪些高频中文词
+      （"我们"、"什么"、"可以"这类）。这比看任何解释都更有说服力。
+    </div>
+  </section>
+
+  <!-- ===== byte-level vs 普通 BPE ===== -->
+  <section id="bytetop" class="blk reveal">
+    <h2 class="blk-title"><span class="num">03.5</span>🔬 byte-level BPE 与普通 BPE 的区别</h2>
+    <p class="blk-desc">
+      这是现代大模型分词器里最容易被略过、但影响最大的一个设计变更。
+      GPT-2 之后的主流模型几乎全部采用 byte-level BPE，其原因值得单独讲一节。
+    </p>
+
+    <div class="grid g2">
+      <div class="card">
+        <h4>普通 BPE（char-level）</h4>
+        <p style="font-size:.9rem;color:var(--text-2)">
+          <b>起点：</b>Unicode 字符。<br>
+          <b>初始词表大小：</b>取决于语料里出现过的字符数，通常几万到十几万
+          （Unicode 全部码点超过 13 万个）。<br><br>
+          <b>致命问题：OOV 依然存在。</b>如果推理时遇到一个训练语料里从没出现过的字符
+          （新的 emoji、生僻汉字、罕见符号），它<b>没有对应的初始符号</b>，
+          只能被替换成 <code class="inline">&lt;UNK&gt;</code>——信息直接丢失。<br><br>
+          在 GPT-2 之前，OpenAI 的 GPT 用的就是这种方案：初始 478 个基础字符，
+          合并 40,000 次，得到 40,478 的词表。看起来够用了，直到遇到一个没见过的符号。
+        </p>
+      </div>
+      <div class="card" style="border-top:3px solid #10a37f">
+        <h4>byte-level BPE（BBPE）</h4>
+        <p style="font-size:.9rem;color:var(--text-2)">
+          <b>起点：</b>UTF-8 字节。<br>
+          <b>初始词表大小：</b>恒为 <b>256</b>（一个字节的全部取值 0x00–0xFF）。<br><br>
+          <b>关键技巧：</b>任何 Unicode 字符都能被编码成 1–4 个 UTF-8 字节，
+          而每个字节都在词表里。<b>于是理论上不存在任何无法编码的输入，OOV 被彻底消灭。</b>
+          这是一个极其漂亮的技巧——用一个固定 256 大小的基础词表，
+          换来对全世界所有文字、所有 emoji、所有二进制噪声的编码能力。<br><br>
+          GPT-2 正是这么做的：256 字节 + 1 个 <code class="inline">&lt;|endoftext|&gt;</code>
+          + 50,000 次合并 = <b>50,257</b> 的词表。
+        </p>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:18px">
+      <h4>一个必须知道的副作用：UTF-8 的"半个汉字"</h4>
+      <p style="font-size:.92rem;color:var(--text-2)">
+        因为起点是字节，BPE 的合并可能发生在<b>字节之间</b>——包括一个汉字被 UTF-8 编码成的
+        三个字节中间。这就产生了字节级 BPE 特有的现象：
+        <b>单个 token 解码出来是"坏掉的半个汉字"，显示成乱码</b>。
+        这不是 bug，是字节级方案的固有代价。它带来两个实际后果：
+      </p>
+      <div class="grid g2" style="margin-top:12px">
+        <div>
+          <p style="font-size:.9rem;color:var(--text-2)">
+            <b>① 词表大小必须是 256 的倍数（或接近）。</b>
+            因为基础层占了整整 256 个位置，你在设 <code class="inline">vocab_size</code> 时
+            要预留这 256 个槽位。
+          </p>
+          <p style="font-size:.9rem;color:var(--text-2);margin-top:10px">
+            <b>② 中文字符会被拆成 2–3 个 token（如果词表训练不充分）。</b>
+            UTF-8 下一个汉字占 3 个字节。如果词表里没有覆盖常见的汉字或汉字组合，
+            就需要 2–3 个 token 才能表示一个字——上下文窗口的利用率直接腰斩。
+            <b>这是中文场景下最实际的成本问题。</b>
+          </p>
+        </div>
+        <div>
+          <p style="font-size:.9rem;color:var(--text-2)">
+            <b>③ 所以中文模型要专门扩词表。</b>
+            主流做法有两条路：<br>
+            · <b>按字分词</b>：每个常用汉字一个 token，简单直接，需要 6000+ 词表覆盖常用字；<br>
+            · <b>在中文语料上单独训 BPE</b>，让"机器学习"这样的高频词组合成一个 token
+            ——Llama 3 走的就是这条路（128K 词表里包含 28,000 个额外的非英语 token）。<br><br>
+            效果可以参考：Llama 3 换用新分词器后，平均每 token 表示 3.94 个字符（Llama 2 是 3.17）。
+            这个数字的提升，主要就来自更好的多语言覆盖。
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="insight">
+      <b>另一个常被忽略的细节：预切分（pre-tokenization）正则。</b>
+      GPT-2 在字节级 BPE 之上还加了一条正则，禁止 BPE 跨字符类别合并（空格除外）——
+      也就是说 "dog." 不会被合并成 "dog." 这样的奇怪单位，句号会被切出来。
+      这个正则看起来是个小补丁，实际上大幅改善了压缩率并减少了词表里的"杂碎"。
+      GPT-4o 的 o200k 词表把这个正则重写得精细得多（按 Unicode 大小写类别分 7 条分支），
+      数字最多合并 3 位，缩写如 "'s"、"'ll" 会被粘成一个 token。
+    </div>
+  </section>
+
+  <!-- ===== STEP 4 实战 ===== -->
+  <section id="step4" class="blk reveal">
+    <h2 class="blk-title"><span class="num">④ 实战</span>GPT 与 LLaMA 的词表规模差异，以及它意味着什么</h2>
+    <p class="blk-desc">
+      理论讲完了，看看真实世界里的数字。这一节的每一个数字都直接影响你的
+      token 预算、账单金额和模型选型。
+    </p>
+
+    <table class="tb cmp-table">
+      <thead>
+        <tr><th>模型 / 编码器</th><th>词表大小</th><th>方案</th><th>说明</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>GPT（初代）</td>
+          <td>40,478</td>
+          <td>char-level BPE</td>
+          <td>478 个基础字符 + 40,000 次合并。仍有 OOV 风险。</td>
+        </tr>
+        <tr>
+          <td>GPT-2</td>
+          <td>50,257</td>
+          <td>byte-level BPE</td>
+          <td>256 字节 + 1 特殊 token + 50,000 次 merge。OOV 被消灭，成为后来者的模板。</td>
+        </tr>
+        <tr>
+          <td>GPT-3.5 / GPT-4（cl100k_base）</td>
+          <td>100,277</td>
+          <td>byte-level BPE</td>
+          <td>词表翻倍，代码与多语言覆盖改善，同样文本的 token 数明显下降。</td>
+        </tr>
+        <tr>
+          <td>GPT-4o / o1 / o3（o200k_base）</td>
+          <td>200,019</td>
+          <td>byte-level BPE</td>
+          <td>约 200K。切分正则重写，中英混排断得更准。压缩率最高，但嵌入层最重。</td>
+        </tr>
+        <tr>
+          <td>LLaMA 1 / 2</td>
+          <td>32,000</td>
+          <td>SentencePiece BPE</td>
+          <td>词表偏小，中文 token 极少（仅数百个），处理中文时一个汉字常占 2–3 个 token。</td>
+        </tr>
+        <tr>
+          <td>LLaMA 3 / 3.1</td>
+          <td>128,000（配置为 128,256）</td>
+          <td>tiktoken BPE</td>
+          <td>扩充到 128K，含约 28,000 个额外非英语 token。压缩率从 3.17 提升到 3.94 字符/token。</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="grid g3">
+      <div class="card">
+        <h4>📏 为什么 LLaMA 从 32K 跳到 128K</h4>
+        <p style="font-size:.88rem;color:var(--text-2)">
+          直接原因是<b>多语言</b>。Llama 2 的 32K 词表里中文 token 只有几百个，
+          一个汉字要占 2–3 个 token，中文上下文效率极低。
+          扩到 128K 后，这个数字显著改善。次要原因是<b>代码</b>——
+          更大的词表能把常见的代码片段整块收录。
+          <br><br>
+          代价是嵌入层参数量翻了 4 倍，这也是 Llama 3 相对 Llama 2 的一个隐性"变重"之处。
+        </p>
+      </div>
+      <div class="card">
+        <h4>💸 这个数字怎么影响你的账单</h4>
+        <p style="font-size:.88rem;color:var(--text-2)">
+          API 按 token 计费，所以压缩率直接等于钱。<br><br>
+          同样一段 10,000 字符的英文文本：<br>
+          · 若压缩率 3.17 → 约 <b>3,155</b> token<br>
+          · 若压缩率 3.94 → 约 <b>2,538</b> token<br>
+          差约 <b>20%</b>。<br><br>
+          中文的情况更极端：在弱中文词表上，一个汉字占 2–3 个 token，
+          同样的中文内容 token 数可能是英文的 1.5–2 倍。<b>选模型时必须把这一项算进去。</b>
+        </p>
+      </div>
+      <div class="card">
+        <h4>🔧 实操：怎么自己数 token</h4>
+        <p style="font-size:.88rem;color:var(--text-2)">
+          OpenAI 官方分词器 <code class="inline">tiktoken</code> 可以直接在本地数：
+        </p>
+        <pre class="code" style="font-size:.78rem;padding:12px 14px;margin-top:8px">pip install tiktoken</pre>
+        <pre class="code" style="font-size:.78rem;padding:12px 14px;margin-top:6px"><span class="k">import</span> tiktoken
+enc = tiktoken.get_encoding(
+        <span class="s">"o200k_base"</span>)
+<span class="c"># 或按模型名自动映射</span>
+<span class="c"># enc = tiktoken.encoding_for_model(</span>
+<span class="c">#          "gpt-4o")</span>
+
+toks = enc.encode(<span class="s">"你好，world！"</span>)
+<span class="k">print</span>(<span class="k">len</span>(toks), toks)
+<span class="k">assert</span> enc.decode(toks) == <span class="s">"你好，world！"</span></pre>
+        <p style="font-size:.86rem;color:var(--text-2);margin-top:8px">
+          注意：<b>光靠字符数估算 token 数永远不准</b>，中英混排、代码、符号的差异极大。
+          要做成本预算，就老老实实用分词器数一遍。
+        </p>
+      </div>
+    </div>
+
+    <div class="hint good">
+      💡 <b>选型结论：</b>如果你的场景以中文为主，优先选<b>中文覆盖充分的分词器</b>
+      （LLaMA 3 系列、Qwen 系列等），而不是只看词表大小。
+      一个 32K 但中文覆盖好的词表，可能比一个 200K 但中文全是字节碎片的大词表更省钱。
+    </div>
+  </section>
+
+  <!-- ===== 坑点 ===== -->
+  <section id="gotcha" class="blk reveal">
+    <h2 class="blk-title"><span class="num">05</span>⚠️ 五个真实世界里的分词坑</h2>
+    <p class="blk-desc">这些是工程上反复出现的、而不是理论上的坑。遇到过一次就会记住一辈子。</p>
+
+    <details class="acc" open>
+      <summary>坑 1 · 数字被切得七零八落</summary>
+      <div class="acc-body">
+        <p style="margin-bottom:8px">
+          早期分词器会把 "1234567" 切成 "123" + "456" + "7" 这类任意分组，
+          导致模型做算术时"看不见"数字的位数结构。
+        </p>
+        <p>
+          <b>缓解方式：</b>现代分词器会限制数字的合并长度——
+          例如 GPT-4o 的 o200k 正则限定数字最多合并 3 位
+          （<code class="inline">\p{N}{1,3}</code>）。有些模型则干脆为每个数字单独分配 token
+          （SentencePiece 的 <code class="inline">split_digits</code> 选项）。
+          <b>没有完美方案</b>，这就是为什么大模型至今算术仍然不稳的一个底层原因。
+        </p>
+      </div>
+    </details>
+
+    <details class="acc">
+      <summary>坑 2 · 尾随空格、换行与前导空格</summary>
+      <div class="acc-body">
+        <p style="margin-bottom:8px">
+          人类看不到的空格，在分词器眼里是天大的事。
+          "hello world" 和 "hello  world"（两个空格）会得到完全不同的 token 序列。
+        </p>
+        <p>
+          <b>两种处理哲学：</b>GPT 系列的预切分正则会把前导空格黏到后面的词上
+          （所以 <code class="inline">" world"</code> 和 <code class="inline">"world"</code> 是不同 token）；
+          SentencePiece 则用一个特殊符号 <code class="inline">▁</code>（U+2581）显式表示空格，
+          并在句首也插入一个。
+          <br><br>
+          <b>实际后果：</b>Prompt 里多打一个空格、模板拼接时漏掉换行，
+          都可能让模型行为变化。这是"同样的意思为什么两次回答不一样"的常见元凶之一。
+        </p>
+      </div>
+    </details>
+
+    <details class="acc">
+      <summary>坑 3 · 特殊 token 与提示注入</summary>
+      <div class="acc-body">
+        <p style="margin-bottom:8px">
+          特殊 token（如 <code class="inline">&lt;|endoftext|&gt;</code>、
+          <code class="inline">&lt;|im_start|&gt;</code>）在训练时被赋予结构和控制语义，
+          它们<b>不应该被普通文本触发</b>。
+        </p>
+        <p>
+          如果用户在输入里直接写了这些字符串，而分词器又没有把它们当作普通文本处理，
+          就可能<b>伪造出对话结构</b>——这就是一类经典的提示注入。
+          正确的做法是在编码用户输入时禁止解析特殊 token
+          （tiktoken 提供 <code class="inline">encode(..., allowed_special=set())</code> 之类的开关）。
+          <br><br>
+          <b>一句话：</b>分词器是安全边界的一部分，不只是预处理工具。
+        </p>
+      </div>
+    </details>
+
+    <details class="acc">
+      <summary>坑 4 · 词表里混进了垃圾 token</summary>
+      <div class="acc-body">
+        <p style="margin-bottom:8px">
+          这是一个真实发生过、且被广泛讨论的现象：某个大词表的中文部分，
+          尾部聚集了大量来自垃圾广告语料的词组碎片。这些 token 占了词表位置，
+          既浪费嵌入层参数，又可能让模型在特定输入下产生怪异行为。
+        </p>
+        <p>
+          <b>教训：</b>词表是<b>训练数据的镜子</b>。语料清洗没做好，污染会以 token 的形式
+          永久刻进模型里，且无法在后训练阶段修复。
+          这也解释了为什么分词器训练语料的筛选质量如此关键。
+        </p>
+      </div>
+    </details>
+
+    <details class="acc">
+      <summary>坑 5 · 分词器与预训练语料不匹配</summary>
+      <div class="acc-body">
+        <p style="margin-bottom:8px">
+          最贵的一个坑。如果分词器在英文为主的语料上训练，而模型主要处理中文，
+          那么中文的 token 效率会低得离谱。
+        </p>
+        <p>
+          <b>怎么发现：</b>拿一段典型业务文本，用目标分词器编码，
+          计算压缩率。中文场景下如果压缩率低于 1.5 字符/token，
+          基本可以判定词表对中文覆盖不足。
+          <br><br>
+          <b>怎么解决：</b>要么换模型，要么在中文语料上重新训练分词器
+          然后<b>扩展词表</b>（需要重新初始化新增 token 的 embedding，
+          并做一定量的继续预训练）。后者代价不小，所以<b>在项目开始时选对分词器</b>
+          比后期补救便宜得多。
+        </p>
+      </div>
+    </details>
+  </section>
+
+  <!-- ===== 总结 ===== -->
+  <section class="blk reveal">
+    <h2 class="blk-title"><span class="num">⑥</span>🎓 一页总结</h2>
+
+    <div class="grid g4">
+      <div class="card s1 step-card">
+        <div class="step-no">01</div>
+        <h4>直觉</h4>
+        <p style="font-size:.88rem;color:var(--text-2)">
+          反复把最高频的相邻符号粘起来。纯计数 + 纯贪心，没有梯度、没有神经网络。
+        </p>
+      </div>
+      <div class="card s2 step-card">
+        <div class="step-no">02</div>
+        <h4>数学</h4>
+        <p style="font-size:.88rem;color:var(--text-2)">
+          <span class="math">\( (a^\star,b^\star)=\arg\max \mathrm{cnt}(a,b) \)</span>，
+          循环 k 次。词表大小 = 初始符号数 + k。
+        </p>
+      </div>
+      <div class="card s3 step-card">
+        <div class="step-no">03</div>
+        <h4>代码</h4>
+        <p style="font-size:.88rem;color:var(--text-2)">
+          <code class="inline">get_stats</code> + <code class="inline">merge_vocab</code>
+          两个函数就能跑。工业版在增量统计和大规模工程上做优化。
+        </p>
+      </div>
+      <div class="card s4 step-card">
+        <div class="step-no">04</div>
+        <h4>实战</h4>
+        <p style="font-size:.88rem;color:var(--text-2)">
+          GPT-2 50,257、GPT-4 100,277、GPT-4o 200,019、LLaMA 3 128,000。
+          数字直接等于成本与效率。
+        </p>
+      </div>
+    </div>
+
+    <div class="insight" style="margin-top:22px">
+      <b>如果只能记住一句话：</b>BPE 把"分词"从语言学问题变成了一个压缩问题——
+      用最少的 token 表示给定的语料，同时让词表大小可控。
+      这一个视角转换，就是现代大语言模型能够处理任意语言、任意符号、
+      且永不失明的根本原因。
+    </div>
+
+    <div class="btn-row" style="margin-top:26px">
+      <a href="#lab" class="btn btn-primary">🧪 回演示台再玩一遍</a>
+      <a href="embedding.html" class="btn btn-purple">🧭 下一步：词向量</a>
+      <a href="playground.html" class="btn btn-outline">🎨 玩法广场</a>
+    </div>
+  </section>
+
+</div>
+
+<footer class="site"><p>💬 agent-nlp-llm · 自然语言技术本体论研究站</p></footer>
+
+<script src="js/site.js"></script>
+<script>
+/* ================================================================
+   BPE 互动演示台
+   ================================================================
+   真实实现一个简化版 Byte Pair Encoding：
+
+     1) 解析语料（支持 "词 频次" 与纯词两种写法）
+     2) 词尾加 </w> 标记，字符级展开 -> 初始词表
+     3) 循环：统计相邻符号对（词频加权）-> 取最大 -> 合并
+     4) 支持"下一步"单步回放与"一次跑完"
+
+   与工业实现的差异已在页面上显式说明（无预切分正则、起点是字符而非
+   字节、朴素重扫描而非增量统计）。
+   ================================================================ */
+(function () {
+  'use strict';
+
+  var $ = function (id) { return document.getElementById(id); };
+
+  var corpusEl   = $('corpus');
+  var rangeEl    = $('mergeRange');
+  var rangeValEl = $('mergeRangeVal');
+  var tailEl     = $('tailSel');
+
+  var stStep = $('stStep'), stVocab = $('stVocab'), stCorpus = $('stCorpus');
+  var stRatio = $('stRatio'), stPair = $('stPair');
+
+  var stageBody = $('stageBody'), stepDots = $('stepDots');
+  var mergesLog = $('mergesLog'), freqList = $('freqList'), vocabChips = $('vocabChips');
+  var labHint = $('labHint');
+
+  var SEP = '\u0001';   // pair key 内部分隔符，避免与真实字符冲突
+
+  /* ---------------- 状态 ---------------- */
+  var state = {
+    ready: false,       // 是否已初始化
+    merged: [],         // 已执行的合并规则 [{a,b,n,newSym}]
+    history: [],        // 每一步的符号序列快照（含第 0 步）
+    historyVocab: [],   // 每一步的"新增符号"列表快照
+    historyPair: [],    // 每一步执行合并时那一对的频次
+    target: 0,          // 目标合并步数
+    rawCorpusCount: 0   // 原始字符数（用于算压缩率）
+  };
+
+  /* ---------------- 工具 ---------------- */
+  function esc(s) {
+    return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+
+  /* 解析语料。
+     支持三种写法：
+       "low lower lowest"            -> 三个词，各计 1 次
+       "low 10"                      -> 词 low，权重 10
+       "low 10 | lower 3" 或换行/逗号分隔
+     返回 [{word, freq}] */
+  function parseCorpus(text) {
+    var out = [];
+    var lines = String(text || '').split(/[\n,，|]+/);
+    for (var i = 0; i < lines.length; i++) {
+      var line = lines[i].trim();
+      if (!line) continue;
+      var parts = line.split(/\s+/);
+      var last = parts[parts.length - 1];
+      if (parts.length >= 2 && /^\d+$/.test(last)) {
+        var f = parseInt(last, 10);
+        var w = parts.slice(0, parts.length - 1).join(' ');
+        // 如果去掉数字后还是多个词，说明用户写的是 "low lower 5"
+        // 这时把每个词都按该频次记入
+        var ws = w.split(/\s+/).filter(Boolean);
+        for (var k = 0; k < ws.length; k++) out.push({ word: ws[k], freq: f });
+      } else {
+        for (var j = 0; j < parts.length; j++) {
+          if (parts[j]) out.push({ word: parts[j], freq: 1 });
+        }
+      }
+    }
+    return out;
+  }
+
+  /* 把语料展开成符号序列（每个词一个数组）。
+     不加词尾标记时，末尾就是最后一个字符。 */
+  function initSymbols(entries, tail) {
+    var seqs = [];
+    var vocab = {};    // 符号 -> true
+    for (var i = 0; i < entries.length; i++) {
+      var w = entries[i].word;
+      var syms = w.split('');
+      vocab[''] = undefined; // no-op，保持可读性
+      delete vocab[''];
+      for (var j = 0; j < syms.length; j++) vocab[syms[j]] = true;
+      if (tail) { syms.push(tail); vocab[tail] = true; }
+      // 保留频次：用一个隐藏字段挂在数组上
+      syms.__freq = entries[i].freq;
+      syms.__word = w;
+      seqs.push(syms);
+    }
+    return { seqs: seqs, vocab: vocab };
+  }
+
+  /* 统计相邻对频次（词频加权） */
+  function getStats(seqs) {
+    var counts = {};
+    for (var i = 0; i < seqs.length; i++) {
+      var s = seqs[i];
+      var f = s.__freq || 1;
+      for (var j = 0; j < s.length - 1; j++) {
+        var key = s[j] + SEP + s[j + 1];
+        counts[key] = (counts[key] || 0) + f;
+      }
+    }
+    return counts;
+  }
+
+  function topPairs(counts, n) {
+    var arr = [];
+    for (var k in counts) {
+      if (!Object.prototype.hasOwnProperty.call(counts, k)) continue;
+      var p = k.split(SEP);
+      arr.push({ a: p[0], b: p[1], n: counts[k] });
+    }
+    // 频次降序；同频次时按字典序保证确定性（对抗平局）
+    arr.sort(function (x, y) {
+      if (y.n !== x.n) return y.n - x.n;
+      var kx = x.a + SEP + x.b, ky = y.a + SEP + y.b;
+      return kx < ky ? -1 : (kx > ky ? 1 : 0);
+    });
+    return typeof n === 'number' ? arr.slice(0, n) : arr;
+  }
+
+  /* 深拷贝一层序列（符号数组本身需要独立） */
+  function cloneSeqs(seqs) {
+    var out = [];
+    for (var i = 0; i < seqs.length; i++) {
+      var s = seqs[i];
+      var c = s.slice();
+      c.__freq = s.__freq;
+      c.__word = s.__word;
+      out.push(c);
+    }
+    return out;
+  }
+
+  /* 执行一次合并，返回新序列 */
+  function doMerge(seqs, a, b) {
+    var out = [];
+    for (var i = 0; i < seqs.length; i++) {
+      var s = seqs[i];
+      var ns = [];
+      var j = 0;
+      while (j < s.length) {
+        if (j < s.length - 1 && s[j] === a && s[j + 1] === b) {
+          ns.push(a + b);
+          j += 2;
+        } else {
+          ns.push(s[j]);
+          j += 1;
+        }
+      }
+      ns.__freq = s.__freq;
+      ns.__word = s.__word;
+      out.push(ns);
+    }
+    return out;
+  }
+
+  function countSymbols(seqs) {
+    var t = 0;
+    for (var i = 0; i < seqs.length; i++) t += seqs[i].length;
+    return t;
+  }
+
+  /* ---------------- 构建完整历史 ---------------- */
+  function build() {
+    var entries = parseCorpus(corpusEl.value);
+    var tail = tailEl.value;
+
+    if (!entries.length) {
+      state.ready = false;
+      stageBody.innerHTML = '<span style="color:#ff8f8f">语料是空的，请输入一些词。</span>';
+      resetStats();
+      return;
+    }
+
+    var init = initSymbols(entries, tail);
+    var seqs = init.seqs;
+
+    // 原始字符数（不含词尾标记，用于压缩率）
+    var rawChars = 0;
+    for (var i = 0; i < entries.length; i++) rawChars += entries[i].word.length * entries[i].freq;
+    state.rawCorpusCount = rawChars;
+
+    var history = [cloneSeqs(seqs)];
+    var historyVocab = [[]];
+    var historyPair = [null];
+    var merged = [];
+
+    var target = Math.max(1, parseInt(rangeEl.value, 10) || 10);
+    var vocabSet = {};
+    Object.keys(init.vocab).forEach(function (k) { vocabSet[k] = true; });
+    var vocabHist = [Object.keys(vocabSet)];
+
+    for (var step = 0; step < target; step++) {
+      var counts = getStats(seqs);
+      var tops = topPairs(counts, 1);
+      if (!tops.length) break;               // 无对可合并
+      var pair = tops[0];
+      if (pair.n < 1) break;
+
+      seqs = doMerge(seqs, pair.a, pair.b);
+      var newSym = pair.a + pair.b;
+      vocabSet[newSym] = true;
+
+      merged.push({ a: pair.a, b: pair.b, n: pair.n, newSym: newSym });
+      history.push(cloneSeqs(seqs));
+      historyVocab.push([newSym]);
+      historyPair.push(pair.n);
+      vocabHist.push(Object.keys(vocabSet));
+    }
+
+    state.ready = true;
+    state.merged = merged;
+    state.history = history;
+    state.historyVocab = historyVocab;
+    state.historyPair = historyPair;
+    state.vocabHist = vocabHist;
+    state.target = merged.length;
+    state.cur = 0;
+
+    renderDots();
+    renderStep(0);
+  }
+
+  function resetStats() {
+    stStep.textContent = '0';
+    stVocab.textContent = '0';
+    stCorpus.textContent = '0';
+    stRatio.textContent = '—';
+    stPair.textContent = '—';
+    stepDots.innerHTML = '';
+    mergesLog.innerHTML = '<div style="color:var(--text-3);font-size:.86rem">还没有合并记录。</div>';
+    freqList.innerHTML = '<div style="color:var(--text-3);font-size:.86rem">等待运行。</div>';
+    vocabChips.innerHTML = '<span style="color:var(--text-3);font-size:.84rem">等待运行。</span>';
+  }
+
+  /* ---------------- 渲染 ---------------- */
+  function renderDots() {
+    var n = state.history.length;   // 0..target
+    if (n <= 1) { stepDots.innerHTML = ''; return; }
+    var html = '';
+    var maxShow = Math.min(n, 42);
+    for (var i = 0; i < maxShow; i++) {
+      html += '<div class="step-dot" data-i="' + i + '">' + i + '</div>';
+    }
+    stepDots.innerHTML = html;
+
+    Array.prototype.forEach.call(stepDots.children, function (el) {
+      el.addEventListener('click', function () {
+        var idx = parseInt(el.getAttribute('data-i'), 10);
+        if (state.ready && idx < state.history.length) {
+          state.cur = idx;
+          renderStep(idx);
+        }
+      });
+    });
+  }
+
+  /* 高亮当前步骤：stepIndex=0 是初始状态，k 表示已合并 k 次 */
+  function renderStep(stepIndex) {
+    if (!state.ready) return;
+    stepIndex = Math.max(0, Math.min(stepIndex, state.history.length - 1));
+    state.cur = stepIndex;
+
+    var seqs = state.history[stepIndex];
+    var tail = tailEl.value;
+
+    /* --- 统计条 --- */
+    var symCount = countSymbols(seqs);
+    var vocabSize = state.vocabHist[stepIndex].length;
+    stStep.textContent = String(stepIndex);
+    stVocab.textContent = String(vocabSize);
+    stCorpus.textContent = String(symCount);
+    stRatio.textContent = state.rawCorpusCount && symCount
+      ? (state.rawCorpusCount / symCount).toFixed(2) + '×'
+      : '—';
+
+    // 当前（下一步将要合并的）最高频对
+    var counts = getStats(seqs);
+    var tops = topPairs(counts, 1);
+    var curTop = tops.length ? tops[0] : null;
+    stPair.textContent = curTop ? '(' + curTop.a + ', ' + curTop.b + ')' : '—';
+
+    /* --- 主舞台：符号序列 --- */
+    var lastNewSym = stepIndex > 0 ? state.merged[stepIndex - 1].newSym : null;
+    var stageHtml = '';
+    for (var i = 0; i < seqs.length; i++) {
+      var s = seqs[i];
+      stageHtml += '<div class="bpe-word">'
+        + '<span class="wlabel">' + esc(s.__word || '') + ' ×' + (s.__freq || 1) + '</span>';
+      for (var j = 0; j < s.length; j++) {
+        var sym = s[j];
+        var cls = 'sym';
+        if (tail && sym === tail) cls += ' tail';
+        // 本步新生成/被合并出来的符号高亮
+        if (lastNewSym && sym === lastNewSym) cls += ' new';
+        // 突出显示下一步将被合并的那一对
+        if (curTop && j < s.length - 1 && s[j] === curTop.a && s[j + 1] === curTop.b) {
+          cls += ' flash';
+        }
+        stageHtml += '<span class="' + cls + '">' + esc(sym) + '</span>';
+      }
+      stageHtml += '</div>';
+    }
+    stageBody.innerHTML = stageHtml;
+
+    /* --- 面板 1：合并记录 --- */
+    if (!state.merged.length) {
+      mergesLog.innerHTML = '<div style="color:var(--text-3);font-size:.86rem">还没有合并记录。</div>';
+    } else {
+      var mh = '';
+      for (var m = 0; m < state.merged.length; m++) {
+        var mm = state.merged[m];
+        var isCur = (m === stepIndex - 1);
+        mh += '<div class="mline" style="' + (isCur ? 'background:var(--blue-lt);font-weight:700' : '') + '">'
+          + '<span class="mno">#' + (m + 1) + '</span>'
+          + '<span><span class="mfrom">(' + esc(mm.a) + ', ' + esc(mm.b) + ')</span>'
+          + ' <span style="color:#8b93a7">→</span> '
+          + '<span class="mto">' + esc(mm.newSym) + '</span></span>'
+          + '<span class="mcnt">频次 ' + mm.n + '</span>'
+          + '</div>';
+      }
+      mergesLog.innerHTML = mh;
+      // 滚动到当前步骤
+      var cur = mergesLog.querySelector('.mline:nth-child(' + stepIndex + ')');
+      if (cur && cur.scrollIntoView) {
+        try { cur.scrollIntoView({ block: 'nearest' }); } catch (e) {}
+      }
+    }
+
+    /* --- 面板 2：频次排行 --- */
+    var top6 = topPairs(counts, 6);
+    if (!top6.length) {
+      freqList.innerHTML = '<div style="color:var(--text-3);font-size:.86rem">已无可合并的相邻对（序列已收敛）。</div>';
+    } else {
+      var maxN = top6[0].n;
+      var fh = '';
+      for (var q = 0; q < top6.length; q++) {
+        var pp = top6[q];
+        var pct = Math.max(3, Math.round((pp.n / maxN) * 100));
+        fh += '<div class="freqrow">'
+          + '<div class="fl"><span>(' + esc(pp.a) + ', ' + esc(pp.b) + ')</span>'
+          + '<span class="fn">' + pp.n + '</span></div>'
+          + '<div class="freqbar" style="width:' + pct + '%"></div>'
+          + '</div>';
+      }
+      freqList.innerHTML = fh;
+    }
+
+    /* --- 面板 3：词表增量 --- */
+    var added = state.vocabHist[stepIndex];
+    if (!added.length) {
+      vocabChips.innerHTML = '<span style="color:var(--text-3);font-size:.84rem">尚未合并，词表 = 初始符号集。</span>';
+    } else {
+      // 初始符号是单字符 + 词尾标记，新增的是多字符符号
+      var vh = '';
+      for (var v = 0; v < added.length; v++) {
+        var symV = added[v];
+        var isTail = (tail && symV === tail);
+        var isNew = symV.length > 1;
+        vh += '<span class="vchip' + (isTail ? ' vtail' : (isNew ? ' vnew' : '')) + '">'
+          + esc(symV) + '</span>';
+      }
+      vocabChips.innerHTML = vh
+        + '<div style="width:100%;font-size:.78rem;color:var(--text-3);margin-top:8px">'
+        + '🟢 绿色 = BPE 合并产出的新符号（' + (state.vocabHist[stepIndex].filter(function (x) {
+            return x.length > 1 && x !== tail;
+          }).length) + ' 个）；'
+        + '🟣 紫色 = 词尾标记；灰色 = 初始字符。'
+        + '</div>';
+    }
+
+    /* --- 高亮步骤点 --- */
+    Array.prototype.forEach.call(stepDots.children, function (el) {
+      var idx = parseInt(el.getAttribute('data-i'), 10);
+      el.classList.remove('on', 'done');
+      if (idx === stepIndex) el.classList.add('on');
+      else if (idx < stepIndex) el.classList.add('done');
+    });
+
+    /* --- 标题与提示 --- */
+    var stageTitle = document.querySelector('.bpe-stage .stage-title');
+    if (stageTitle) {
+      stageTitle.textContent = '第 ' + stepIndex + ' 步 / 共 ' + (state.history.length - 1)
+        + ' 步合并 · 当前符号总数 ' + symCount;
+    }
+
+    if (stepIndex === 0) {
+      labHint.innerHTML = '📌 <b>现在还没合并。</b>灰色高亮的那两个符号就是当前全语料中最高频的相邻对，'
+        + '也就是 BPE 下一步要粘起来的对象。点「▶ 下一步」看它变成什么样。';
+    } else {
+      var last = state.merged[stepIndex - 1];
+      labHint.innerHTML = '🔗 <b>第 ' + stepIndex + ' 次合并：把 (' + esc(last.a) + ', ' + esc(last.b)
+        + ') 粘成了 <span style="color:var(--green);font-weight:700">"' + esc(last.newSym)
+        + '"</span></b>（该对在原序列中出现 ' + last.n + ' 次）。'
+        + '这个新符号已经加进词表——它就是模型最终会看到的一个 token。'
+        + '<br>下一步要合并的是 <b>(' + esc(curTop ? curTop.a : '—') + ', ' + esc(curTop ? curTop.b : '—') + ')</b>，'
+        + '注意序列中高亮的那些位置。';
+    }
+  }
+
+  /* ---------------- 事件绑定 ---------------- */
+  rangeEl.addEventListener('input', function () {
+    rangeValEl.textContent = rangeEl.value;
+  });
+  rangeEl.addEventListener('change', function () {
+    if (state.ready) build();
+  });
+  tailEl.addEventListener('change', function () {
+    if (state.ready) build();
+  });
+
+  $('btnRun').addEventListener('click', function () {
+    build();
+    if (!state.ready) return;
+    if (!state.merged.length) {
+      labHint.innerHTML = '🤔 这段语料里没有可合并的相邻对（词都太短了，或者每个词只有一个符号）。'
+        + '试着输入更长的词，或者打开词尾标记。';
+      return;
+    }
+    labHint.innerHTML = '✅ <b>已运行完毕，共执行 ' + state.merged.length + ' 次合并。</b>'
+      + '符号总数从 ' + stCorpus.textContent + ' 开始逐步下降，压缩率显示为 '
+      + stRatio.textContent + '。'
+      + '<br>现在用「▶ 下一步」从第 0 步开始单步回放，看序列是怎么一步步变短的。';
+    state.cur = state.merged.length;
+    renderStep(state.merged.length);
+  });
+
+  $('btnNext').addEventListener('click', function () {
+    if (!state.ready) {
+      build();
+      if (!state.ready) return;
+    }
+    if (state.cur >= state.history.length - 1) {
+      labHint.innerHTML = '🏁 <b>已经到最后一个合并步骤了。</b>'
+        + '<br>想继续就调大「目标合并步数」再点「运行 BPE 合并步骤」，'
+        + '或者把语料换成更长的文本。';
+      return;
+    }
+    renderStep(state.cur + 1);
+  });
+
+  $('btnAll').addEventListener('click', function () {
+    if (!state.ready) build();
+    if (!state.ready) return;
+    renderStep(state.history.length - 1);
+    labHint.innerHTML = '⏩ <b>已跳到最后一次合并。</b>看左边舞台：序列已经从一堆单字符'
+      + '变成了若干较长的子词。切到「合并记录」面板，那一列就是这个词表的完整诞生史。';
+  });
+
+  $('btnReset').addEventListener('click', function () {
+    state.ready = false;
+    state.merged = [];
+    state.history = [];
+    state.vocabHist = [];
+    state.cur = 0;
+    resetStats();
+    stageBody.innerHTML = '<span style="color:#7d8bb0">点「运行 BPE 合并步骤」开始。</span>';
+    var stageTitle = document.querySelector('.bpe-stage .stage-title');
+    if (stageTitle) stageTitle.textContent = '当前符号序列（每个词一行）';
+    labHint.innerHTML = '📌 <b>玩法提示：</b>先用默认语料跑一遍，看 "low"、"est" 是怎么被粘出来的。'
+      + '然后把语料换成你自己的句子，或者把"词尾标记"改成"不加"，观察合并结果有什么变化。';
+    build();   // 重置后立即构建，回到第 0 步
+  });
+
+  /* 初始化：先构建一次，让页面一打开就处于"可单步"状态 */
+  rangeValEl.textContent = rangeEl.value;
+  build();
+  if (state.ready) {
+    labHint.innerHTML = '📌 <b>已就绪。</b>当前共 '
+      + state.merged.length + ' 步合并待观察。'
+      + '灰色高亮的那一对是最高频的相邻符号对——点「▶ 下一步」看它被粘起来。'
+      + '<br>也可以直接改上面的语料，然后点「运行 BPE 合并步骤」重新计算。';
+  }
+})();
+
+/* ================================================================
+   进入视口淡入
+   ================================================================ */
+(function () {
+  'use strict';
+  var els = document.querySelectorAll('.reveal');
+  if (!('IntersectionObserver' in window)) {
+    Array.prototype.forEach.call(els, function (el) { el.classList.add('revealed'); });
+    return;
+  }
+  var io = new IntersectionObserver(function (entries) {
+    entries.forEach(function (en) {
+      if (en.isIntersecting) { en.target.classList.add('revealed'); io.unobserve(en.target); }
+    });
+  }, { threshold: 0.08 });
+  Array.prototype.forEach.call(els, function (el) { io.observe(el); });
+})();
+</script>
+</body>
+</html>

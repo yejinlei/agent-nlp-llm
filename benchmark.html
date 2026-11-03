@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>模型选型 · 到底该用哪个模型 · agent-nlp-llm</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+<link rel="stylesheet" href="css/site.css">
+<style>
+  .q-row { margin-bottom: 16px; }
+  .q-row > label { display:block; font-weight:600; margin-bottom:6px; font-size:.95rem; }
+  .opt-group { display:flex; flex-wrap:wrap; gap:8px; }
+  .opt { padding:8px 16px; border:1px solid var(--border-2); border-radius:9px; cursor:pointer; font-size:.88rem; background:#fff; transition:all .15s; }
+  .opt:hover { border-color:var(--blue); }
+  .opt.on { background:linear-gradient(120deg,#3b6fe0,#7c3aed); color:#fff; border-color:transparent; font-weight:600; }
+  .reco { background:linear-gradient(120deg,#f0f6ff,#f7f0ff); border:1px solid var(--border-2); border-radius:14px; padding:22px; }
+  .reco b.name { font-size:1.3rem; color:var(--purple); }
+</style>
+</head>
+<body>
+
+<nav class="navbar">
+  <div class="nav-inner">
+    <a href="index.html" class="nav-logo">💬 agent-nlp-llm</a>
+    <button class="nav-toggle" onclick="document.querySelector('.nav-links').classList.toggle('open')" aria-label="菜单">☰</button>
+    <div class="nav-links">
+      <a href="index.html" class="nav-link">🏠 首页</a>
+      <a href="playground.html" class="nav-link">🎨 玩法</a>
+      <a href="nlp/index.html" class="nav-link">📝 NLP</a>
+      <a href="llm/index.html" class="nav-link">🤖 LLM</a>
+      <a href="bpe.html" class="nav-link">🔤 分词器</a>
+      <a href="embedding.html" class="nav-link">🧭 词向量</a>
+      <a href="attention.html" class="nav-link">🎯 注意力</a>
+      <a href="papers.html" class="nav-link">📚 论文</a>
+      <a href="clinic.html" class="nav-link">🕵️ 诊所</a>
+      <a href="pitfalls.html" class="nav-link">💥 踩坑</a>
+      <a href="benchmark.html" class="nav-link active">📊 选型</a>
+      <a href="universe.html" class="nav-link">🌌 宇宙</a>
+      <a href="https://github.com/yejinlei/agent-nlp-llm" target="_blank" rel="noopener" class="nav-gh" aria-label="GitHub"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg></a>
+    </div>
+  </div>
+</nav>
+
+<div class="wrap page">
+  <section class="hero reveal">
+    <h1>📊 模型选型：到底该用哪个模型</h1>
+    <p class="sub">"哪个模型最好"是个错误的问题。正确的问题是：<strong>在我的预算、场景和约束下，哪个最合适</strong>。下面用决策器帮你一步步想清楚。</p>
+  </section>
+
+  <section class="blk reveal">
+    <h2 class="blk-title"><span class="num">🧭</span>选型决策器：回答 5 个问题，给你建议</h2>
+    <div class="card">
+      <div class="q-row"><label>1. 你的部署环境 / 预算</label>
+        <div class="opt-group" data-q="deploy">
+          <span class="opt" data-v="api">用云 API，按量付费</span>
+          <span class="opt" data-v="local_small">本地消费级显卡（≤16G）</span>
+          <span class="opt" data-v="local_big">本地/服务器大显存（≥48G）</span>
+          <span class="opt" data-v="cpu">完全离线 / 只有 CPU</span>
+        </div>
+      </div>
+      <div class="q-row"><label>2. 主要任务类型</label>
+        <div class="opt-group" data-q="task">
+          <span class="opt" data-v="gen">通用生成 / 对话</span>
+          <span class="opt" data-v="code">代码</span>
+          <span class="opt" data-v="long">长文本理解 / 摘要</span>
+          <span class="opt" data-v="cn">中文为主的任务</span>
+        </div>
+      </div>
+      <div class="q-row"><label>3. 数据隐私要求</label>
+        <div class="opt-group" data-q="privacy">
+          <span class="opt" data-v="strict">严格，数据不能出内网</span>
+          <span class="opt" data-v="loose">无所谓，可用外部服务</span>
+        </div>
+      </div>
+      <div class="q-row"><label>4. 是否需要微调 / 定制</label>
+        <div class="opt-group" data-q="finetune">
+          <span class="opt" data-v="yes">需要，要用自己数据训练</span>
+          <span class="opt" data-v="no">不需要，提示即可</span>
+        </div>
+      </div>
+      <div class="q-row"><label>5. 延迟 / 吞吐要求</label>
+        <div class="opt-group" data-q="latency">
+          <span class="opt" data-v="low">实时响应要求高</span>
+          <span class="opt" data-v="mid">一般即可</span>
+          <span class="opt" data-v="high">批量离线处理</span>
+        </div>
+      </div>
+      <button class="btn btn-primary" id="recoBtn">生成推荐 →</button>
+      <button class="btn btn-outline" id="recoReset">重置</button>
+      <div id="recoOut" style="margin-top:18px"></div>
+    </div>
+  </section>
+
+  <section class="blk reveal">
+    <h2 class="blk-title"><span class="num">🧮</span>显存估算器：这个模型我跑得动吗</h2>
+    <p class="blk-desc">推理显存 ≈ 权重 + KV 缓存 + 激活开销。输入参数量和精度，实时估算最低显存需求。</p>
+    <div class="card">
+      <div class="ctrl">
+        <label>参数量（B，十亿）
+          <input type="number" id="paramB" value="7" min="0.5" max="700" step="0.5" style="width:120px">
+        </label>
+        <label>精度
+          <select id="precision">
+            <option value="2">FP16（2 字节）</option>
+            <option value="1">INT8（1 字节）</option>
+            <option value="0.5">INT4（0.5 字节）</option>
+            <option value="4">FP32（4 字节）</option>
+          </select>
+        </label>
+        <label>上下文长度（token）
+          <input type="number" id="ctxLen" value="2048" min="512" max="131072" step="512" style="width:130px">
+        </label>
+        <label>批次大小
+          <input type="number" id="batchSz" value="1" min="1" max="64" step="1" style="width:90px">
+        </label>
+      </div>
+      <div class="demo-box">
+        <div class="kv"><span>模型权重（参数量 × 字节数）</span><span id="memWeight">—</span></div>
+        <div class="kv"><span>KV 缓存（估算，≈ 2·层数·头维度·序列长）</span><span id="memKV">—</span></div>
+        <div class="kv"><span>激活与框架开销（权重 × 20% 粗估）</span><span id="memAct">—</span></div>
+        <div class="kv" style="border-top:2px solid var(--border-2)"><span><b>建议最低显存</b></span><span id="memTotal" style="color:var(--purple);font-size:1.1rem">—</span></div>
+      </div>
+      <div class="hint" id="memHint"></div>
+    </div>
+  </section>
+
+  <section class="blk reveal">
+    <h2 class="blk-title"><span class="num">📋</span>代表性模型对比</h2>
+    <div class="card" style="overflow-x:auto">
+      <table class="tb">
+        <thead><tr><th>模型</th><th>规模</th><th>开源</th><th>上下文</th><th>适合场景</th><th>部署门槛</th></tr></thead>
+        <tbody>
+          <tr><td>GPT 系列</td><td>闭源（数百 B+）</td><td>否</td><td>长</td><td>通用、复杂推理</td><td>API 调用</td></tr>
+          <tr><td>Claude 系列</td><td>闭源</td><td>否</td><td>超长</td><td>长文本、写作、分析</td><td>API 调用</td></tr>
+          <tr><td>Llama 系列</td><td>8B–70B+</td><td>是</td><td>中–长</td><td>通用、可微调</td><td>需 GPU</td></tr>
+          <tr><td>Qwen 系列</td><td>0.5B–72B+</td><td>是</td><td>中–长</td><td>中文、通用、代码</td><td>可小可大</td></tr>
+          <tr><td>DeepSeek 系列</td><td>多规格</td><td>是</td><td>长</td><td>推理、代码</td><td>需 GPU</td></tr>
+          <tr><td>Mistral / Mixtral</td><td>7B–8x7B(MoE)</td><td>是</td><td>中</td><td>高效推理</td><td>中小 GPU</td></tr>
+          <tr><td>ChatGLM / GLM</td><td>6B–130B</td><td>部分</td><td>中–长</td><td>中文对话</td><td>中等</td></tr>
+          <tr><td>Baichuan</td><td>7B–13B</td><td>是</td><td>中</td><td>中文任务</td><td>中小 GPU</td></tr>
+          <tr><td>Phi / Gemma 小模型</td><td>2B–9B</td><td>是</td><td>中</td><td>端侧、轻量任务</td><td>低</td></tr>
+        </tbody>
+      </table>
+      <p style="font-size:.85rem;color:var(--text-3);margin-top:10px">※ 上表为方法层面的分类示意，具体型号与参数会随版本快速变化，选型请以官方最新文档为准。</p>
+    </div>
+  </section>
+
+  <section class="blk reveal">
+    <h2 class="blk-title"><span class="num">📐</span>怎么真正评估一个模型</h2>
+    <div class="grid g2">
+      <div class="card">
+        <h4>① 看基准测试（但要警惕）</h4>
+        <p style="font-size:.92rem;color:var(--text-2)">MMLU（通用知识）、HumanEval（代码）、C-Eval / CMMLU（中文）、GSM8K（数学推理）。<b>注意</b>：基准分数可能因数据污染、提示方式差异而虚高，只能作为粗筛。</p>
+      </div>
+      <div class="card">
+        <h4>② 语言模型困惑度 PPL</h4>
+        <p style="font-size:.92rem;color:var(--text-2)">PPL 越低说明模型对文本的"意外程度"越小。公式 <span class="math">\\( \text{PPL}=\exp\!\big(-\frac{1}{N}\sum_i \log p(w_i)\big) \\)</span>。但 PPL 低不等于任务表现好，只能衡量语言流畅度。</p>
+      </div>
+      <div class="card">
+        <h4>③ 在自己的数据上测</h4>
+        <p style="font-size:.92rem;color:var(--text-2)">这是唯一真正靠谱的办法。从你的真实任务里抽 100–300 条，人工标注参考答案，做成自己的评测集。<b>别人的榜单不如自己的测试集</b>。</p>
+      </div>
+      <div class="card">
+        <h4>④ 算清成本</h4>
+        <p style="font-size:.92rem;color:var(--text-2)">API 按 token 计费要算清输入输出比例；本地部署要算显卡折旧 + 电费 + 运维。很多时候"自己部署"并不比 API 便宜，除非量大或隐私硬要求。</p>
+      </div>
+    </div>
+    <div class="insight"><b>选型心法：</b> 先被约束筛选（隐私、预算、延迟），再在剩余候选里做实测对比，最后用成本归一化——<b>每块钱效果最好的那个</b>，才是你该选的模型。</div>
+  </section>
+</div>
+
+<footer class="site"><p>💬 agent-nlp-llm · 自然语言技术本体论研究站</p></footer>
+
+<script src="js/site.js"></script>
+<script>
+(function(){
+  // ---- 决策器 ----
+  var answers = {};
+  document.querySelectorAll('.opt-group').forEach(function(g){
+    var q = g.dataset.q;
+    g.querySelectorAll('.opt').forEach(function(o){
+      o.onclick = function(){
+        g.querySelectorAll('.opt').forEach(function(x){ x.classList.remove('on'); });
+        o.classList.add('on');
+        answers[q] = o.dataset.v;
+      };
+    });
+  });
+
+  function recommend(){
+    var a = answers;
+    var name, reason, alt;
+    if (a.privacy === 'strict' || a.deploy === 'local_small' || a.deploy === 'local_big' || a.deploy === 'cpu') {
+      // 必须本地
+      if (a.deploy === 'cpu') {
+        name = '小型开源模型（如 Qwen 小规格 / Phi / Gemma 端侧版本，配合量化）';
+        reason = '只有 CPU 意味着算力极其有限，只能跑几 B 以下的量化小模型，或使用专门的推理优化方案。';
+        alt = '若数据可脱敏，可考虑混合方案：本地做预处理，关键步骤走 API。';
+      } else if (a.deploy === 'local_small') {
+        name = a.task === 'code' ? '代码友好的 7–14B 级开源模型（量化后）' : '7–14B 级开源模型（如 Llama/Qwen 中规格，INT4 量化）';
+        reason = '≤16G 显存适合 7B–14B 的 INT4/INT8 量化推理，效果与成本平衡最好。';
+        alt = '若延迟要求高，选更小的 3B–7B；若质量优先，用 QLoRA 微调小模型补齐领域能力。';
+      } else {
+        name = '30B–70B 级开源模型（如 Llama/Qwen/DeepSeek 大规格）';
+        reason = '大显存能承载高精度或大模型，是最接近闭源体验的自托管选择。';
+        alt = '若追求性价比，可上 MoE 架构模型，用部分激活换取更高吞吐。';
+      }
+    } else {
+      // 可用 API
+      if (a.task === 'long') {
+        name = '长上下文见长的闭源模型（Claude / 支持长窗口的 GPT）';
+        reason = '长文本理解对上下文窗口和中间信息保持能力要求高，闭源大模型目前更稳。';
+        alt = '成本敏感时可用开源长上下文模型（如 Qwen-Long 类）自托管。';
+      } else if (a.task === 'code') {
+        name = '代码专长的模型（GPT / Claude / DeepSeek-Coder 类）';
+        reason = '代码任务对逻辑与语法细节敏感，专训或大模型优势明显。';
+        alt = '私有代码库可考虑本地开源代码模型 + RAG。';
+      } else if (a.task === 'cn') {
+        name = '中文优化模型（如 Qwen / GLM / 中文表现好的闭源模型）';
+        reason = '中文语料和评测上，中文专长模型往往比通用英文模型更贴合。';
+        alt = '复杂推理场景可对比闭源旗舰，简单场景用中等规格即可。';
+      } else {
+        name = '通用旗舰闭源模型（GPT / Claude 类）';
+        reason = '通用对话/生成任务，旗舰模型综合体验最好，省去部署运维。';
+        alt = '量大或成本敏感时，用开源 7B–14B + 微调自托管可显著降本。';
+      }
+    }
+    if (a.finetune === 'yes' && (a.deploy === 'local_small' || a.deploy === 'local_big' || a.deploy === 'cpu')) {
+      reason += ' 你还需要微调——优先选开源、且社区工具链成熟的模型，配合 LoRA/QLoRA 能大幅降低门槛。';
+    }
+    if (a.latency === 'low') {
+      reason += ' 实时性要求高：优先小模型或带 KV 缓存优化/投机解码的方案，别一味追大。';
+    }
+    return { name: name, reason: reason, alt: alt };
+  }
+
+  document.getElementById('recoBtn').onclick = function(){
+    var missing = ['deploy','task','privacy','finetune','latency'].filter(function(k){ return !answers[k]; });
+    var out = document.getElementById('recoOut');
+    if (missing.length) {
+      out.innerHTML = '<div class="hint warn">⚠️ 还有 ' + missing.length + ' 个问题没选，请把 5 个维度都选上。</div>';
+      return;
+    }
+    var r = recommend();
+    out.innerHTML = '<div class="reco"><div style="font-size:.85rem;color:var(--text-3)">推荐方案</div>' +
+      '<b class="name">' + r.name + '</b>' +
+      '<p style="margin:10px 0;font-size:.95rem"><b>为什么：</b>' + r.reason + '</p>' +
+      '<p style="font-size:.9rem;color:var(--text-2)"><b>备选思路：</b>' + r.alt + '</p>' +
+      '<p style="font-size:.82rem;color:var(--text-3);margin-top:10px">※ 这是基于经验的启发式建议，最终请务必用自己的测试集实测验证。</p></div>';
+  };
+  document.getElementById('recoReset').onclick = function(){
+    answers = {};
+    document.querySelectorAll('.opt').forEach(function(o){ o.classList.remove('on'); });
+    document.getElementById('recoOut').innerHTML = '';
+  };
+
+  // ---- 显存估算 ----
+  function fmt(gb){ return gb >= 1 ? gb.toFixed(2) + ' GB' : (gb * 1024).toFixed(0) + ' MB'; }
+  function calcMem(){
+    var pb = parseFloat(document.getElementById('paramB').value) || 7;
+    var bytes = parseFloat(document.getElementById('precision').value) || 2;
+    var ctx = parseInt(document.getElementById('ctxLen').value, 10) || 2048;
+    var bs = parseInt(document.getElementById('batchSz').value, 10) || 1;
+
+    var params = pb * 1e9;
+    var wGB = params * bytes / 1e9;
+
+    // KV 缓存粗估：2(KV) × 层数 × 隐藏维 × 2(字节, FP16) × 序列长 × 批次
+    // 用参数量近似隐藏维与层数（经验：hidden ≈ 128·sqrt(参数B)，层数 ≈ 12·log2(参数B)+...）
+    var layers = Math.max(12, Math.round(12 * Math.log2(Math.max(pb, 1)) + 8));
+    var hidden = Math.round(128 * Math.sqrt(pb * 1000) / 10) * 10; // 粗略量级
+    var kvGB = 2 * layers * hidden * 2 * ctx * bs / 1e9;
+
+    var actGB = wGB * 0.2;
+    var total = wGB + kvGB + actGB;
+
+    document.getElementById('memWeight').textContent = fmt(wGB);
+    document.getElementById('memKV').textContent = fmt(kvGB);
+    document.getElementById('memAct').textContent = fmt(actGB);
+    document.getElementById('memTotal').textContent = fmt(total);
+
+    var hint = document.getElementById('memHint');
+    var advice;
+    if (total <= 8) advice = '✅ 8G 显存级别即可运行（如 RTX 3060/4060 等）。';
+    else if (total <= 16) advice = '✅ 16G 显存（RTX 4060Ti 16G / 4080）可运行，建议开量化。';
+    else if (total <= 24) advice = '⚠️ 需要 24G 显存（RTX 3090/4090）。显存吃紧时优先降量化精度或减批次。';
+    else if (total <= 48) advice = '⚠️ 需要 48G 级专业卡或双卡并装。';
+    else if (total <= 80) advice = '🔶 需要 A100/H100 80G 级别或模型并行。';
+    else advice = '🔴 单卡很难放下，需要多卡张量并行 + 量化 + 推理优化框架。';
+    hint.className = total > 24 ? 'hint warn' : 'hint good';
+    hint.innerHTML = advice + '<br><span style="font-size:.84rem">注：KV 缓存随上下文线性增长——' +
+      ctx + ' token 时 KV 已占 ' + fmt(kvGB) + '。长上下文场景它常常比权重还吃显存。</span>';
+  }
+  ['paramB','precision','ctxLen','batchSz'].forEach(function(id){
+    var el = document.getElementById(id);
+    el.addEventListener('input', calcMem);
+    el.addEventListener('change', calcMem);
+  });
+  calcMem();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>注意力机制 · 让模型学会该看哪 · agent-nlp-llm</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+<link rel="stylesheet" href="css/site.css">
+<style>
+  .heat { border-collapse: collapse; margin: 8px 0; }
+  .heat td, .heat th { width: 46px; height: 34px; text-align: center; font-size: .72rem; border: 2px solid #fff; border-radius: 4px; }
+  .heat th { color: var(--text-3); font-weight: 600; }
+  .tok { display: inline-block; padding: 6px 12px; margin: 3px; border-radius: 9px; background: #eef3ff; color: #2c4a8c; font-weight: 600; cursor: pointer; transition: all .15s; }
+  .tok:hover { background: #dbe7ff; }
+  .tok.sel { outline: 2px solid #ec4899; }
+</style>
+</head>
+<body>
+
+<nav class="navbar">
+  <div class="nav-inner">
+    <a href="index.html" class="nav-logo">💬 agent-nlp-llm</a>
+    <button class="nav-toggle" onclick="document.querySelector('.nav-links').classList.toggle('open')" aria-label="菜单">☰</button>
+    <div class="nav-links">
+      <a href="index.html" class="nav-link">🏠 首页</a>
+      <a href="playground.html" class="nav-link">🎨 玩法</a>
+      <a href="nlp/index.html" class="nav-link">📝 NLP</a>
+      <a href="llm/index.html" class="nav-link">🤖 LLM</a>
+      <a href="bpe.html" class="nav-link">🔤 分词器</a>
+      <a href="embedding.html" class="nav-link">🧭 词向量</a>
+      <a href="attention.html" class="nav-link active">🎯 注意力</a>
+      <a href="papers.html" class="nav-link">📚 论文</a>
+      <a href="clinic.html" class="nav-link">🕵️ 诊所</a>
+      <a href="pitfalls.html" class="nav-link">💥 踩坑</a>
+      <a href="benchmark.html" class="nav-link">📊 选型</a>
+      <a href="universe.html" class="nav-link">🌌 宇宙</a>
+      <a href="https://github.com/yejinlei/agent-nlp-llm" target="_blank" rel="noopener" class="nav-gh" aria-label="GitHub"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg></a>
+    </div>
+  </div>
+</nav>
+
+<aside class="toc">
+  <h4>导览</h4>
+  <a href="#intuition" class="on">① 直觉</a>
+  <a href="#math">② 数学</a>
+  <a href="#code">③ 代码</a>
+  <a href="#practice">④ 实战</a>
+  <a href="#play">🎯 可视化沙盒</a>
+</aside>
+
+<div class="wrap page">
+  <section class="hero reveal">
+    <h1>🎯 注意力机制：让模型学会"该看哪"</h1>
+    <p class="sub">一句话里，"它"到底指小猫还是老鼠？注意力机制让模型<strong>自己学会</strong>在理解某个词时该重点参考哪些词，而这个"关注权重"是训练出来的，不需要人写规则。</p>
+  </section>
+
+  <!-- ① 直觉 -->
+  <section id="intuition" class="blk reveal">
+    <h2 class="blk-title"><span class="num">①</span>直觉：开会的比喻</h2>
+    <p class="blk-desc">理解一句话，就像开一场会。<strong>Self-Attention</strong> 的意思是：每个人（每个词）同时听所有人发言，然后自己决定该重点记谁的、忽略谁的。</p>
+    <div class="grid g3">
+      <div class="card">
+        <h4>Query（我想问什么）</h4>
+        <p style="font-size:.9rem;color:var(--text-2)">当前词的"提问"。比如"它"在想：我要理解自己指谁，该找哪个名词？</p>
+      </div>
+      <div class="card">
+        <h4>Key（我是什么）</h4>
+        <p style="font-size:.9rem;color:var(--text-2)">其他词亮出的"身份标签"。"小猫""老鼠"都会亮出"我是名词"。</p>
+      </div>
+      <div class="card">
+        <h4>Value（我能给什么内容）</h4>
+        <p style="font-size:.9rem;color:var(--text-2)">其他词实际贡献的信息。匹配度高的 Key，它的 Value 就被重点采纳。</p>
+      </div>
+    </div>
+    <div class="insight"><b>图书馆类比：</b> Query 是你的检索关键词，Key 是每本书的书名标签，Value 是书的内容。你拿关键词去和所有书名比对（QKᵀ），哪本书标签最匹配，就重点读那本（加权求和 Value）。整个过程可微分，所以能端到端训练。</div>
+    <p style="color:var(--text-2);margin-top:14px"><strong>为什么需要它？</strong> 在 RNN/LSTM 时代，信息要沿着时间一步步传递，句子一长，前面的信息就被"稀释"甚至遗忘了（长距离依赖瓶颈）。注意力让任意两个位置<strong>直接相连</strong>，距离不管多远，权重都能学出来。</p>
+  </section>
+
+  <!-- ② 数学 -->
+  <section id="math" class="blk reveal">
+    <h2 class="blk-title"><span class="num">②</span>数学：缩放点积注意力</h2>
+    <p style="color:var(--text-2)">这是 Transformer 的核心公式，一个式子搞定"匹配 + 加权"：</p>
+    <div class="math">\\( \text{Attention}(Q,K,V)=\text{softmax}\!\left(\dfrac{QK^{\top}}{\sqrt{d_k}}\right)V \\)</div>
+    <p style="color:var(--text-2)">逐步拆解：</p>
+    <table class="tb">
+      <thead><tr><th>步骤</th><th>表达式</th><th>在干嘛</th></tr></thead>
+      <tbody>
+        <tr><td>① 算匹配度</td><td rowspan="1"><span class="math">\\( QK^{\top} \\)</span></td><td>每个 Query 和所有 Key 做点积，得到"像不像"的分数矩阵</td></tr>
+        <tr><td>② 缩放</td><td><span class="math">\\( \div\sqrt{d_k} \\)</span></td><td>维度越大点积越大，除以 <span class="math">\\( \sqrt{d_k} \\)</span> 防止 softmax 进饱和区、梯度消失</td></tr>
+        <tr><td>③ 归一化</td><td><span class="math">\\( \text{softmax}(\cdot) \\)</span></td><td>把分数转成加起来等于 1 的权重</td></tr>
+        <tr><td>④ 加权求和</td><td><span class="math">\\( \cdot\,V \\)</span></td><td>按权重把各词的 Value 混合起来，得到输出</td></tr>
+      </tbody>
+    </table>
+    <h3 style="margin:22px 0 10px">为什么要"多头"？</h3>
+    <p style="color:var(--text-2)">一个注意力头只能学一种关注模式。多头 = 多个头并行，各自关注不同关系（一个看语法主谓、一个看指代、一个看修饰），再把结果拼起来：</p>
+    <div class="math">\\( \text{MultiHead}(Q,K,V)=\text{Concat}(\text{head}_1,\dots,\text{head}_h)W^{O},\quad \text{head}_i=\text{Attention}(QW_i^{Q},KW_i^{K},VW_i^{V}) \\)</div>
+    <div class="insight"><b>复杂度警告：</b> 注意力要对每对位置算分数，复杂度是 <span class="math">\\( O(n^2) \\)</span>——序列翻倍，计算量和显存翻 4 倍。这就是长文本处理昂贵、也是 FlashAttention / 稀疏注意力 / 线性注意力等优化方法存在的根本原因。</div>
+  </section>
+
+  <!-- ③ 代码 -->
+  <section id="code" class="blk reveal">
+    <h2 class="blk-title"><span class="num">③</span>代码：从零实现缩放点积注意力</h2>
+<pre class="code"><span class="k">import</span> torch, torch.nn <span class="k">as</span> nn, torch.nn.functional <span class="k">as</span> F, math
+
+<span class="k">def</span> <span class="f">scaled_dot_product_attention</span>(q, k, v, mask=<span class="k">None</span>):
+    <span class="c"># q: [B, h, T_q, d_k]  k: [B, h, T_k, d_k]  v: [B, h, T_k, d_v]</span>
+    d_k = q.size(-<span class="n">1</span>)
+
+    <span class="c"># ① 匹配度矩阵：[B,h,T_q,T_k]</span>
+    scores = torch.matmul(q, k.transpose(-<span class="n">2</span>, -<span class="n">1</span>)) / math.sqrt(d_k)   <span class="c"># ② 缩放</span>
+
+    <span class="c"># 因果掩码：自回归生成时，第 t 个位置不能看到未来</span>
+    <span class="k">if</span> mask <span class="k">is</span> <span class="k">not</span> <span class="k">None</span>:
+        scores = scores.masked_fill(mask == <span class="n">0</span>, float(<span class="s">'-inf'</span>))
+
+    <span class="c"># ③ softmax 归一化（沿最后一维，即对所有 Key）</span>
+    attn = F.softmax(scores, dim=-<span class="n">1</span>)
+
+    <span class="c"># ④ 加权求和得到输出</span>
+    <span class="k">return</span> torch.matmul(attn, v), attn
+
+<span class="c"># —— 自测 ——</span>
+B, h, T, d = <span class="n">2</span>, <span class="n">8</span>, <span class="n">16</span>, <span class="n">64</span>
+q, k, v = [torch.randn(B, h, T, d) <span class="k">for</span> _ <span class="k">in</span> <span class="k">range</span>(<span class="n">3</span>)]
+<span class="c"># 下三角因果掩码</span>
+mask = torch.tril(torch.ones(T, T)).view(<span class="n">1</span>, <span class="n">1</span>, T, T)
+out, attn = <span class="f">scaled_dot_product_attention</span>(q, k, v, mask)
+<span class="k">print</span>(out.shape, attn.shape)   <span class="c"># [2,8,16,64] [2,8,16,16]</span>
+<span class="k">print</span>(attn[<span class="n">0</span>,<span class="n">0</span>,<span class="n">0</span>])          <span class="c"># 第0个位置只能看到自己，权重全在 index 0</span>
+</pre>
+    <div class="hint">💡 <code class="inline">masked_fill(mask==0, -inf)</code> 是因果注意力的关键：softmax 后 -inf 变成 0，模型就"看不见"未来了。这也是 GPT 能逐词生成的技术前提。</div>
+  </section>
+
+  <!-- ④ 实战 -->
+  <section id="practice" class="blk reveal">
+    <h2 class="blk-title"><span class="num">④</span>实战：优化、成本与争议</h2>
+    <div class="grid g2">
+      <div class="card">
+        <h4>加速：FlashAttention</h4>
+        <p style="font-size:.92rem;color:var(--text-2)">传统实现要把 <span class="math">\\( n\times n \\)</span> 的分数矩阵写进显存。FlashAttention 用分块 + 在线 softmax，<strong>不落地完整矩阵</strong>，显存和速度都大幅改善，是现代训练的标配。</p>
+      </div>
+      <div class="card">
+        <h4>省 KV 缓存：MQA / GQA</h4>
+        <p style="font-size:.92rem;color:var(--text-2)">生成时每步都要缓存历史 Key/Value，长上下文显存吃紧。让多个 Query 头共享一组 KV（MQA/GQA），能在几乎不掉效果的前提下省下大量显存。</p>
+      </div>
+      <div class="card">
+        <h4>注意力 = 解释性？</h4>
+        <p style="font-size:.92rem;color:var(--text-2)">人们一度以为注意力权重就是"模型在看哪"的证据。但后续研究表明注意力权重与最终预测的因果关系并不直接，<strong>不能简单当作解释</strong>。可视化有启发，但别奉为真理。</p>
+      </div>
+      <div class="card">
+        <h4>长文本的下一站</h4>
+        <p style="font-size:.92rem;color:var(--text-2)">滑动窗口注意力、稀疏注意力、线性注意力、状态空间模型（Mamba）都在试图绕开 <span class="math">\\( O(n^2) \\)</span> 的代价。这是当前最活跃的研究方向之一。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 沙盒 -->
+  <section id="play" class="blk reveal">
+    <h2 class="blk-title"><span class="num">🎯</span>可视化沙盒：亲手调一次注意力</h2>
+    <p class="blk-desc">输入一句中文（用空格或用逗号分隔词），点击计算，看注意力权重怎么分布。拖动"聚焦度"滑块，观察 softmax 温度对分布的影响。</p>
+    <div class="ctrl">
+      <label style="flex:1;min-width:260px">句子
+        <input type="text" id="attnText" value="小猫 追 老鼠 因为 它 饿了" style="width:100%">
+      </label>
+      <label>聚焦度（温度）
+        <input type="range" id="attnTemp" min="0.3" max="3" step="0.1" value="1">
+      </label>
+    </div>
+    <div class="ctrl">
+      <button class="btn btn-primary" id="attnGo">计算注意力</button>
+      <span style="font-size:.85rem;color:var(--text-3)">点击热力图中的任一格，右侧会解释它意味着什么</span>
+    </div>
+    <div style="overflow-x:auto"><div id="attnHeat"></div></div>
+    <div class="hint" id="attnExp">👉 点热力图中的格子，看它的含义。</div>
+  </section>
+</div>
+
+<footer class="site"><p>💬 agent-nlp-llm · 自然语言技术本体论研究站</p></footer>
+
+<script src="js/site.js"></script>
+<script>
+(function(){
+  var toks = [], mat = [];
+
+  // 用词与词的“语义关联度”启发式生成一个稳定的伪注意力矩阵
+  function relatedness(a, b){
+    // 相同/相近的字加权，形成明显的指代/因果结构
+    var link = {
+      '它': {'小猫':3.2,'老鼠':2.6,'饿':1.4},
+      '追': {'小猫':2.6,'老鼠':2.8},
+      '饿': {'它':3.0,'小猫':1.6},
+      '因为': {'饿':2.4,'追':1.6},
+      '老鼠': {'追':2.2,'小猫':1.4},
+      '小猫': {'追':2.0,'它':1.4}
+    };
+    var s = 0;
+    if (link[a] && link[a][b]) s += link[a][b];
+    // 基础相似度：字符重叠
+    for (var i = 0; i < a.length; i++) if (b.indexOf(a[i]) >= 0) s += 0.8;
+    // 位置邻近的小加成
+    s += 0.6;
+    return s;
+  }
+
+  function buildMatrix(temperature){
+    var n = toks.length;
+    mat = [];
+    for (var i = 0; i < n; i++){
+      var row = [];
+      for (var j = 0; j < n; j++){
+        row.push(relatedness(toks[i], toks[j]) / temperature);
+      }
+      // softmax
+      var mx = Math.max.apply(null, row);
+      var ex = row.map(function(x){ return Math.exp(x - mx); });
+      var sum = ex.reduce(function(a,b){ return a+b; }, 0);
+      mat.push(ex.map(function(x){ return x / sum; }));
+    }
+  }
+
+  function colorFor(v){
+    var a = Math.min(1, v * 1.9 + 0.05);
+    return 'background:rgba(59,111,224,' + a.toFixed(2) + ');color:' + (a > 0.45 ? '#fff' : '#2c4a8c');
+  }
+
+  function render(){
+    var host = document.getElementById('attnHeat');
+    var html = '<table class="heat"><tr><th style="font-size:.65rem">词＼看</th>';
+    toks.forEach(function(t){ html += '<th>' + t + '</th>'; });
+    html += '</tr>';
+    mat.forEach(function(row, i){
+      html += '<tr><th style="text-align:right;padding-right:6px">' + toks[i] + '</th>';
+      row.forEach(function(v, j){
+        html += '<td style="' + colorFor(v) + ';cursor:pointer" data-i="' + i + '" data-j="' + j + '" title="' + toks[i] + '→' + toks[j] + ': ' + v.toFixed(2) + '">' + v.toFixed(2) + '</td>';
+      });
+      html += '</tr>';
+    });
+    html += '</table>';
+    host.innerHTML = html;
+    Array.prototype.forEach.call(host.querySelectorAll('td'), function(td){
+      td.onclick = function(){
+        var i = +td.dataset.i, j = +td.dataset.j;
+        var v = mat[i][j];
+        var lvl = v > 0.4 ? '很强' : (v > 0.2 ? '中等' : '较弱');
+        document.getElementById('attnExp').innerHTML = '「<b>' + toks[i] + '</b>」在理解自己时，看「<b>' + toks[j] +
+          '</b>」的权重是 <b>' + v.toFixed(2) + '</b>（' + lvl + '）。<br>真实模型里这些数字不是人定的，而是训练中自动学出来的——' +
+          '所以模型确实"学会"了指代和因果。';
+      };
+    });
+  }
+
+  function run(){
+    var raw = document.getElementById('attnText').value.trim();
+    toks = raw.split(/[\s,，、]+/).filter(function(x){ return x.length; });
+    if (toks.length < 2){ toks = ['小猫','追','老鼠']; }
+    var temp = parseFloat(document.getElementById('attnTemp').value);
+    buildMatrix(temp);
+    render();
+    var t = document.getElementById('attnTemp').value;
+    document.getElementById('attnExp').textContent = '温度 = ' + t + '：' +
+      (temp < 1 ? '分布更"尖锐"，模型只盯着少数几个词看，容易忽略其他信息。' :
+       temp > 2 ? '分布更"平滑"，关注被摊薄，什么都看一点但都不深入。' :
+       '分布较均衡，是实践中常用的区间。');
+  }
+
+  document.getElementById('attnGo').onclick = run;
+  document.getElementById('attnTemp').oninput = run;
+  run();
+})();
+</script>
+</body>
+</html>

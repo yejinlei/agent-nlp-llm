@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🎨 创意玩法广场 · agent-nlp-llm</title>
+<meta name="description" content="agent-nlp-llm 站点全部互动玩法入口：BPE 分词器、词向量类比、注意力沙盒、错误诊断诊所、Prompt 踩坑博物馆、模型选型决策树、技术宇宙时间轴等。">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+<link rel="stylesheet" href="css/site.css">
+<style>
+  .reveal { opacity: 0; transform: translateY(18px); transition: opacity .55s ease, transform .55s ease; }
+  .reveal.revealed { opacity: 1; transform: none; }
+  .play-card { text-decoration: none; color: inherit; display: block; position: relative; overflow: hidden; }
+  .play-card .pc-icon { font-size: 2.1rem; display: block; margin-bottom: 10px; line-height: 1.1; }
+  .play-card h4 { font-size: 1.02rem; margin-bottom: 6px; }
+  .play-card p { font-size: .88rem; color: var(--text-2); margin: 0; }
+  .play-card .pc-tags { margin-top: 12px; }
+  .play-card .pc-go {
+    position: absolute; right: 20px; top: 22px; font-size: .8rem; font-weight: 700;
+    color: var(--blue); opacity: 0; transform: translateX(-6px); transition: all .22s;
+  }
+  .play-card:hover .pc-go { opacity: 1; transform: none; }
+  .hero-stat { display: flex; gap: 34px; justify-content: center; flex-wrap: wrap; margin-top: 30px; }
+  .hero-stat div { text-align: center; }
+  .hero-stat b {
+    display: block; font-size: 1.75rem; font-weight: 800;
+    background: linear-gradient(120deg, #3b6fe0, #7c3aed);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .hero-stat span { font-size: .84rem; color: var(--text-3); }
+  .guide-list { margin: 0; padding-left: 4px; list-style: none; }
+  .guide-list li { padding: 7px 0 7px 26px; position: relative; }
+  .guide-list li::before {
+    content: ''; position: absolute; left: 6px; top: 15px;
+    width: 8px; height: 8px; border-radius: 50%;
+    background: linear-gradient(120deg, #3b6fe0, #7c3aed);
+  }
+  .play-demo-out {
+    font-family: var(--mono); font-size: .93rem; line-height: 1.9;
+    background: #0f1424; color: #e3e8f4; border-radius: 10px;
+    padding: 14px 16px; min-height: 74px; overflow-x: auto;
+  }
+  .play-demo-out .pair { color: #a5e075; font-weight: 700; }
+  .play-demo-out .dim { color: #7d8bb0; }
+  .chip {
+    display: inline-block; font-size: .78rem; font-weight: 600; padding: 3px 9px;
+    border-radius: 8px; background: #eef1f8; color: var(--text-2); margin: 0 5px 5px 0;
+    font-family: var(--mono);
+  }
+  .chip.hit { background: var(--green-lt); color: var(--green); }
+  .road-row { display: flex; gap: 14px; align-items: flex-start; padding: 14px 0; border-bottom: 1px dashed var(--border); }
+  .road-row:last-child { border-bottom: none; }
+  .road-lv {
+    flex: 0 0 40px; height: 40px; border-radius: 11px; color: #fff;
+    display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: .9rem;
+  }
+  .road-row h5 { margin: 0 0 4px; font-size: .98rem; }
+  .road-row p { margin: 0; font-size: .88rem; color: var(--text-2); }
+</style>
+</head>
+<body>
+
+<nav class="navbar">
+  <div class="nav-inner">
+    <a href="index.html" class="nav-logo">💬 agent-nlp-llm</a>
+    <button class="nav-toggle" onclick="document.querySelector('.nav-links').classList.toggle('open')" aria-label="菜单">☰</button>
+    <div class="nav-links">
+      <a href="index.html" class="nav-link">🏠 首页</a>
+      <a href="playground.html" class="nav-link active">🎨 玩法</a>
+      <a href="nlp/index.html" class="nav-link">📝 NLP</a>
+      <a href="llm/index.html" class="nav-link">🤖 LLM</a>
+      <a href="bpe.html" class="nav-link">🔤 分词器</a>
+      <a href="embedding.html" class="nav-link">🧭 词向量</a>
+      <a href="attention.html" class="nav-link">🎯 注意力</a>
+      <a href="papers.html" class="nav-link">📚 论文</a>
+      <a href="clinic.html" class="nav-link">🕵️ 诊所</a>
+      <a href="pitfalls.html" class="nav-link">💥 踩坑</a>
+      <a href="benchmark.html" class="nav-link">📊 选型</a>
+      <a href="universe.html" class="nav-link">🌌 宇宙</a>
+      <a href="https://github.com/yejinlei/agent-nlp-llm" target="_blank" rel="noopener" class="nav-gh" aria-label="GitHub"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg></a>
+    </div>
+  </div>
+</nav>
+
+<aside class="toc">
+  <h4>导览</h4>
+  <a href="#intro" class="on">🎯 为什么是"玩"</a>
+  <a href="#all" >🕹️ 全部玩法</a>
+  <a href="#mini" >🧪 现场试玩</a>
+  <a href="#road" >🪜 推荐动线</a>
+  <a href="#guide" >📖 使用指南</a>
+  <a href="#faq">❓ 常见疑问</a>
+</aside>
+
+<div class="wrap page">
+
+  <!-- Hero -->
+  <section id="intro" class="hero reveal">
+    <h1>🎨 创意玩法广场</h1>
+    <p class="sub">
+      这里是 <strong>agent-nlp-llm</strong> 的全部互动入口。每一个玩法都是一个独立的、真实可跑的页面——
+      没有"演示用假按钮"，你输入什么它就算什么。语言模型的每一个抽象概念，在这里都被拆成可以亲手拨动的零件。
+    </p>
+    <div class="btn-row">
+      <a href="#all" class="btn btn-primary">🕹️ 逛逛全部 10 个玩法</a>
+      <a href="#mini" class="btn btn-purple">🧪 就在本页试玩 BPE</a>
+      <a href="index.html" class="btn btn-outline">🏠 回到首页</a>
+    </div>
+    <div class="hero-stat">
+      <div><b>10</b><span>互动玩法页面</span></div>
+      <div><b>4</b><span>玩法难度层级</span></div>
+      <div><b>0</b><span>需要安装的依赖</span></div>
+      <div><b>100%</b><span>纯前端真实计算</span></div>
+    </div>
+  </section>
+
+  <!-- 为什么是玩 -->
+  <section class="blk reveal">
+    <h2 class="blk-title"><span class="num">01</span>🎯 为什么"玩"比"读"更有效</h2>
+    <p class="blk-desc">
+      语言模型的知识有一半是<b>形状</b>而不是<b>定义</b>。"注意力是一个加权平均"这句话没有形状；
+      但当你在热力图上看到 <span class="math">\( \text{它} \)</span> 这一列烧得最红时，你就有了形状。
+      玩法页面的全部目的，就是把定义变成形状。
+    </p>
+
+    <div class="grid g3">
+      <div class="card">
+        <div style="font-size:1.6rem">🧱</div>
+        <h4 style="margin:8px 0 6px">把黑箱拆成看得见的零件</h4>
+        <p style="font-size:.9rem;color:var(--text-2)">
+          大模型是一个 70 亿到 4000 亿参数的函数。你不能"看懂"它，但你可以拆开其中每一颗螺丝看它怎么转——
+          分词器怎么切、向量怎么算、注意力看哪里。
+        </p>
+      </div>
+      <div class="card">
+        <div style="font-size:1.6rem">🔁</div>
+        <h4 style="margin:8px 0 6px">用最小反例建立直觉</h4>
+        <p style="font-size:.9rem;color:var(--text-2)">
+          每个玩法都提供一个"极端输入"入口：把词表调到最小、把温度调到最高、把句子换成生僻词。
+          直觉是在边界条件上长出来的，不是在正常例子上。
+        </p>
+      </div>
+      <div class="card">
+        <div style="font-size:1.6rem">🪜</div>
+        <h4 style="margin:8px 0 6px">四步教学法贯穿始终</h4>
+        <p style="font-size:.9rem;color:var(--text-2)">
+          每个玩法页面内部都按「直觉 → 数学 → 代码 → 实战」组织。先让你产生疑问，再用公式解释，
+          再用代码复现，最后告诉你工业界真实数字长什么样。
+        </p>
+      </div>
+    </div>
+
+    <div class="insight">
+      <b>一句话总纲：</b>凡是你能在 30 秒内用一个滑块、一个输入框或者一次点击复现的东西，你都不会真正忘记它。
+      这个广场就是把 NLP／LLM 里所有"值得复现"的概念都做成了那个滑块。
+    </div>
+  </section>
+
+  <!-- 全部玩法 -->
+  <section id="all" class="blk reveal">
+    <h2 class="blk-title"><span class="num">02</span>🕹️ 全部玩法：10 个入口</h2>
+    <p class="blk-desc">点任意一张卡片直接进入。难度标签只是建议，跳着玩完全没问题。</p>
+
+    <div class="grid g3">
+      <a class="card play-card" href="bpe.html">
+        <span class="pc-go">进入 →</span>
+        <span class="pc-icon">🔤</span>
+        <h4>BPE 分词器逐步骤</h4>
+        <p>输入任意文本，一步步看 byte pair encoding 怎么把字符合并成子词，亲手按下每一次 merge。</p>
+        <div class="pc-tags">
+          <span class="tag tag-blue">入门</span><span class="tag tag-gray">有实时 Demo</span>
+        </div>
+      </a>
+
+      <a class="card play-card" href="embedding.html">
+        <span class="pc-go">进入 →</span>
+        <span class="pc-icon">🧭</span>
+        <h4>词向量类比游戏</h4>
+        <p>国王 − 男人 + 女人 = ？亲手做一次向量运算，看语义关系如何在空间里变成方向。</p>
+        <div class="pc-tags">
+          <span class="tag tag-blue">入门</span><span class="tag tag-purple">可视化</span>
+        </div>
+      </a>
+
+      <a class="card play-card" href="attention.html">
+        <span class="pc-go">进入 →</span>
+        <span class="pc-icon">🎯</span>
+        <h4>注意力可视化沙盒</h4>
+        <p>换句子、调温度、缩放点积，实时看注意力权重热力图怎么分布——它到底在"看"哪个词。</p>
+        <div class="pc-tags">
+          <span class="tag tag-purple">进阶</span><span class="tag tag-gray">热力图</span>
+        </div>
+      </a>
+
+      <a class="card play-card" href="clinic.html">
+        <span class="pc-go">进入 →</span>
+        <span class="pc-icon">🕵️</span>
+        <h4>大模型错误诊断诊所</h4>
+        <p>给你一份"病例"（模型输出错了），你当医生：这是数据问题、训练问题，还是 Prompt 问题？</p>
+        <div class="pc-tags">
+          <span class="tag tag-green">实战</span><span class="tag tag-orange">情景判断</span>
+        </div>
+      </a>
+
+      <a class="card play-card" href="pitfalls.html">
+        <span class="pc-go">进入 →</span>
+        <span class="pc-icon">💥</span>
+        <h4>Prompt 踩坑博物馆</h4>
+        <p>收集真实翻车案例：幻觉、格式崩坏、指令被忽略。看别人的坑长什么样，能省你三个月。</p>
+        <div class="pc-tags">
+          <span class="tag tag-green">实战</span><span class="tag tag-gray">案例集</span>
+        </div>
+      </a>
+
+      <a class="card play-card" href="benchmark.html">
+        <span class="pc-go">进入 →</span>
+        <span class="pc-icon">📊</span>
+        <h4>模型选型决策树</h4>
+        <p>按预算、延迟、上下文长度、隐私要求一路回答问题，走出一棵决策树，得到你的推荐模型。</p>
+        <div class="pc-tags">
+          <span class="tag tag-green">实战</span><span class="tag tag-blue">决策树</span>
+        </div>
+      </a>
+
+      <a class="card play-card" href="universe.html">
+        <span class="pc-go">进入 →</span>
+        <span class="pc-icon">🌌</span>
+        <h4>技术宇宙时间轴</h4>
+        <p>从 1950 年图灵测试到今天的 MoE 与长上下文，70 年 NLP／LLM 里程碑可视化拖动浏览。</p>
+        <div class="pc-tags">
+          <span class="tag tag-purple">通识</span><span class="tag tag-gray">时间轴</span>
+        </div>
+      </a>
+
+      <a class="card play-card" href="papers.html">
+        <span class="pc-go">进入 →</span>
+        <span class="pc-icon">📚</span>
+        <h4>10 篇必读论文精读</h4>
+        <p>从 Word2Vec 到 Attention、BERT、GPT-3、RLHF，每篇一页图解，讲清贡献、方法与影响。</p>
+        <div class="pc-tags">
+          <span class="tag tag-purple">进阶</span><span class="tag tag-blue">论文</span>
+        </div>
+      </a>
+
+      <a class="card play-card" href="nlp/index.html">
+        <span class="pc-go">进入 →</span>
+        <span class="pc-icon">📝</span>
+        <h4>NLP 算法档案库</h4>
+        <p>从 HMM 分词、TF-IDF、CRF 到 BERT，传统 NLP 核心算法系统整理，每个都配公式与代码。</p>
+        <div class="pc-tags">
+          <span class="tag tag-blue">系统课</span><span class="tag tag-gray">档案库</span>
+        </div>
+      </a>
+
+      <a class="card play-card" href="llm/index.html">
+        <span class="pc-go">进入 →</span>
+        <span class="pc-icon">🤖</span>
+        <h4>LLM 全流程手册</h4>
+        <p>预训练 → SFT → RLHF → 量化部署，大模型完整生命周期，每一步的数学与工程细节都不跳步。</p>
+        <div class="pc-tags">
+          <span class="tag tag-orange">高阶</span><span class="tag tag-gray">全流程</span>
+        </div>
+      </a>
+    </div>
+
+    <div class="hint good">
+      💡 卡片上的标签含义：<b>入门</b>＝不需要任何前置公式；<b>进阶</b>＝需要一点线性代数或概率的直觉；
+      <b>实战</b>＝偏工程决策，没有唯一正确答案，重点在于权衡过程；<b>高阶</b>＝需要能读懂 PyTorch 代码。
+    </div>
+  </section>
+
+  <!-- 现场试玩 -->
+  <section id="mini" class="blk reveal">
+    <h2 class="blk-title"><span class="num">03</span>🧪 现场试玩：一口 BPE</h2>
+    <p class="blk-desc">
+      不用跳转，这里就能先尝一口最核心的玩法。下面这个迷你 BPE 和 <a href="bpe.html">bpe.html</a>
+      里的是同一套算法，只是把词尾标记 <code class="inline">&lt;/w&gt;</code> 简化掉了，
+      让第一次合并看一眼就懂。
+    </p>
+
+    <div class="demo-box">
+      <h4>Mini BPE · 只做一步合并</h4>
+      <p style="font-size:.9rem;color:var(--text-2);margin:8px 0">
+        BPE 的全部逻辑只有一句话：<b>统计相邻符号对，把出现次数最多的那一对粘起来。</b>
+        这个框里做的就是这个"统计 + 粘合"。
+      </p>
+      <div class="hint" style="margin-top:4px">
+        ✍️ <b>输入约定：</b>用<b>空格</b>把符号分开（如 <code class="inline">l o w</code> 表示三个符号），
+        用<b>逗号或换行</b>分隔不同的词。默认值已经是最小可玩的例子——直接点按钮就行。
+      </div>
+
+      <div class="ctrl">
+        <label style="flex:1;min-width:260px">输入一串用空格分隔的"符号"（逗号/换行分隔不同的词）
+          <input type="text" id="miniInput" value="l o w e r ,   l o w ,   n e w e r ,   l o w e s t" style="width:100%">
+        </label>
+        <button class="btn btn-primary" id="miniGo">🔍 统计相邻符号对</button>
+        <button class="btn btn-purple" id="miniMerge" disabled>🔗 合并最高频的一对</button>
+        <button class="btn btn-outline" id="miniReset">↺ 重置</button>
+      </div>
+
+      <div class="kv"><span>当前符号序列</span><span id="miniTokens" style="font-weight:500">—</span></div>
+      <div class="kv"><span>步骤</span><span id="miniStep">0</span></div>
+      <div class="kv"><span>符号总数</span><span id="miniCount">0</span></div>
+
+      <p style="font-size:.88rem;font-weight:600;color:var(--text-2);margin:14px 0 6px">相邻符号对频次排行（Top 6）</p>
+      <div id="miniPairs" class="play-demo-out"><span class="dim">点上方按钮，开始统计。</span></div>
+
+      <div class="hint" id="minihint">
+        📌 <b>这是什么意思：</b>每合并一次，序列就短一点，而词表里多了一个"新符号"。
+        合并的次数就是 BPE 唯一的超参数——想得到 5 万个 token 的词表，就合并 5 万次（去掉初始 256 个 byte 之后）。
+        这就是"用合并次数换词表大小"。
+      </div>
+    </div>
+
+    <div class="grid g2">
+      <div class="card">
+        <h4>为什么不是"按词切分"？</h4>
+        <p style="font-size:.9rem;color:var(--text-2)">
+          按词切分，词表要无穷大，而且任何一个没见过的词都变成 <code class="inline">&lt;UNK&gt;</code>；
+          按字符切分，词表很小，但序列变得极长、单个字符几乎没有语义。
+          子词（subword）取中间：<b>高频的词整块保留，低频的词拆成有意义的碎片</b>，
+          于是 "lowest" 才有可能拆成 "low" + "est" 而不是五个无意义的字符。
+        </p>
+      </div>
+      <div class="card">
+        <h4>为什么"最常见"要合并？</h4>
+        <p style="font-size:.9rem;color:var(--text-2)">
+          语言里存在 Zipf 定律：少数词出现得极多，大多数词出现得极少。
+          把 p("th" 相邻) 这种高频碎片粘成一个 token，能让<b>整篇文本的 token 数显著下降</b>，
+          等价于在同样上下文窗口里塞进更多真实文字。压缩率和词表大小，就是 BPE 唯一的权衡轴。
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 推荐动线 -->
+  <section id="road" class="blk reveal">
+    <h2 class="blk-title"><span class="num">04</span>🪜 推荐动线：四条路线</h2>
+    <p class="blk-desc">玩法没有强制顺序，但按下面的顺序走一遍，认知坡度最舒服。</p>
+
+    <div class="grid g2">
+      <div class="card">
+        <h4 style="margin-bottom:10px">🟦 路线 A · 零基础 60 分钟</h4>
+        <div class="road-row">
+          <div class="road-lv" style="background:linear-gradient(135deg,#3b6fe0,#5c8bf0)">01</div>
+          <div><h5><a href="universe.html">技术宇宙时间轴</a></h5><p>先建历史坐标，知道我们在讲哪 70 年。</p></div>
+        </div>
+        <div class="road-row">
+          <div class="road-lv" style="background:linear-gradient(135deg,#3b6fe0,#5c8bf0)">02</div>
+          <div><h5><a href="bpe.html">BPE 分词器逐步骤</a></h5><p>第一个真实的算法，看得见每一步。</p></div>
+        </div>
+        <div class="road-row">
+          <div class="road-lv" style="background:linear-gradient(135deg,#3b6fe0,#5c8bf0)">03</div>
+          <div><h5><a href="embedding.html">词向量类比游戏</a></h5><p>从离散符号跳到连续向量，语义第一次有了几何。</p></div>
+        </div>
+        <div class="road-row">
+          <div class="road-lv" style="background:linear-gradient(135deg,#3b6fe0,#5c8bf0)">04</div>
+          <div><h5><a href="attention.html">注意力可视化沙盒</a></h5><p>Transformer 的心脏，热力图一眼看懂。</p></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h4 style="margin-bottom:10px">🟪 路线 B · 有一点基础，想搞工程</h4>
+        <div class="road-row">
+          <div class="road-lv" style="background:linear-gradient(135deg,#7c3aed,#a855f7)">01</div>
+          <div><h5><a href="bpe.html">BPE 分词器逐步骤</a></h5><p>先看 <code class="inline">vocab_size</code> 到底怎么决定成本。</p></div>
+        </div>
+        <div class="road-row">
+          <div class="road-lv" style="background:linear-gradient(135deg,#7c3aed,#a855f7)">02</div>
+          <div><h5><a href="benchmark.html">模型选型决策树</a></h5><p>把成本、延迟、隐私变成可执行的选择。</p></div>
+        </div>
+        <div class="road-row">
+          <div class="road-lv" style="background:linear-gradient(135deg,#7c3aed,#a855f7)">03</div>
+          <div><h5><a href="clinic.html">大模型错误诊断诊所</a></h5><p>线上出问题时，你需要的不是理论而是分诊能力。</p></div>
+        </div>
+        <div class="road-row">
+          <div class="road-lv" style="background:linear-gradient(135deg,#7c3aed,#a855f7)">04</div>
+          <div><h5><a href="pitfalls.html">Prompt 踩坑博物馆</a></h5><p>用别人的失败案例压缩自己的试错成本。</p></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h4 style="margin-bottom:10px">🟩 路线 C · 准备读论文</h4>
+        <div class="road-row">
+          <div class="road-lv" style="background:linear-gradient(135deg,#10a37f,#34d399)">01</div>
+          <div><h5><a href="papers.html">10 篇必读论文精读</a></h5><p>先有地图，再进原文，不然会被符号淹没。</p></div>
+        </div>
+        <div class="road-row">
+          <div class="road-lv" style="background:linear-gradient(135deg,#10a37f,#34d399)">02</div>
+          <div><h5><a href="attention.html">注意力可视化沙盒</a></h5><p>对照《Attention Is All You Need》的公式逐项验证。</p></div>
+        </div>
+        <div class="road-row">
+          <div class="road-lv" style="background:linear-gradient(135deg,#10a37f,#34d399)">03</div>
+          <div><h5><a href="llm/index.html">LLM 全流程手册</a></h5><p>把论文里的孤立模块放回完整的生命周期里。</p></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h4 style="margin-bottom:10px">🟧 路线 D · 要写代码／跑模型</h4>
+        <div class="road-row">
+          <div class="road-lv" style="background:linear-gradient(135deg,#f59e0b,#fbbf24)">01</div>
+          <div><h5><a href="nlp/index.html">NLP 算法档案库</a></h5><p>每个算法都有公式与最小可运行代码。</p></div>
+        </div>
+        <div class="road-row">
+          <div class="road-lv" style="background:linear-gradient(135deg,#f59e0b,#fbbf24)">02</div>
+          <div><h5><a href="llm/index.html">LLM 全流程手册</a></h5><p>预训练到部署，配置项逐个解释。</p></div>
+        </div>
+        <div class="road-row">
+          <div class="road-lv" style="background:linear-gradient(135deg,#f59e0b,#fbbf24)">03</div>
+          <div><h5><a href="bpe.html">BPE 分词器逐步骤</a></h5><p>自己训一个 tokenizer，是最快建立"数据感"的方式。</p></div>
+        </div>
+        <div class="road-row">
+          <div class="road-lv" style="background:linear-gradient(135deg,#f59e0b,#fbbf24)">04</div>
+          <div><h5><a href="benchmark.html">模型选型决策树</a></h5><p>落地前最后一道关：选谁、跑在哪、花多少钱。</p></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 使用指南 -->
+  <section id="guide" class="blk reveal">
+    <h2 class="blk-title"><span class="num">05</span>📖 玩法使用指南</h2>
+    <p class="blk-desc">关于怎么用这些页面，以及它们背后的做法，写在下面这些折叠区里。</p>
+
+    <details class="acc" open>
+      <summary>🎮 怎么玩才有效：三条实操建议</summary>
+      <div class="acc-body">
+        <ul class="guide-list">
+          <li><b>先预测，再点击。</b>按下"运行"之前，先在脑子里猜一下输出长什么样。猜错的那一次，就是真正学到东西的那一次。</li>
+          <li><b>一定要走到极端。</b>每个 Demo 都往边界推一把：输入纯中文、输入纯 emoji、输入一段代码、把参数拉到最大和最小。边界条件暴露的是原理，不是参数。</li>
+          <li><b>玩完看一眼"这是什么意思"。</b>每个 Demo 下面那段蓝色提示框才是知识点本体，交互只是让这个知识点长出了形状。</li>
+        </ul>
+      </div>
+    </details>
+
+    <details class="acc">
+      <summary>⚙️ 这些 Demo 是真算还是假演？</summary>
+      <div class="acc-body">
+        <p style="margin-bottom:10px">
+          全部是<b>真算</b>。所以这个站点可以在完全离线的情况下打开（KaTeX 公式字体除外）。
+          具体来说：
+        </p>
+        <ul class="guide-list">
+          <li>BPE 页面：由你在输入框里提供的文本现场构建语料、现场统计相邻对频次、现场执行合并。你改成什么文本，结果就跟着变。</li>
+          <li>词向量页面：使用一组预置的二维示意向量做真实的向量加减与最近邻搜索，不是查表。</li>
+          <li>注意力页面：按照 scaled dot-product attention 公式 <span class="math">\( \text{softmax}(QK^\top/\sqrt{d}) \)</span> 现场计算权重，再按权重映射成颜色。</li>
+          <li>决策树页面：走的是真实的 if-else 决策逻辑，每个分支都有明确的工程依据。</li>
+        </ul>
+        <div class="hint">
+          唯一的例外是"示意维度"。真实的词向量是 300 到 4096 维，页面上不可能画 4096 维空间，
+          所以会降维到 2 维或 3 维展示。但降维只影响<b>画给你看的样子</b>，不影响<b>计算结果</b>。
+        </div>
+      </div>
+    </details>
+
+    <details class="acc">
+      <summary>🧭 每个玩法适合什么人、大概要花多久</summary>
+      <div class="acc-body">
+        <table class="tb">
+          <thead>
+            <tr><th>玩法</th><th>适合谁</th><th>建议时长</th><th>玩完你会知道</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>🔤 BPE 分词器</td><td>所有人（第一个该玩的）</td><td>15 min</td><td>大模型眼里的"字"是什么，为什么同一个词中文比英文多花 token</td></tr>
+            <tr><td>🧭 词向量类比</td><td>对"语义"好奇的人</td><td>10 min</td><td>语义关系为什么可以做向量加减</td></tr>
+            <tr><td>🎯 注意力沙盒</td><td>想理解 Transformer 的人</td><td>20 min</td><td>Q、K、V 到底在做什么，为什么叫"注意力"</td></tr>
+            <tr><td>🕵️ 错误诊断诊所</td><td>做过一点应用的人</td><td>25 min</td><td>模型出错时该先怀疑谁</td></tr>
+            <tr><td>💥 Prompt 踩坑博物馆</td><td>天天写 Prompt 的人</td><td>20 min</td><td>哪些坑有共性、哪些是偶发</td></tr>
+            <tr><td>📊 模型选型决策树</td><td>要做技术决策的人</td><td>15 min</td><td>自己的场景该选哪一档模型与部署方式</td></tr>
+            <tr><td>🌌 技术宇宙时间轴</td><td>喜欢历史脉络的人</td><td>15 min</td><td>每个技术解决了前一个的什么毛病</td></tr>
+            <tr><td>📚 论文精读</td><td>要读原文的人</td><td>60 min</td><td>10 篇奠基论文各自的核心贡献</td></tr>
+            <tr><td>📝 NLP 算法档案库</td><td>系统学习者</td><td>按需</td><td>传统 NLP 的完整算法谱系</td></tr>
+            <tr><td>🤖 LLM 全流程手册</td><td>要落地大模型的人</td><td>按需</td><td>预训练到部署的每个环节</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </details>
+
+    <details class="acc">
+      <summary>🔧 技术实现：为什么可以做到零依赖</summary>
+      <div class="acc-body">
+        <ul class="guide-list">
+          <li><b>纯静态。</b>没有构建步骤、没有 npm、没有打包器。所有页面都是可以直接双击打开的 HTML 文件。</li>
+          <li><b>KaTeX 渲染公式。</b>数学公式用 KaTeX 语法写在 <code class="inline">class="math"</code> 的容器里，加载时自动渲染，不依赖 MathJax 那种重量级方案。</li>
+          <li><b>原生 DOM 操作。</b>交互全部用原生 JavaScript 完成，没有任何前端框架。每个 Demo 是一个独立的立即执行函数，互不干扰。</li>
+          <li><b>算法与教学分离。</b>每个页面的结构都是「先用直觉描述 → 再给数学 → 再给可运行代码 → 最后给工业界真实数字」，交互组件嵌在直觉那一段里。</li>
+        </ul>
+      </div>
+    </details>
+  </section>
+
+  <!-- FAQ -->
+  <section id="faq" class="blk reveal">
+    <h2 class="blk-title"><span class="num">06</span>❓ 常见疑问</h2>
+
+    <div class="grid g2">
+      <div class="card">
+        <h4>我完全不懂数学，能玩吗？</h4>
+        <p style="font-size:.9rem;color:var(--text-2)">
+          可以。每个玩法都会先用一段没有任何符号的话把直觉说清楚，公式都放在"数学"那一段，
+          并且每个符号都有解释。跳过公式只看交互和提示框，也能拿到七成的收获。
+        </p>
+      </div>
+      <div class="card">
+        <h4>需要先看完 index.html 吗？</h4>
+        <p style="font-size:.9rem;color:var(--text-2)">
+          不需要。玩法广场本身就是最好的入口。但如果你想先建立整体地图，
+          <a href="index.html">首页</a>的"六级学习路径"和"全景家族树"值得花十分钟扫一遍。
+        </p>
+      </div>
+      <div class="card">
+        <h4>为什么同一个概念有多个玩法？</h4>
+        <p style="font-size:.9rem;color:var(--text-2)">
+          因为不同的抽象层级需要不同的入口。比如"分词"这件事，
+          <a href="bpe.html">BPE 页面</a>看的是算法，
+          <a href="llm/index.html">LLM 手册</a>看的是工程取舍，
+          <a href="benchmark.html">选型页面</a>看的是它对成本的影响。三个视角合起来才是完整的。
+        </p>
+      </div>
+      <div class="card">
+        <h4>可以在手机上玩吗？</h4>
+        <p style="font-size:.9rem;color:var(--text-2)">
+          可以，全部页面都是响应式的，导航栏在窄屏会折叠成汉堡菜单。
+          不过注意力热力图这类需要横向空间的 Demo，横屏或平板体验更好。
+        </p>
+      </div>
+    </div>
+
+    <div class="hint good" style="margin-top:22px">
+      🚀 准备好了就直接从这里出发吧：<a href="bpe.html">🔤 BPE 分词器逐步骤</a> 是公认最好的第一站。
+    </div>
+  </section>
+
+</div>
+
+<footer class="site"><p>💬 agent-nlp-llm · 自然语言技术本体论研究站</p></footer>
+
+<script src="js/site.js"></script>
+<script>
+/* ============================================================
+   Mini BPE Demo —— 页内可试玩的简化版 byte pair encoding
+   ------------------------------------------------------------
+   与 bpe.html 使用同一套核心算法思路，区别：
+   1) 这里不做预分词（pre-tokenization），直接对用户输入的
+      空格分隔序列操作；
+   2) 这里不使用词尾标记 </w>；
+   3) 这里只演示"统计 + 合并一步"，完整的多步过程在 bpe.html。
+   ============================================================ */
+(function () {
+  'use strict';
+
+  var inputEl = document.getElementById('miniInput');
+  var goEl = document.getElementById('miniGo');
+  var mergeEl = document.getElementById('miniMerge');
+  var resetEl = document.getElementById('miniReset');
+  var tokensEl = document.getElementById('miniTokens');
+  var stepEl = document.getElementById('miniStep');
+  var countEl = document.getElementById('miniCount');
+  var pairsEl = document.getElementById('miniPairs');
+  var hintEl = document.getElementById('minihint');
+
+  var arr = [];      // 分组后的序列：[[sym, sym, ...], ...]
+  var step = 0;      // 已合并步数
+  var lastPair = null; // 上一次统计出的最频繁 pair
+
+  /* 把用户输入解析成若干"块"。
+     支持用逗号、换行或 "|" 分隔不同的"词"，
+     空格作为块内符号的分隔符。 */
+  function parseInput(raw) {
+    var text = (raw || '').trim();
+    if (!text) return [];
+    var chunks = text.split(/[,，\n|]+/);
+    var out = [];
+    for (var i = 0; i < chunks.length; i++) {
+      var syms = chunks[i].trim().split(/\s+/).filter(function (s) { return s.length > 0; });
+      if (syms.length) out.push(syms);
+    }
+    return out;
+  }
+
+  /* 把用户输入当"没有被空格切开的连续字符串"也可用：
+     如果用户输入的是 "low lower lowest" 这种自然写法，
+     我们就逐字符拆开，让 BPE 从一个一个字符起步。 */
+  function parseChars(raw) {
+    var text = (raw || '').trim();
+    if (!text) return [];
+    var chunks = text.split(/[,，\n|]+/);
+    var out = [];
+    for (var i = 0; i < chunks.length; i++) {
+      var s = chunks[i].trim();
+      if (!s) continue;
+      // 如果块内已经用空格分了符号，就尊重用户的分隔；否则逐字符拆
+      var syms = (s.indexOf(' ') >= 0)
+        ? s.split(/\s+/).filter(function (x) { return x.length > 0; })
+        : s.split('');
+      out.push(syms);
+    }
+    return out;
+  }
+
+  /* 统计所有块内相邻符号对的加权频次
+     计数器实现的是 BPE 论文里的 get_stats() */
+  function getStats(seq) {
+    var counts = {};
+    for (var i = 0; i < seq.length; i++) {
+      var chunk = seq[i];
+      for (var j = 0; j < chunk.length - 1; j++) {
+        var key = chunk[j] + '\u0001' + chunk[j + 1];
+        counts[key] = (counts[key] || 0) + 1;
+      }
+    }
+    return counts;
+  }
+
+  /* 把统计结果转成可排序数组：[{a, b, n}, ...] */
+  function statsToArr(counts) {
+    var arr = [];
+    for (var k in counts) {
+      if (!Object.prototype.hasOwnProperty.call(counts, k)) continue;
+      var parts = k.split('\u0001');
+      arr.push({ a: parts[0], b: parts[1], n: counts[k] });
+    }
+    arr.sort(function (x, y) { return y.n - x.n; });
+    return arr;
+  }
+
+  /* 渲染 Top-N 频次排行 */
+  function renderPairs(list) {
+    if (!list.length) {
+      pairsEl.innerHTML = '<span class="dim">没有可统计的相邻符号对了（序列已经太短）。</span>';
+      return;
+    }
+    var max = list[0].n;
+    var html = '';
+    var top = list.slice(0, 6);
+    for (var i = 0; i < top.length; i++) {
+      var p = top[i];
+      var barLen = Math.max(1, Math.round((p.n / max) * 20));
+      var bar = new Array(barLen + 1).join('█');
+      html += '<div>'
+        + '<span class="pair">(' + esc(p.a) + ', ' + esc(p.b) + ')</span> '
+        + '<span class="dim">' + bar + '</span> '
+        + '× ' + p.n
+        + (i === 0 ? '  <span class="dim">← 最高频，可合并</span>' : '')
+        + '</div>';
+    }
+    pairsEl.innerHTML = html;
+  }
+
+  function esc(s) {
+    return String(s)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+
+  /* 渲染当前符号序列 */
+  function renderSeq() {
+    if (!arr.length) { tokensEl.textContent = '—'; countEl.textContent = '0'; return; }
+    var html = '';
+    var total = 0;
+    for (var i = 0; i < arr.length; i++) {
+      total += arr[i].length;
+      if (i > 0) html += ' <span class="dim" style="color:#8b93a7">|</span> ';
+      html += esc(arr[i].join(' '));
+    }
+    tokensEl.innerHTML = html;
+    countEl.textContent = String(total);
+  }
+
+  /* 执行一次合并：把 pair 在所有出现处粘起来 */
+  function mergePair(pair) {
+    var next = [];
+    for (var i = 0; i < arr.length; i++) {
+      var chunk = arr[i];
+      var out = [];
+      var j = 0;
+      while (j < chunk.length) {
+        if (j < chunk.length - 1 && chunk[j] === pair.a && chunk[j + 1] === pair.b) {
+          out.push(pair.a + pair.b);   // 粘合
+          j += 2;
+        } else {
+          out.push(chunk[j]);
+          j += 1;
+        }
+      }
+      next.push(out);
+    }
+    return next;
+  }
+
+  function refresh() {
+    var stats = statsToArr(getStats(arr));
+    lastPair = stats.length ? stats[0] : null;
+    renderPairs(stats);
+    renderSeq();
+    stepEl.textContent = String(step);
+    mergeEl.disabled = !lastPair;
+  }
+
+  /* 从输入重建状态 */
+  function reset(fromInput) {
+    if (fromInput) {
+      arr = parseChars(inputEl.value);
+    }
+    step = 0;
+    lastPair = null;
+    refresh();
+  }
+
+  goEl.addEventListener('click', function () {
+    reset(true);
+    if (!arr.length) {
+      pairsEl.innerHTML = '<span class="dim">请输入一些内容再统计。</span>';
+      hintEl.innerHTML = '📌 先在上面的输入框里写点东西（用空格分隔符号、逗号分隔词），再点"统计相邻符号对"。';
+      return;
+    }
+    var stats = statsToArr(getStats(arr));
+    if (!lastPair) {
+      pairsEl.innerHTML = '<span class="dim">没有相邻符号对可统计——每个"词"都只有一个符号，无法配对。</span>';
+      hintEl.innerHTML = '🤔 每个词都只有一个符号，没有相邻对可合并。试着把词写长一些，'
+        + '比如 <code class="inline">l o w e s t</code>。';
+      return;
+    }
+    hintEl.innerHTML = '📌 <b>统计完成：</b>当前共 ' + countEl.textContent
+      + ' 个符号，' + stats.length + ' 种不同的相邻符号对。最高频的是 '
+      + '<b>(' + esc(lastPair.a) + ', ' + esc(lastPair.b) + ')</b>，出现 '
+      + lastPair.n + ' 次。现在点"合并最高频的一对"，看序列怎么变短。';
+  });
+
+  mergeEl.addEventListener('click', function () {
+    if (!lastPair) {
+      hintEl.innerHTML = '🎉 已经没有可合并的相邻符号对了——BPE 在这个小语料上收敛了。'
+        + '改一下输入框里的文本，再点"统计相邻符号对"重新开始。';
+      return;
+    }
+    var p = { a: lastPair.a, b: lastPair.b };
+    var before = countEl.textContent;
+    arr = mergePair(p);
+    step += 1;
+    refresh();
+    hintEl.innerHTML = '🔗 <b>第 ' + step + ' 次合并：</b>把 ('
+      + esc(p.a) + ', ' + esc(p.b) + ') 粘成了新符号 <b>"'
+      + esc(p.a + p.b) + '"</b>。符号数从 ' + before + ' 变成 ' + countEl.textContent
+      + '。这个新符号会被加进词表——它就是 BPE 产出的一个子词。'
+      + (lastPair ? '继续点，或者改一下输入框里的文本再统计。'
+                  : '<br>🎉 序列已经无法再合并了，BPE 在这个小语料上收敛。');
+  });
+
+  resetEl.addEventListener('click', function () {
+    reset(true);
+    hintEl.innerHTML = '📌 <b>这是什么意思：</b>每合并一次，序列就短一点，而词表里多了一个"新符号"。'
+      + '合并的次数就是 BPE 唯一的超参数——想得到 5 万个 token 的词表，就合并 5 万次'
+      + '（去掉初始 256 个 byte 之后）。这就是"用合并次数换词表大小"。';
+  });
+
+  // 初始化：立刻统计一次，让页面一打开就处于"可以点合并"的状态
+  reset(true);
+  if (lastPair) {
+    hintEl.innerHTML = '📌 <b>已就绪：</b>当前共 ' + countEl.textContent + ' 个符号，'
+      + '最高频的相邻对是 <b>(' + esc(lastPair.a) + ', ' + esc(lastPair.b) + ')</b>，出现 '
+      + lastPair.n + ' 次。点"Merge 最高频的一对"看它们被粘起来。';
+    goEl.textContent = '🔍 重新统计';
+  }
+})();
+
+/* ============================================================
+   进入视口淡入（与全站 .reveal 约定一致）
+   ============================================================ */
+(function () {
+  'use strict';
+  var els = document.querySelectorAll('.reveal');
+  if (!('IntersectionObserver' in window)) {
+    Array.prototype.forEach.call(els, function (el) { el.classList.add('revealed'); });
+    return;
+  }
+  var io = new IntersectionObserver(function (entries) {
+    entries.forEach(function (en) {
+      if (en.isIntersecting) { en.target.classList.add('revealed'); io.unobserve(en.target); }
+    });
+  }, { threshold: 0.08 });
+  Array.prototype.forEach.call(els, function (el) { io.observe(el); });
+})();
+</script>
+</body>
+</html>

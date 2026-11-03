@@ -1,0 +1,1524 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>💥 Prompt 踩坑博物馆：别人的坑，你的路标 · agent-nlp-llm</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+<link rel="stylesheet" href="css/site.css">
+<style>
+.reveal { opacity: 0; transform: translateY(18px); transition: opacity .55s ease, transform .55s ease; }
+.reveal.revealed { opacity: 1; transform: none; }
+
+/* ---- 博物馆专用 ---- */
+.museum-hero { text-align: center; padding: 40px 0 30px; }
+.museum-hero h1 {
+  font-size: clamp(1.9rem, 4.2vw, 3rem); font-weight: 800; line-height: 1.25; margin-bottom: 18px;
+  background: linear-gradient(120deg, #f59e0b, #ec4899 50%, #7c3aed);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.museum-hero p.sub { font-size: 1.12rem; color: var(--text-2); max-width: 800px; margin: 0 auto 24px; }
+
+.legend { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; margin: 22px 0 6px; }
+.legend span { font-size: .8rem; padding: 5px 13px; border-radius: 20px; font-weight: 600; }
+.lg1 { background: #eef3ff; color: #3b6fe0; }
+.lg2 { background: #f5f0ff; color: #7c3aed; }
+.lg3 { background: #e8f8f3; color: #10a37f; }
+.lg4 { background: #fff7e8; color: #c47d08; }
+
+.pit {
+  position: relative; overflow: hidden;
+}
+.pit::before {
+  content: ''; position: absolute; top: 0; left: 0; width: 5px; height: 100%;
+  background: linear-gradient(180deg, #f59e0b, #ec4899);
+}
+.pit-head { display: flex; align-items: flex-start; gap: 14px; flex-wrap: wrap; margin-bottom: 4px; }
+.pit-no {
+  flex: 0 0 46px; height: 46px; border-radius: 13px; display: flex; align-items: center; justify-content: center;
+  font-weight: 800; color: #fff; font-size: 1rem; font-family: var(--mono);
+  background: linear-gradient(135deg, #f59e0b, #ec4899);
+}
+.pit-title { font-size: 1.06rem; font-weight: 800; margin: 0 0 4px; }
+.pit-meta { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+
+.chg { border-radius: 11px; padding: 14px 17px; margin: 14px 0; font-size: .92rem; line-height: 1.72; }
+.chg .cap {
+  display: inline-flex; align-items: center; gap: 6px; font-size: .74rem; font-weight: 800;
+  letter-spacing: .05em; padding: 2px 10px; border-radius: 20px; margin-bottom: 9px;
+}
+.chg-bad { background: #fff5f6; border: 1px solid #ffd7dc; }
+.chg-bad .cap { background: #ffe0e4; color: #c81e34; }
+.chg-good { background: #f2fbf8; border: 1px solid #c6ebdf; }
+.chg-good .cap { background: #d6f5ea; color: #0a6b53; }
+.chg pre {
+  background: #fff; border: 1px solid var(--border); border-radius: 9px; padding: 12px 15px;
+  font-family: var(--mono); font-size: .82rem; line-height: 1.7; overflow-x: auto;
+  white-space: pre-wrap; word-break: break-word; color: #26304a; margin: 4px 0 0;
+}
+.chg-bad pre { border-color: #ffd7dc; }
+.chg-good pre { border-color: #c6ebdf; }
+
+.why { background: linear-gradient(120deg, #f8f9ff, #fdf7ff); border: 1px dashed var(--border-2);
+  border-radius: 11px; padding: 15px 18px; font-size: .92rem; margin: 14px 0; }
+.why b.hd { color: var(--purple); display: block; margin-bottom: 6px; font-size: .95rem; }
+.why ul { margin: 6px 0 4px 20px; color: var(--text-2); }
+.why li { margin: 3px 0; }
+.why code { background: #eef1f8; color: #b5326e; padding: 1px 6px; border-radius: 5px; font-family: var(--mono); font-size: .86em; }
+.math { background: #fbfaff; border: 1px solid var(--purple-lt); border-radius: 10px; padding: 13px 18px; margin: 11px 0; overflow-x: auto; font-size: .93rem; }
+
+.cmp { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 12px; margin: 12px 0; }
+.cmp-item { background: #fff; border: 1px solid var(--border); border-radius: 10px; padding: 12px 15px; font-size: .88rem; }
+.cmp-item .h { font-size: .74rem; font-weight: 800; letter-spacing: .05em; margin-bottom: 6px; display: block; }
+.cmp-item .h.hb { color: #c81e34; }
+.cmp-item .h.hg { color: #0a6b53; }
+
+.filter-bar { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin: 28px 0 22px; }
+.chip {
+  border: 1px solid var(--border-2); background: #fff; border-radius: 20px; padding: 7px 15px;
+  font-size: .84rem; font-weight: 600; cursor: pointer; color: var(--text-2); font-family: inherit; transition: all .16s;
+}
+.chip:hover { border-color: var(--purple); color: var(--purple); }
+.chip.on { background: linear-gradient(120deg, #f59e0b, #ec4899); color: #fff; border-color: transparent; }
+
+/* ---- 改写实验室 ---- */
+.lab-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 16px 0; }
+@media (max-width: 760px) { .lab-row { grid-template-columns: 1fr; } }
+.lab-col { display: flex; flex-direction: column; gap: 8px; }
+.lab-col label { font-size: .84rem; font-weight: 700; color: var(--text-2); }
+textarea#lab-input {
+  width: 100%; min-height: 150px; resize: vertical; font-size: .88rem;
+  font-family: var(--mono); line-height: 1.7;
+}
+.lab-out {
+  min-height: 150px; background: #fbfcff; border: 1px solid var(--border-2); border-radius: 11px;
+  padding: 15px 17px; font-size: .88rem; font-family: var(--mono); line-height: 1.75;
+  color: #26304a; white-space: pre-wrap; word-break: break-word;
+}
+.score-ring { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; margin: 8px 0 4px; }
+.ring {
+  width: 92px; height: 92px; border-radius: 50%; flex: 0 0 92px;
+  display: flex; align-items: center; justify-content: center;
+  background: conic-gradient(#10a37f 0deg, #eef1f8 0deg); transition: background .4s;
+}
+.ring i {
+  width: 74px; height: 74px; border-radius: 50%; background: #fff; display: flex;
+  align-items: center; justify-content: center; font-weight: 800; font-size: 1.35rem;
+  font-family: var(--mono); font-style: normal; color: var(--text);
+}
+.prob { flex: 1 1 280px; }
+.prob-item { display: flex; align-items: flex-start; gap: 9px; font-size: .87rem; padding: 5px 0; }
+.prob-item .dot { flex: 0 0 8px; height: 8px; border-radius: 50%; margin-top: 8px; }
+.prob-item .dot.bad { background: #ef4444; }
+.prob-item .dot.ok { background: #10a37f; }
+.prob-item .txt { flex: 1 1 auto; }
+.prob-item .txt b { color: var(--text); }
+
+.checklist { counter-reset: ck; }
+.ck-item { display: flex; gap: 12px; padding: 11px 0; border-bottom: 1px dashed var(--border); font-size: .93rem; align-items: flex-start; }
+.ck-item:last-child { border-bottom: none; }
+.ck-box {
+  flex: 0 0 22px; height: 22px; border-radius: 7px; border: 2px solid var(--border-2);
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  font-size: .8rem; color: #fff; transition: all .16s; user-select: none; background: #fff; margin-top: 2px;
+}
+.ck-box.on { background: var(--green); border-color: var(--green); }
+.ck-txt { flex: 1 1 auto; }
+.ck-txt b { display: block; margin-bottom: 2px; }
+.ck-txt span { color: var(--text-2); font-size: .88rem; }
+.ck-progress { height: 8px; background: #eef1f8; border-radius: 20px; overflow: hidden; margin: 14px 0 18px; }
+.ck-progress > i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, #f59e0b, #10a37f); border-radius: 20px; transition: width .3s; }
+</style>
+</head>
+<body>
+
+<nav class="navbar">
+  <div class="nav-inner">
+    <a href="index.html" class="nav-logo">💬 agent-nlp-llm</a>
+    <button class="nav-toggle" onclick="document.querySelector('.nav-links').classList.toggle('open')" aria-label="菜单">☰</button>
+    <div class="nav-links">
+      <a href="index.html" class="nav-link">🏠 首页</a>
+      <a href="playground.html" class="nav-link">🎨 玩法</a>
+      <a href="nlp/index.html" class="nav-link">📝 NLP</a>
+      <a href="llm/index.html" class="nav-link">🤖 LLM</a>
+      <a href="bpe.html" class="nav-link">🔤 分词器</a>
+      <a href="embedding.html" class="nav-link">🧭 词向量</a>
+      <a href="attention.html" class="nav-link">🎯 注意力</a>
+      <a href="papers.html" class="nav-link">📚 论文</a>
+      <a href="clinic.html" class="nav-link">🕵️ 诊所</a>
+      <a href="pitfalls.html" class="nav-link active">💥 踩坑</a>
+      <a href="benchmark.html" class="nav-link">📊 选型</a>
+      <a href="universe.html" class="nav-link">🌌 宇宙</a>
+      <a href="https://github.com/yejinlei/agent-nlp-llm" target="_blank" rel="noopener" class="nav-gh" aria-label="GitHub"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg></a>
+    </div>
+  </div>
+</nav>
+
+<div class="wrap page">
+
+  <section class="museum-hero">
+    <h1>💥 Prompt 踩坑博物馆：别人的坑，你的路标</h1>
+    <p class="sub">这里的每一件展品，都是有人真金白银踩过的坑。<br>
+      我们不只是"告诉你别这么写"，而是讲清<b>模型内部到底发生了什么</b>，让原理解释现象。<br>
+      <b>12 个经典坑</b> + 一个可以亲手改写的<b>Prompt 体检实验室</b>。</p>
+    <div class="legend">
+      <span class="lg1">🕳️ 结构坑</span>
+      <span class="lg2">🧠 原理坑</span>
+      <span class="lg3">📐 格式坑</span>
+      <span class="lg4">🎛️ 参数坑</span>
+    </div>
+  </section>
+
+  <div class="filter-bar" id="filter-bar">
+    <button class="chip on" data-f="all">全部 12 个坑</button>
+    <button class="chip" data-f="struct">🕳️ 结构与位置</button>
+    <button class="chip" data-f="princ">🧠 原理与语义</button>
+    <button class="chip" data-f="fmt">📐 格式与输出</button>
+    <button class="chip" data-f="param">🎛️ 参数与配置</button>
+  </div>
+
+  <!-- ===== 坑 01 ===== -->
+  <section class="blk reveal" data-pit="p1" data-cat="struct">
+    <div class="card pit">
+      <div class="pit-head">
+        <div class="pit-no">01</div>
+        <div style="flex:1 1 260px">
+          <h3 class="pit-title">🕳️ 指令被埋在长上下文的最底下</h3>
+          <div class="pit-meta">
+            <span class="tag tag-blue tag">结构坑</span>
+            <span class="tag tag-gray">lost in the middle</span>
+            <span class="tag tag-orange">高频</span>
+          </div>
+        </div>
+      </div>
+      <div class="chg chg-bad">
+        <span class="cap">❌ 错误示例</span>
+        <pre>[一篇 6000 字的用户访谈记录全文……]
+[又一段 3000 字的产品背景介绍……]
+[再一段 2000 字的竞品分析……]
+
+请从上面的访谈记录中提取所有用户提到的痛点，按主题分组，并给出优先级排序，输出 JSON。</pre>
+      </div>
+      <div class="why">
+        <b class="hd">🔬 原理：注意力对上下文中段的天然衰减</b>
+        <p>Transformer 的注意力权重分布呈现出典型的 <b>U 形曲线</b>——序列<b>开头</b>和<b>结尾</b>的 token 获得最多关注，
+          中间部分被稀释，这就是著名的 <i>lost in the middle</i> 现象。</p>
+        <ul>
+          <li><b>开头 sink 效应</b>：第一个 token（BOS）往往吸收了大量注意力作为"注意力汇"，系统性地获得高权重。</li>
+          <li><b>结尾 recency 效应</b>：语言模型的预训练目标是从上文预测<b>紧随其后</b>的 token，因此靠近生成位置的内容天然更相关、权重更高。</li>
+          <li><b>位置编码的相位</b>：RoPE 下不同位置的相对距离会影响点积，长距离内容的相关性信号进一步被削弱。</li>
+        </ul>
+        <div class="math">
+          <span class="math">\(\text{Attn}(Q,K,V) = \text{softmax}\!\left(\frac{QK^{\top}}{\sqrt{d_k}}\right)V\)</span>
+          —— 中段位置在 <span class="math">QK^{\top}</span> 上既没有 sink 的偏置优势，也没有 recency 的语义优势，softmax 归一化后权重被摊薄。
+        </div>
+        <p>结果：指令虽然写在了 prompt 里，但在注意力层面<b>被前面 11000 字的材料淹没了</b>。
+          模型"看到"了指令，但没"在意"它。</p>
+      </div>
+      <div class="chg chg-good">
+        <span class="cap">✅ 正确做法：指令前置 + 结构分隔 + 结尾复述</span>
+        <pre># 任务
+从下面的访谈记录中提取用户痛点，按主题分组并排序优先级。
+只依据下面 &lt;访谈记录&gt; 中的内容作答，不要引入外部信息。
+
+# 输出格式（严格）
+{"themes":[{"name":"...","pain_points":["..."],"priority":1}]}
+
+# 约束
+- priority 取 1-5，1 为最高
+- 每条痛点必须是访谈记录中的原话或紧邻转述
+- 若记录中未提及某主题，不要编造
+
+# 输入材料
+&lt;访谈记录&gt;
+[6000 字段落……]
+&lt;/访谈记录&gt;
+
+# 现在开始执行上面的「任务」，输出 JSON：</pre>
+      </div>
+      <div class="cmp">
+        <div class="cmp-item">
+          <span class="h hb">❌ 指令在最后</span>
+          模型容易只回答"最近看到的材料片段的摘要"，漏掉中段信息；复杂约束（分组 / 排序 / 格式）常被整体忽略。
+        </div>
+        <div class="cmp-item">
+          <span class="h hg">✅ 指令首尾呼应</span>
+          开头定义任务与格式（利用 sink 位），结尾再复述一次动作（利用 recency 位），中段只放数据。实测约束遵循率能从 ~60% 提升到 ~90%+。
+        </div>
+      </div>
+      <div class="hint">
+        <b>🩺 经验法则：</b>「<b>首尾放指令，中间放数据</b>」。
+        更激进一点的做法是把长文档做成 RAG，只把最相关的 Top-K 片段喂进去——减少"中段"的物理长度，从根本上绕开这个坑。
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== 坑 02 ===== -->
+  <section class="blk reveal" data-pit="p2" data-cat="princ">
+    <div class="card pit">
+      <div class="pit-head">
+        <div class="pit-no">02</div>
+        <div style="flex:1 1 260px">
+          <h3 class="pit-title">🚫 "不要写…"反而让模型写得更起劲</h3>
+          <div class="pit-meta">
+            <span class="tag tag-purple">原理坑</span>
+            <span class="tag tag-gray">否定式指令 / 语义激活</span>
+            <span class="tag tag-orange">高频</span>
+          </div>
+        </div>
+      </div>
+      <div class="chg chg-bad">
+        <span class="cap">❌ 错误示例</span>
+        <pre>写一段介绍我们咖啡机产品的话。
+不要用"高品质""匠心""极致体验"这种空洞的词。
+不要写得太长。
+不要用感叹号。
+不要提到价格。</pre>
+      </div>
+      <div class="why">
+        <b class="hd">🔬 原理：否定词的"概念注入"效应</b>
+        <p>语言模型是基于<b>共现统计</b>训练的，它学到的是"哪些词倾向于出现在哪些上下文里"。
+          当你说"不要用『高品质』"，这些 token 本身仍然被<b>实体化地写进了上下文</b>：</p>
+        <div class="math">
+          <span class="math">P(x_t \mid \text{"不要用高品质匠心极致体验……"})</span>
+          —— 上下文里已经出现了"高品质""匠心""极致体验"，模型的下一 token 分布被这些词<b>语义激活</b>，
+          反而抬高了它们的生成概率。
+        </div>
+        <p>这类似心理学里的"白熊效应"：<b>告诉你"别想白熊"，你脑子里立刻全是白熊</b>。模型没有"抑制"这个操作，
+          它只有"基于上下文预测下一个 token"。否定词 <code>不要</code> 是一个很弱的修饰，
+          远弱于被否定的内容本身的语义强度。</p>
+        <ul>
+          <li>更糟的情况：当 prompt 里"不要 X"出现多次，模型会误判<b>话题域</b>——它会觉得"这个对话是关于高品质咖啡机的"，于是往那个方向写。</li>
+          <li>约束越具体、越负面，注入越强。四个"不要"，等于给模型喂了四组它本该避开的词。</li>
+        </ul>
+      </div>
+      <div class="chg chg-good">
+        <span class="cap">✅ 正确做法：换成正面、可执行的规格</span>
+        <pre>写一段介绍我们咖啡机产品的话。
+
+风格要求（正面描述）：
+- 用具体的物理参数说话：15 bar 泵压、92°C 恒温、2L 水箱、预热 25 秒
+- 用具体使用场景说话：早上赶时间、办公室小桌、给父母用
+- 句式为短陈述句，每句不超过 25 字
+- 长度控制在 120-160 字
+- 语气平实、信息密度高，像产品规格说明</pre>
+      </div>
+      <div class="cmp">
+        <div class="cmp-item">
+          <span class="h hb">❌ 负面清单</span>
+          输出："我们的咖啡机拥有<b>高品质</b>的…带来<b>极致体验</b>！"——四条禁令全中，还附赠感叹号。
+        </div>
+        <div class="cmp-item">
+          <span class="h hg">✅ 正面规格</span>
+          输出："15 bar 泵压让浓缩油脂更厚。92°C 恒温萃取，2L 水箱够一家人用一周。预热只要 25 秒，早上不用等。"——参数与场景齐备。
+        </div>
+      </div>
+      <div class="hint good">
+        <b>💡 唯一该用否定式的场景：</b>安全边界（"不得提供医疗诊断""不输出个人隐私信息"）。
+        这类约束通常配合系统提示词并且会被专门对齐训练，效果比普通否定指令好得多。
+        <b>其余场景，一律翻译成"要做什么"。</b>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== 坑 03 ===== -->
+  <section class="blk reveal" data-pit="p3" data-cat="fmt">
+    <div class="card pit">
+      <div class="pit-head">
+        <div class="pit-no">03</div>
+        <div style="flex:1 1 260px">
+          <h3 class="pit-title">📐 要 JSON 但没说清形状，解析全线崩溃</h3>
+          <div class="pit-meta">
+            <span class="tag tag-green">格式坑</span>
+            <span class="tag tag-gray">结构化输出</span>
+            <span class="tag tag-orange">高频</span>
+          </div>
+        </div>
+      </div>
+      <div class="chg chg-bad">
+        <span class="cap">❌ 错误示例</span>
+        <pre>把下面这段评论分析一下，输出 JSON。
+
+评论：这款耳机音质很好，但是戴久了耳朵疼，而且价格偏贵，不太推荐。
+
+输出：</pre>
+        <p style="margin-top:10px;color:#c81e34">实际输出（真实会发生）：</p>
+        <pre>好的，这是分析结果：
+
+```json
+{
+  "情感": "混合",
+  "优点": ["音质好"],
+  "缺点": ["佩戴不适", "价格高"],
+  "建议": "不建议购买"
+}
+```
+
+希望对你有帮助！需要我进一步分析其他评论吗？</pre>
+      </div>
+      <div class="why">
+        <b class="hd">🔬 原理：模型在"对话分布"里采样，不在"序列化器"里采样</b>
+        <p>模型被训练成<b>乐于助人的对话助手</b>。它的训练数据里，"输出 JSON"这类请求的旁边常常跟着寒暄、解释、代码围栏。
+          你没指定形状时，它就按"最像人类回应的方式"生成——于是有了开场白、```json 围栏、结束语。</p>
+        <ul>
+          <li><b>字段名不确定</b>：你说"输出 JSON"，模型可能用 <code>sentiment</code>、也可能是 <code>情感</code>、<code>emotion</code>、<code>polarity</code>。下游 <code>json.loads()</code> 立刻 KeyError。</li>
+          <li><b>类型不确定</b>："缺点"是数组还是逗号分隔字符串？"评分"是 1-5 整数还是 "极高"？</li>
+          <li><b>包装层不确定</b>：```json 围栏、前后寒暄，都会让严格 JSON 解析器直接抛异常。</li>
+          <li><b>空值不确定</b>：字段缺失时是省略、是 <code>null</code>、还是 <code>""</code>？</li>
+        </ul>
+      </div>
+      <div class="chg chg-good">
+        <span class="cap">✅ 正确做法：给 schema + 给样例 + 禁止包装 + 用原生结构化输出</span>
+        <pre>分析下面的评论，只输出一个 JSON 对象。不要输出任何解释、寒暄或 Markdown 代码围栏。
+
+Schema（字段名、类型、取值范围必须严格遵守）：
+{
+  "sentiment": "positive" | "negative" | "mixed",
+  "pros": string[],      // 每条不超过 15 字，没有则空数组
+  "cons": string[],      // 同上
+  "score": number,       // 1-5 的整数
+  "recommend": boolean,
+  "reason": string       // 一句话，不超过 40 字
+}
+
+Few-shot 样例：
+输入：做工精细，续航一般。
+输出：{"sentiment":"mixed","pros":["做工精细"],"cons":["续航一般"],"score":3,"recommend":false,"reason":"优点与短板并存，适合轻度使用。"}
+
+现在处理这条：
+输入：这款耳机音质很好，但是戴久了耳朵疼，而且价格偏贵，不太推荐。
+输出：</pre>
+      </div>
+      <div class="cmp">
+        <div class="cmp-item">
+          <span class="h hb">❌ 只说"输出 JSON"</span>
+          期望与实际不一致，字段名/类型/包装层全靠猜。生产环境解析失败率常达 10%–30%。
+        </div>
+        <div class="cmp-item">
+          <span class="h hg">✅ Schema + few-shot</span>
+          字段名与类型被钉死，样例给模型一个可模仿的模板，配合 <b>response_format / JSON Schema Mode</b>（OpenAI、vLLM 等均支持）可以做到 100% 可解析。
+        </div>
+      </div>
+      <div class="hint warn">
+        <b>⚠️ 工程侧双保险：</b>① 优先使用 API 提供的结构化输出能力（约束解码，token 级保证合法）；
+        ② 无此能力时，写一个"解析 + 正则修复 + 重试"的兜底函数：剥离 ``` 围栏、截取第一个 <code>{</code> 到最后一个 <code>}</code>、
+        失败则带上错误信息再请求一次。别让 JSON 解析失败直接打崩线上服务。
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== 坑 04 ===== -->
+  <section class="blk reveal" data-pit="p4" data-cat="princ">
+    <div class="card pit">
+      <div class="pit-head">
+        <div class="pit-no">04</div>
+        <div style="flex:1 1 260px">
+          <h3 class="pit-title">☠️ Few-shot 示例有毒，越教越歪</h3>
+          <div class="pit-meta">
+            <span class="tag tag-purple">原理坑</span>
+            <span class="tag tag-gray">上下文学习 / 分布对齐</span>
+          </div>
+        </div>
+      </div>
+      <div class="chg chg-bad">
+        <span class="cap">❌ 错误示例</span>
+        <pre>判断下面句子的情感（positive / negative）：
+
+句子：服务态度很差，等了一个小时。 → positive
+句子：物流很快，包装完好。 → positive
+句子：东西不错。 → positive
+
+句子：这家店我再也不来了。 →</pre>
+      </div>
+      <div class="why">
+        <b class="hd">🔬 原理：few-shot 示例定义的是"任务分布"，不是"任务说明"</b>
+        <p>上下文学习（In-Context Learning）的机制不是"理解规则"，而是<b>从示例中归纳出输入→输出的映射模式</b>。
+          模型会寻找示例里最一致的规律——如果三个示例的答案都是 <code>positive</code>，最省力的规律就是
+          <b>"答案永远是 positive"</b>。</p>
+        <ul>
+          <li><b>标签不平衡</b>：3 个 positive 打头，模型会先验偏向 positive。要让示例覆盖所有类别且分布均衡。</li>
+          <li><b>示例本身有错</b>：第一个示例是明确负面却标成 positive，相当于教模型"情感标签可以乱贴"。</li>
+          <li><b>表面特征被当成规律</b>：如果所有 positive 示例都以句号结尾、所有 negative 都以感叹号结尾，模型可能学的是标点，而不是情感。</li>
+          <li><b>顺序敏感</b>：研究表明 few-shot 示例的<b>排列顺序</b>会导致准确率波动 10%–20%（recency bias 让最后一个示例影响最大）。</li>
+        </ul>
+        <div class="math">
+          <span class="math">P(y \mid x, \text{demos}) \;\approx\; P(y \mid \text{归纳出的模式})</span>
+          —— 示例是<b>证据</b>，模型从这里估计的是条件分布，不是逻辑规则。
+        </div>
+      </div>
+      <div class="chg chg-good">
+        <span class="cap">✅ 正确做法：均衡、正确、多样、格式一致</span>
+        <pre>判断句子的情感，输出 positive 或 negative。只输出这一个词。
+
+---
+句子：菜品很新鲜，上菜也快。 → positive
+---
+句子：等了四十分钟还没人理我。 → negative
+---
+句子：环境一般，味道还行。 → positive
+---
+句子：结账时多算了一道菜。 → negative
+---
+
+句子：这家店我再也不来了。 →</pre>
+      </div>
+      <div class="cmp">
+        <div class="cmp-item">
+          <span class="h hb">❌ 3 个同标签 + 1 个错标</span>
+          模型学到"一直输出 positive"，或学到"情感标签随机"。准确率可能还不如零样本。
+        </div>
+        <div class="cmp-item">
+          <span class="h hg">✅ 2 正 2 负 + 交错排列</span>
+          类别均衡、正误明确、句式多样，模型能稳定归纳出边界。示例顺序打乱做多次评测取平均，避免顺序偏差。
+        </div>
+      </div>
+      <div class="hint">
+        <b>🩺 自查清单：</b>① 每类样本数量是否均衡？② 示例标签 100% 正确吗（人工再过一遍）？③ 换一下示例顺序，结果还稳定吗？
+        ④ 去掉示例后（zero-shot）表现如何？如果 zero-shot 更好，说明你的示例在捣乱。
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== 坑 05 ===== -->
+  <section class="blk reveal" data-pit="p5" data-cat="struct">
+    <div class="card pit">
+      <div class="pit-head">
+        <div class="pit-no">05</div>
+        <div style="flex:1 1 260px">
+          <h3 class="pit-title">📦 关键约束被淹没在一堆口水话里</h3>
+          <div class="pit-meta">
+            <span class="tag tag-blue">结构坑</span>
+            <span class="tag tag-gray">约束与噪声的比例</span>
+            <span class="tag tag-orange">高频</span>
+          </div>
+        </div>
+      </div>
+      <div class="chg chg-bad">
+        <span class="cap">❌ 错误示例</span>
+        <pre>你好！我是一个产品经理，最近在做一个 B 端 SaaS 项目，我们想做一个帮助用户快速了解我们产品的介绍文案。
+我们的产品是给中小企业的财务对账工具，主要解决月底对账要花三天的痛点。
+目标用户是财务专员和会计，他们一般不太懂技术，所以文案要通俗一点。
+哦对了，最好别超过 100 个字，因为我们 UI 上位置不大，而且我们是多语言产品所以中文版最多 100 字。
+希望语气是专业但不冰冷，像个懂行的同事在跟你说话。
+谢谢！</pre>
+      </div>
+      <div class="why">
+        <b class="hd">🔬 原理：约束的"信噪比"太低</b>
+        <p>模型的注意力预算有限。prompt 里真正重要的约束只有两三条（<b>≤100 字</b>、<b>通俗</b>、<b>专业但亲切</b>），
+          但它们散布在 200 多字的背景介绍、礼貌用语和口语化叙述里，权重被平均掉了。</p>
+        <ul>
+          <li><b>关键数字被埋</b>：<code>100 字</code> 出现在一句话的中间，前面还有"哦对了""最好别超过"。模型可能只记住"别太长"。</li>
+          <li><b>口语化标记弱</b>："希望""最好""一般"都是软性语气词，模型不容易把它们识别为硬约束。</li>
+          <li><b>信息重复但不一致</b>："目标用户不太懂技术"和"语气专业但不冰冷"是两条不同约束，混在一段里会互相干扰。</li>
+          <li><b>礼貌寒暄消耗 token</b>：这些 token 也会参与注意力计算，造成纯噪声。</li>
+        </ul>
+      </div>
+      <div class="chg chg-good">
+        <span class="cap">✅ 正确做法：结构化 + 关键约束显式编号 + 硬性边界用大写强调</span>
+        <pre>## 任务
+为 B 端财务对账 SaaS 产品写一段产品介绍文案。
+
+## 目标读者
+中小企业财务专员 / 会计（非技术背景）
+
+## 硬性约束（必须全部满足）
+1. **总字数 ≤ 100 字**（中文汉字计数，标点不计）
+2. 提及核心痛点：月底对账耗时约 3 天
+3. 不得出现技术术语（如 API、SDK、集成）
+4. 全文不使用感叹号
+
+## 语气
+专业但不冰冷，像一位懂行的同事在介绍。
+
+## 输出
+只输出文案正文，不要标题、不要解释、不要引号。</pre>
+      </div>
+      <div class="cmp">
+        <div class="cmp-item">
+          <span class="h hb">❌ 一段口水话</span>
+          输出常见 180–250 字，带标题和"我们致力于…"套话，字数约束基本失守。
+        </div>
+        <div class="cmp-item">
+          <span class="h hg">✅ 结构化约束</span>
+          输出 88 字左右，痛点明确，无术语无感叹号。约束遵循率大幅提升。
+        </div>
+      </div>
+      <div class="hint good">
+        <b>💡 三条结构原则：</b>① 用 Markdown 标题分块，让模型能"看到"结构；
+        ② 硬约束编号并列，数字约束加粗；③ 把"必须/不得"和"希望/尽量"区分开——
+        <b>硬约束不超过 5 条</b>，多了模型必然漏掉几条。
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== 坑 06 ===== -->
+  <section class="blk reveal" data-pit="p6" data-cat="princ">
+    <div class="card pit">
+      <div class="pit-head">
+        <div class="pit-no">06</div>
+        <div style="flex:1 1 260px">
+          <h3 class="pit-title">🧮 让模型心算多步数学题，不给草稿纸</h3>
+          <div class="pit-meta">
+            <span class="tag tag-purple">原理坑</span>
+            <span class="tag tag-gray">思维链 / 串行计算能力</span>
+          </div>
+        </div>
+      </div>
+      <div class="chg chg-bad">
+        <span class="cap">❌ 错误示例</span>
+        <pre>小明有 48 个苹果，他给了小红 1/3，然后小红把自己的苹果平均分给 4 个朋友，
+每个朋友又给了小明 2 个。请问最后小明有多少个苹果？只回答数字。</pre>
+        <p style="margin-top:10px;color:#c81e34">实际输出：38（正确答案是 40）</p>
+      </div>
+      <div class="why">
+        <b class="hd">🔬 原理：Transformer 的"固定深度"与串行计算的矛盾</b>
+        <p>这是 LLM 最根本的结构性限制之一：<b>一个 token 的前向计算经过的层数是固定的</b>（比如 32 层）。
+          这意味着模型对每个 token 只能执行有限次数的"串行运算"。</p>
+        <div class="math">
+          <span class="math">h^{(l+1)} = h^{(l)} + \text{FFN}(\text{LN}(\text{Attn}(\text{LN}(h^{(l)}))))</span>
+          —— 深度 <span class="math">L</span> 固定 ⇒ 单步推理的算子序列长度有上界。
+        </div>
+        <ul>
+          <li><b>直接输出答案</b>：模型必须在一两次前向传播内完成"48×2/3 → 32 ... 分给 4 个朋友 ... ×2"这一串运算，
+            这超出了它的串行计算预算，只能靠"模式匹配"猜一个看起来合理的数。</li>
+          <li><b>思维链（CoT）为什么有效</b>：让模型把中间步骤<b>写成 token</b>，每个新 token 都带来一次完整的前向传播。
+            生成 <span class="math">k</span> 个中间 token，相当于把有效计算深度扩大了 <span class="math">k</span> 倍——
+            <b>用 token 换计算量</b>。</li>
+          <li><b>"只回答数字"加剧问题</b>：你主动切断了它的草稿纸，等于禁用 CoT。</li>
+        </ul>
+      </div>
+      <div class="chg chg-good">
+        <span class="cap">✅ 正确做法：放手让它推理，或用 few-shot CoT</span>
+        <pre>小明有 48 个苹果，他给了小红 1/3，然后小红把自己的苹果平均分给 4 个朋友，
+每个朋友又给了小明 2 个。请问最后小明有多少个苹果？
+
+请一步一步推理，写出每一步的计算过程，最后单独一行输出「答案：X」。
+
+---
+示例格式：
+问题：10 个球，送出 1/2，再收到 3 个。
+推理：
+- 送出：10 × 1/2 = 5
+- 剩余：10 − 5 = 5
+- 收到 3 个：5 + 3 = 8
+答案：8
+---</pre>
+      </div>
+      <div class="cmp">
+        <div class="cmp-item">
+          <span class="h hb">❌ 直接答</span>
+          输出 "38"。多步算术题准确率在中等规模模型上常低于 50%；步骤越多、数字越不整齐，崩塌越快。
+        </div>
+        <div class="cmp-item">
+          <span class="h hg">✅ CoT 分步</span>
+          "48 的 1/3 是 16，送出后剩 32。小红有 16 个……最后小明有 32 + 8 = 40。答案：40。" 准确率显著提升。
+        </div>
+      </div>
+      <div class="hint">
+        <b>💡 进阶技巧：</b>① <b>Zero-shot CoT</b>——只需加一句"Let's think step by step"（中文："我们一步一步来分析"）；
+        ② <b>Self-Consistency</b>——用 temperature>0 采样 5–10 条推理链，对最终答案投票，准确率再涨一截；
+        ③ <b>Program-of-Thought</b>——让模型生成 Python 代码而不是心算，交给解释器执行。
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== 坑 07 ===== -->
+  <section class="blk reveal" data-pit="p7" data-cat="param">
+    <div class="card pit">
+      <div class="pit-head">
+        <div class="pit-no">07</div>
+        <div style="flex:1 1 260px">
+          <h3 class="pit-title">🎲 温度参数乱设，要么车轱辘话要么胡说八道</h3>
+          <div class="pit-meta">
+            <span class="tag tag-orange">参数坑</span>
+            <span class="tag tag-gray">采样策略 / softmax 温度</span>
+          </div>
+        </div>
+      </div>
+      <div class="chg chg-bad">
+        <span class="cap">❌ 错误示例（两种典型翻车）</span>
+        <pre>[场景 A] 抽取合同里的甲乙方名称和金额
+参数：temperature = 1.3, top_p = 1.0
+→ 结果：模型"发挥"出了合同里根本没有的条款，把「壹佰万元」写成「一百多万元」。
+
+[场景 B] 写 10 条不同角度的广告 slogan
+参数：temperature = 0.0（贪心）
+→ 结果：10 次调用返回的几乎是同一句话，只是标点略有不同。</pre>
+      </div>
+      <div class="why">
+        <b class="hd">🔬 原理：温度在重新塑形概率分布</b>
+        <p>温度 <span class="math">T</span> 作用在 softmax 上，直接改变整个概率分布的"尖锐程度"：</p>
+        <div class="math">
+          <span class="math">p_i = \frac{\exp(z_i / T)}{\sum_j \exp(z_j / T)}</span>
+        </div>
+        <ul>
+          <li><span class="math">T \to 0</span>：分布趋近 one-hot，等价于 argmax 贪心 → <b>确定、可复现，但单一、死板</b>，容易导致重复。</li>
+          <li><span class="math">T = 1</span>：使用模型原始分布。</li>
+          <li><span class="math">T &gt; 1</span>：分布被"抹平"，长尾 token 概率被抬高 → <b>多样但容易跑偏、出现幻觉</b>。
+            <span class="math">T = 1.3</span> 时，原本概率 0.1% 的 token 可能被放大 10 倍以上。</li>
+        </ul>
+        <p><b>top_p（核采样）</b>是另一层保险：只保留累积概率达到 <span class="math">p</span> 的最小 token 集合。它和温度是配套的：
+          温度抬高长尾后，top_p 负责把最离谱的长尾切掉。</p>
+        <table class="tb">
+          <tr><th>任务类型</th><th>temperature</th><th>top_p</th><th>理由</th></tr>
+          <tr><td>提取 / 分类 / 结构化输出</td><td>0.0 – 0.2</td><td>0.9 – 1.0</td><td>要的是确定性，不是创造力</td></tr>
+          <tr><td>代码生成 / 数学推理</td><td>0.0 – 0.3</td><td>0.95</td><td>语法与逻辑不能发散</td></tr>
+          <tr><td>问答 / 摘要</td><td>0.3 – 0.6</td><td>0.9</td><td>兼顾忠实与自然</td></tr>
+          <tr><td>文案 / 头脑风暴 / 创意</td><td>0.8 – 1.1</td><td>0.95</td><td>需要多样性</td></tr>
+          <tr><td>需要极端多样性</td><td>1.0 – 1.3</td><td>0.95–0.98</td><td>配合去重与人工筛选</td></tr>
+        </table>
+      </div>
+      <div class="chg chg-good">
+        <span class="cap">✅ 正确做法：按任务分层配置 + 多样性用采样多次而不是拉高温度</span>
+        <pre>[合同信息抽取]
+temperature = 0.0, top_p = 1.0, response_format = json_schema
+→ 确定性输出，字段稳定可解析。
+
+[生成 10 条不同角度的 slogan]
+temperature = 0.9, top_p = 0.95, n = 10      # 一次采样 10 条
+或：temperature = 0.8, 调用 10 次并做语义去重
+→ 多样性来自采样次数和 top_p，而不是把 T 拉到 1.5 让它开始胡说。</pre>
+      </div>
+      <div class="cmp">
+        <div class="cmp-item">
+          <span class="h hb">❌ 一个温度打天下</span>
+          抽取任务用 T=1.3 → 幻觉与字段漂移；创意任务用 T=0 → 十次调用九次一样。
+        </div>
+        <div class="cmp-item">
+          <span class="h hg">✅ 按任务分层</span>
+          抽取用 0、推理用 0.2、创意用 0.9。上线后把温度和 top_p 写进配置并与 prompt 版本一起管理。
+        </div>
+      </div>
+      <div class="hint warn">
+        <b>⚠️ 常被忽略的一点：</b><code>temperature = 0</code> 并不保证 100% 可复现——批处理、并行计算、硬件差异都会带来微小数值抖动。
+        如果业务真的需要强确定性（比如缓存 key），请自行做输出归一化与结果校验。
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== 坑 08 ===== -->
+  <section class="blk reveal" data-pit="p8" data-cat="struct">
+    <div class="card pit">
+      <div class="pit-head">
+        <div class="pit-no">08</div>
+        <div style="flex:1 1 260px">
+          <h3 class="pit-title">🕳️ "中间信息丢失"：塞得越多，答得越差</h3>
+          <div class="pit-meta">
+            <span class="tag tag-blue">结构坑</span>
+            <span class="tag tag-gray">lost in the middle / 上下文窗口</span>
+            <span class="tag tag-orange">高频</span>
+          </div>
+        </div>
+      </div>
+      <div class="chg chg-bad">
+        <span class="cap">❌ 错误示例</span>
+        <pre>[把公司全部 50 页员工手册原封不动贴进 prompt，共 38000 字]
+[然后问：]
+
+我的年假有几天？可以跨年累积吗？</pre>
+      </div>
+      <div class="why">
+        <b class="hd">🔬 原理：窗口容量 ≠ 有效利用能力</b>
+        <p>这就是坑 01 的同族病，单独列为一件展品是因为它在 RAG 场景里太常见了。核心结论来自 <i>Lost in the Middle</i> 等研究：</p>
+        <ul>
+          <li><b>U 形注意力曲线</b>：答案位于上下文<b>开头或结尾</b>时准确率最高；位于<b>中间</b>时准确率显著下降，
+            在长上下文中甚至可能低于"完全不提供文档"的闭卷表现。</li>
+          <li><b>注意力被稀释</b>：softmax 归一化意味着总权重是 1。20000 个 token 里塞进 1 个关键句，那一句分到的权重自然微乎其微。</li>
+          <li><b>Hmm，那"更长窗口"没用吗</b>：有用，但它是"上限"而非"有效容量"。100 万 token 的窗口不代表模型能在里面做精准检索——
+            这更像是一间巨大的仓库，不代表你能在里面三秒找到那根针。</li>
+          <li><b>干扰信息主动伤害</b>：与问题无关的段落不只是"占位"，它还会提供误导性的近邻语义，把模型带偏。</li>
+        </ul>
+      </div>
+      <div class="chg chg-good">
+        <span class="cap">✅ 正确做法：检索优先 + 重排 + 分块摘要 + 位置策略</span>
+        <pre># 步骤 1：检索（不要贴全文）
+query = "年假 天数 跨年 累积"
+→ 向量检索 + BM25 混合召回 Top-20 段落
+
+# 步骤 2：重排（Rerank）
+→ 用 cross-encoder 重排，取 Top-3 最相关段落
+
+# 步骤 3：按"关键信息靠两端"排布
+[任务指令]
+[最相关的段落 → 放最前面]
+[次相关的一段 → 放中间]
+[第三相关的一段 → 放最后]
+[再次复述问题]
+
+# 步骤 4：要求引用
+只依据上面提供的段落回答，每句话后标注来源段落编号。
+若段落中没有相关信息，回答「手册中未提及」。</pre>
+      </div>
+      <div class="cmp">
+        <div class="cmp-item">
+          <span class="h hb">❌ 全文粘贴 38000 字</span>
+          关键条款落在第 22 页中间，模型答"未提及"或编造"15 天"。
+          同时成本飙升、延迟翻倍。
+        </div>
+        <div class="cmp-item">
+          <span class="h hg">✅ 检索 3 段 + 位置优化</span>
+          相关条款原文进入 prompt，回答准确且带引用，token 消耗降到 1/20。
+        </div>
+      </div>
+      <div class="hint good">
+        <b>💡 三条实用策略：</b>
+        ① <b>减少绝对长度</b>比优化排布更有效——优先做检索和重排；
+        ② 必须放长文时，把最相关的内容<b>复制一份放到末尾</b>；
+        ③ 用"分块 → 逐块抽取 → 汇总"的两阶段流程替代"一口气读全文"。
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== 坑 09 ===== -->
+  <section class="blk reveal" data-pit="p9" data-cat="princ">
+    <div class="card pit">
+      <div class="pit-head">
+        <div class="pit-no">09</div>
+        <div style="flex:1 1 260px">
+          <h3 class="pit-title">👤 代词指代不清，模型只能猜</h3>
+          <div class="pit-meta">
+            <span class="tag tag-purple">原理坑</span>
+            <span class="tag tag-gray">指代消解 / 歧义</span>
+          </div>
+        </div>
+      </div>
+      <div class="chg chg-bad">
+        <span class="cap">❌ 错误示例</span>
+        <pre>把这个功能改一下，让它更好用一点，然后把那个也顺便调整下。
+另外上次说的那个问题也一起处理了吧。</pre>
+      </div>
+      <div class="why">
+        <b class="hd">🔬 原理：多轮对话里，指代要靠"猜"来消解</b>
+        <p>模型没有真正的对话状态机，它做指代消解（coreference resolution）的依据是<b>上下文里的统计关联</b>。
+          当上下文里存在多个候选先行词时，模型只能给出一个概率分布下的"合理猜测"：</p>
+        <div class="math">
+          <span class="math">P(\text{指代对象} \mid \text{"它"},\ \text{上下文})</span>
+          —— 候选越多、越相似，分布越平坦，模型越可能猜错。
+        </div>
+        <ul>
+          <li><b>"这个功能"</b>：前文提到过 3 个功能，模型无从判断是哪一个。</li>
+          <li><b>"更好用"</b>：是一个没有任何可操作定义的模糊目标——降低点击步数？提高加载速度？改文案？</li>
+          <li><b>"那个"</b>：纯粹的空白指代，模型只能靠"最常出现的名词"来填，极不可靠。</li>
+          <li><b>"上次说的那个问题"</b>：跨会话引用。如果历史里没有，模型会开始<b>编造</b>一个问题，然后煞有介事地"处理"它——这是幻觉的温床。</li>
+          <li><b>"一起处理"</b>：三件事混在一个请求里，模型注意力分散，往往只做了最后一件。</li>
+        </ul>
+      </div>
+      <div class="chg chg-good">
+        <span class="cap">✅ 正确做法：显式指代 + 可验证目标 + 单请求单任务</span>
+        <pre>## 任务 1：优化「批量导出 CSV」功能（/export 页面）
+目标：把用户完成导出的操作步数从 5 步降到 3 步以内。
+具体做法：把「筛选 → 确认 → 选格式 → 命名 → 下载」合并为
+「选格式 → 下载」两步，筛选沿用列表页当前条件。
+验收标准：路径长度 ≤ 3 次点击。
+
+## 任务 2：调整「导出文件名」规则
+现状：固定为 export.csv
+期望：改为 {业务名}_{YYYYMMDD}.csv，例如 orders_20261103.csv
+
+## 请先复述你对这两个任务的理解，确认无误后再给方案。</pre>
+      </div>
+      <div class="cmp">
+        <div class="cmp-item">
+          <span class="h hb">❌ 代词 + 模糊目标</span>
+          模型改造了错误的页面，或直接反问"请问是哪个功能"。来回沟通 4 轮，比一开始说清楚还费时间。
+        </div>
+        <div class="cmp-item">
+          <span class="h hg">✅ 显式 + 可验证</span>
+          有路径、有目标数字、有验收标准。而且让模型"先复述理解"，成本极低，却能拦住 80% 的误解。
+        </div>
+      </div>
+      <div class="hint">
+        <b>🩺 一条铁律：</b>凡是能用<b>名词</b>说清楚的，绝不用<b>代词</b>。
+        "把它优化一下" → "把 <code>/checkout</code> 页面的表单校验从提交后改到失焦时触发"。
+        如果怕自己啰嗦，可以搜一下"<b>Bob 测试</b>"：把 prompt 给一个完全不熟悉项目的同事看，他能不能准确执行？
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== 坑 10 ===== -->
+  <section class="blk reveal" data-pit="p10" data-cat="struct">
+    <div class="card pit">
+      <div class="pit-head">
+        <div class="pit-no">10</div>
+        <div style="flex:1 1 260px">
+          <h3 class="pit-title">🤹 一次性让模型干八件事</h3>
+          <div class="pit-meta">
+            <span class="tag tag-blue">结构坑</span>
+            <span class="tag tag-gray">任务分解 / 注意力预算</span>
+          </div>
+        </div>
+      </div>
+      <div class="chg chg-bad">
+        <span class="cap">❌ 错误示例</span>
+        <pre>帮我读完这篇论文，然后：1. 翻译摘要；2. 总结三个创新点；3. 列出所有实验数据集；
+4. 批判它的方法缺陷；5. 提出三个改进方向；6. 生成一个剪藏用的 Markdown 卡片；
+7. 找出里面所有错误的引用格式；8. 顺便推荐五篇相关论文。
+全部一次输出完，格式要整齐。</pre>
+      </div>
+      <div class="why">
+        <b class="hd">🔬 原理：注意力是稀缺资源，约束越多漏得越多</b>
+        <ul>
+          <li><b>注意力预算有限</b>：模型要在一次生成中同时满足 8 个不同的格式与内容要求，注意力被切分成 8 份，
+            每一项都只能分到薄薄一层。</li>
+          <li><b>指令遵循是有成本的</b>：研究表明，随着 prompt 中并列约束数量的增加，单条约束的遵循率会显著下降——
+            这就是"约束疲劳"。经验上超过 5 条并列要求，漏项就开始成为常态。</li>
+          <li><b>任务性质冲突</b>：翻译要求逐字忠实，总结要求抽象压缩，批判要求发散质疑——
+            把它们塞在同一次生成里，模型会在不同"模式"之间摇摆，输出品味混乱。</li>
+          <li><b>"格式要整齐"是空约束</b>：没有指定具体格式，模型自己发挥的八段式往往长短不一、层次混乱。</li>
+          <li><b>无法局部重试</b>：一旦第 5 项崩了，你只能整段重来。</li>
+        </ul>
+      </div>
+      <div class="chg chg-good">
+        <span class="cap">✅ 正确做法：拆成链式调用，每步只做一件事 + 给模板</span>
+        <pre># Step 1 — 翻译摘要（纯转换任务，temperature 0.2）
+输入：论文摘要原文
+输出：中文译文，保留专业术语的英文原文加括号
+
+# Step 2 — 总结创新点（输入 Step 1 的译文，temperature 0.3）
+输出：恰好 3 条，每条格式「创新点：… ｜ 相比现有方法：…」
+
+# Step 3 — 列数据集（纯抽取，temperature 0.0）
+输出 JSON: [{"name":"","size":"","domain":""}]
+
+# Step 4 — 批判与改进（合并为一个思辨任务，temperature 0.6）
+输出：3 条「局限 → 改进方向」配对
+
+# Step 5 — 生成卡片（模板填充，temperature 0.2）
+按下面模板填充，缺失字段写 "N/A"：
+## {{标题}}
+- 任务：{{}}
+- 方法：{{}}
+...</pre>
+      </div>
+      <div class="cmp">
+        <div class="cmp-item">
+          <span class="h hb">❌ 八合一</span>
+          实测常只完成 5–6 项，第 7、8 项基本消失；输出冗长且中途质量下滑；任何一项不满意都得全量重跑。
+        </div>
+        <div class="cmp-item">
+          <span class="h hg">✅ 拆链串行</span>
+          每一步输出都短质量高，可单独重试、可缓存、可用程序校验；总 token 成本往往反而更低。
+        </div>
+      </div>
+      <div class="hint good">
+        <b>💡 拆分判断标准：</b>如果一个子任务的输出是另一个子任务的输入 → 串联；
+        如果两个子任务互不依赖 → 并行走两次调用（甚至用不同模型：抽取用便宜模型，批判用强模型）。
+        <b>单次 prompt 的硬约束建议 ≤ 5 条。</b>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== 坑 11 ===== -->
+  <section class="blk reveal" data-pit="p11" data-cat="fmt">
+    <div class="card pit">
+      <div class="pit-head">
+        <div class="pit-no">11</div>
+        <div style="flex:1 1 260px">
+          <h3 class="pit-title">📏 不指定长度：要么两句话，要么一本书</h3>
+          <div class="pit-meta">
+            <span class="tag tag-green">格式坑</span>
+            <span class="tag tag-gray">输出长度控制</span>
+          </div>
+        </div>
+      </div>
+      <div class="chg chg-bad">
+        <span class="cap">❌ 错误示例</span>
+        <pre>介绍一下什么是 Transformer。</pre>
+        <p style="margin-top:10px;color:#c81e34">可能输出 A（共 30 字）：<br>
+          "Transformer 是一种基于自注意力机制的神经网络架构。"</p>
+        <p style="color:#c81e34">可能输出 B（共 1400 字）：<br>
+          从 2017 年论文讲起，讲编码器解码器、多头注意力、位置编码、残差、
+          讲 BERT 和 GPT 的区别，讲应用场景与局限……最后还附了参考文献。</p>
+      </div>
+      <div class="why">
+        <b class="hd">🔬 原理：长度由"训练分布 + 解码过程"共同决定</b>
+        <ul>
+          <li><b>没有长度信号</b>时，模型按训练数据里"这类请求通常配多长的回答"来采样。这个分布非常宽，
+            而且对提示词的细微措辞极其敏感。</li>
+          <li><b>EOS 是学出来的</b>：模型在哪个 token 输出结束符，取决于它认为"答案完整了"。你没有定义"完整"，它就用平均长度来猜。</li>
+          <li><b>max_tokens 是硬截断</b>：设太小会在句子中间被切断；设太大又给了模型啰嗦的空间。它<b>不是</b>长度控制手段，
+            而是安全阀。</li>
+          <li><b>长度无约束会连带拖垮格式</b>：想放入 UI 卡片位置的内容，如果没有字数上限，几乎必然溢出。</li>
+        </ul>
+      </div>
+      <div class="chg chg-good">
+        <span class="cap">✅ 正确做法：显式字数区间 + 结构约束 + 参考样例</span>
+        <pre>介绍一下什么是 Transformer，面向有编程基础但不了解深度学习的读者。
+
+要求：
+- 总长度 180–220 字（中文汉字计）
+- 结构固定为三段，每段一句话：
+  ① 一句话定义（它是什么）
+  ② 核心机制（自注意力在做什么，用一个类比）
+  ③ 为什么重要（解决了什么旧问题）
+- 不出现数学公式，不出现英文缩写（除非首次出现时给出全称）
+- 全文不使用加粗和列表符号
+
+参考样例（不同主题，仅示范长度与语气）：
+"什么是向量数据库？它是专门存储和检索高维向量的数据库，把语义相似度变成可计算的距离。
+核心机制是近似最近邻搜索——不追求找到最精确的那一条，而是在毫秒内找到足够好的一批。
+它让『按意思搜索』第一次变得工程可行，此前这只能靠关键词碰运气。"
+（共 152 字）</pre>
+      </div>
+      <div class="cmp">
+        <div class="cmp-item">
+          <span class="h hb">❌ 只说"介绍一下"</span>
+          输出长度方差极大（30 字到 1500 字都可能），完全无法嵌入固定高度的 UI 组件。
+        </div>
+        <div class="cmp-item">
+          <span class="h hg">✅ 字数区间 + 三段式 + 样例</span>
+          输出稳定落在 190±15 字，结构一致，可安全渲染进卡片。
+        </div>
+      </div>
+      <div class="hint warn">
+        <b>⚠️ 注意"字数"对模型是个软约束。</b>模型无法精确计数 token 或汉字。
+        实践做法：① 给出<b>区间</b>而不是精确值；② 用"三段/三点/每点一句话"这种结构约束间接控长；
+        ③ 关键场景在程序侧做长度校验，超限就重新生成或让模型"压缩到 X 字以内"。
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== 坑 12 ===== -->
+  <section class="blk reveal" data-pit="p12" data-cat="param">
+    <div class="card pit">
+      <div class="pit-head">
+        <div class="pit-no">12</div>
+        <div style="flex:1 1 260px">
+          <h3 class="pit-title">🌈 "尽可能好一点"——无法验收的模糊目标</h3>
+          <div class="pit-meta">
+            <span class="tag tag-orange">参数坑</span>
+            <span class="tag tag-gray">目标函数 / 可验证性</span>
+          </div>
+        </div>
+      </div>
+      <div class="chg chg-bad">
+        <span class="cap">❌ 错误示例</span>
+        <pre>请用最专业的方式，尽可能好地、高质量地完成这个任务，
+要体现出你的能力和水平，做到最好，让人眼前一亮。
+（任务：把这段话写得更通顺一些）</pre>
+      </div>
+      <div class="why">
+        <b class="hd">🔬 原理：模型在优化你给出的"可观测目标"</b>
+        <p>"好""专业""高质量"对模型来说<b>不是一个方向，而是一个噪声很大的向量</b>。
+          这类词在训练数据里总是和"冗长、华丽、加粗、加 emoji、堆专业术语"共现——
+          所以模型会把这些表面特征当成"satisfying the request"：</p>
+        <div class="math">
+          <span class="math">\text{argmax}_y\; P(y \mid \text{"尽可能好"}) \;\approx\; \text{"人类写的、看起来很用心的长文本"}</span>
+        </div>
+        <ul>
+          <li><b>"最专业的方式"</b>常常变成"术语最多的方式"——把"修一下这句话"变成满篇"赋能""抓手""闭环"。</li>
+          <li><b>"让人眼前一亮"</b>往往变成加 emoji、加感叹号、加修辞排比。</li>
+          <li><b>无法验收</b>：你没法说"这个不够好"，因为你没定义过"好"。</li>
+          <li><b>和原始任务冲突</b>：任务是"写得更通顺"，结果被改写成了一篇更长的文章，原有信息反而被稀释。</li>
+        </ul>
+      </div>
+      <div class="chg chg-good">
+        <span class="cap">✅ 正确做法：把"好"翻译成可检查的判定条件</span>
+        <pre>把下面这段话改得更通顺、更易读。
+
+## 具体标准（全部满足）
+1. 句子平均长度 ≤ 30 字，最长单句 ≤ 45 字
+2. 不用被动语态，主语明确
+3. 删除所有冗余修饰词（"非常""十分""进行了"等），信息量不变
+4. 保持原意不变，不新增任何事实
+5. 总长度不超过原文 +10%
+
+## 输出格式
+第一行：改写后的文本
+第二行起：逐条说明你做了哪些修改（格式「原句 → 改句 → 原因」）
+
+原文：
+我们这边呢，其实是针对公司的这个运营流程进行了一个比较全面的、系统性的梳理和优化工作……
+</pre>
+      </div>
+      <div class="cmp">
+        <div class="cmp-item">
+          <span class="h hb">❌ "尽可能好 + 让人眼前一亮"</span>
+          输出变成一篇 500 字的"赋能闭环方法论"，加粗和 emoji 齐飞，离"改通顺"十万八千里。
+        </div>
+        <div class="cmp-item">
+          <span class="h hg">✅ 5 条可检查标准</span>
+          输出朴素、通顺、原意不失。而且你能拿着这 5 条逐项验收——甚至写个脚本自动测平均句长。
+        </div>
+      </div>
+      <div class="hint good">
+        <b>💡 万能替换公式：</b>把每个形容词都翻译成可观测的量。
+        <br>"专业" → "使用行业标准术语，每个术语首次出现给全称"
+        <br>"简洁" → "≤120 字，无冗余修饰词"
+        <br>"严谨" → "每个结论后标注来源，不确定的写『待验证』"
+        <br><b>检验方法：如果一段 prompt 无法用来做打分验收，那它就不是一条有效指令。</b>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== 改写实验室 ===== -->
+  <section class="blk reveal" id="lab">
+    <h2 class="blk-title"><span class="num">实验室</span>🧪 Prompt 体检实验室</h2>
+    <p class="blk-desc">把你的 prompt 粘贴进来，系统会按上面 12 个坑逐条体检，并给出改写建议。
+      <b>完全本地运行，不上传任何内容。</b></p>
+    <div class="card">
+      <div class="lab-row">
+        <div class="lab-col">
+          <label for="lab-input">📝 你的原始 Prompt（试试粘贴一段你正在用的）</label>
+          <textarea id="lab-input" spellcheck="false" placeholder="例如：&#10;请给我写一个产品介绍，要尽可能好，专业一点。&#10;不要写得太长，也不要用那种很空的词。&#10;另外我们公司是做 SaaS 的，产品是财务对账工具，用户是中小企业的会计。&#10;输出 JSON。"></textarea>
+          <div class="btn-row" style="justify-content:flex-start">
+            <button class="btn btn-primary" onclick="Lab.run()">🔬 开始体检</button>
+            <button class="btn btn-outline" onclick="Lab.demo()">🎲 载入示例 prompt</button>
+            <button class="btn btn-outline" onclick="Lab.clear()">🧹 清空</button>
+          </div>
+        </div>
+        <div class="lab-col">
+          <label>📋 改写后的 Prompt（可直接复制使用）</label>
+          <div class="lab-out" id="lab-out">点击「开始体检」后，这里会生成一份改写过的 prompt。</div>
+          <button class="btn btn-outline" onclick="Lab.copy()" style="margin-top:8px">📎 复制改写结果</button>
+        </div>
+      </div>
+
+      <div class="score-ring">
+        <div class="ring" id="lab-ring"><i id="lab-score">—</i></div>
+        <div class="prob" id="lab-prob">
+          <div class="prob-item"><span class="dot ok"></span><span class="txt">等待体检……</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== 检查清单（折叠区）===== -->
+  <section class="blk reveal" id="checklist">
+    <h2 class="blk-title"><span class="num">清单</span>✅ Prompt 设计检查清单</h2>
+    <p class="blk-desc">上线前把这份清单过一遍。点击方框可以勾选，进度实时统计——建议把它贴到你的 PR 模板里。</p>
+    <details class="acc" open>
+      <summary>📋 展开 / 收起检查清单（14 项）</summary>
+      <div class="ck-progress"><i id="ck-fill"></i></div>
+      <div class="card">
+        <div class="checklist" id="ck-list">
+          <div class="ck-item"><span class="ck-box" data-ck></span><span class="ck-txt"><b>① 指令在首尾</b><span>任务描述和输出格式放在 prompt 开头，并在结尾复述一次关键动作。数据放中间。</span></span></div>
+          <div class="ck-item"><span class="ck-box" data-ck></span><span class="ck-txt"><b>② 没有否定式约束</b><span>把所有"不要写…"翻译成"要写…"。除了安全边界，其余一律用正面规格。</span></span></div>
+          <div class="ck-item"><span class="ck-box" data-ck></span><span class="ck-txt"><b>③ 输出格式被钉死</b><span>给出 schema（字段名 + 类型 + 取值范围）+ 一个 few-shot 样例，并明确"不输出任何解释和代码围栏"。</span></span></div>
+          <div class="ck-item"><span class="ck-box" data-ck></span><span class="ck-txt"><b>④ Few-shot 示例经过审核</b><span>类别均衡、标签 100% 正确、句式多样、格式完全一致；打乱顺序测试过稳定性。</span></span></div>
+          <div class="ck-item"><span class="ck-box" data-ck></span><span class="ck-txt"><b>⑤ 关键约束 ≤ 5 条且结构化</b><span>硬约束编号列出、加粗数字；"必须"与"希望"明确区分；用 Markdown 标题分块降低信噪比。</span></span></div>
+          <div class="ck-item"><span class="ck-box" data-ck></span><span class="ck-txt"><b>⑥ 需要推理的任务给了草稿纸</b><span>数学/多步逻辑题要求"一步一步推理"；必要时用 few-shot CoT 或让模型生成代码执行。</span></span></div>
+          <div class="ck-item"><span class="ck-box" data-ck></span><span class="ck-txt"><b>⑦ 采样参数与任务匹配</b><span>抽取/分类 T=0–0.2，推理 T=0–0.3，创意 T=0.8–1.1；多样性靠多次采样而不是拉高温度。</span></span></div>
+          <div class="ck-item"><span class="ck-box" data-ck></span><span class="ck-txt"><b>⑧ 长上下文做了检索与重排</b><span>不贴全文；用 RAG 取 Top-K 并重排；最相关的片段放在开头和结尾；要求模型标注引用来源。</span></span></div>
+          <div class="ck-item"><span class="ck-box" data-ck></span><span class="ck-txt"><b>⑨ 没有含糊代词</b><span>所有"它/这个/那个/上次说的"都替换为具体名词和路径；做了「陌生人测试」。</span></span></div>
+          <div class="ck-item"><span class="ck-box" data-ck></span><span class="ck-txt"><b>⑩ 一次只做一件事</b><span>复合任务拆成链式调用；每个子任务有明显的输入输出边界；单次 prompt 硬约束 ≤ 5 条。</span></span></div>
+          <div class="ck-item"><span class="ck-box" data-ck></span><span class="ck-txt"><b>⑪ 长度有明确区间</b><span>给出字数区间 + 结构约束（几段/几点）；程序侧做长度校验与超限重试。</span></span></div>
+          <div class="ck-item"><span class="ck-box" data-ck></span><span class="ck-txt"><b>⑫ 目标是可验收的</b><span>每个形容词都翻译成可观测的量；prompt 里不存在无法打分的表述。</span></span></div>
+          <div class="ck-item"><span class="ck-box" data-ck></span><span class="ck-txt"><b>⑬ 做了鲁棒性与安全性设计</b><span>定义了"信息不足时如何回答"（如回答"资料中未提及"）；输入做了注入防护；有失败兜底与日志。</span></span></div>
+          <div class="ck-item"><span class="ck-box" data-ck></span><span class="ck-txt"><b>⑭ 版本化与回归测试</b><span>prompt 与模型版本、参数一起纳入版本管理；有一套固定测试集（含边界 case），改动后跑回归对比。</span></span></div>
+        </div>
+        <div class="hint good" id="ck-msg" style="margin-top:16px">
+          <b>📊 进度：</b><span id="ck-num">0 / 14</span> 项已完成。
+        </div>
+        <div class="hint good" id="ck-done" style="display:none"></div>
+      </div>
+    </details>
+  </section>
+
+</div>
+
+<footer class="site"><p>💬 agent-nlp-llm · 自然语言技术本体论研究站</p></footer>
+
+<script src="js/site.js"></script>
+<script>
+/* ===== Prompt 踩坑博物馆：改写实验室 + 检查清单 ===== */
+var Lab = (function () {
+  'use strict';
+
+  var RULES = [
+    {
+      id: 'negation',
+      name: '否定式指令',
+      re: /不要|别用|不能用|禁止|avoid|do not|don\'t|never/i,
+      msg: '<b>出现否定式指令</b>：被否定的词会实体化进入上下文并<b>激活</b>相关语义，模型反而更容易写出来。请改写为"要写什么"的正面规格。'
+    },
+    {
+      id: 'vague',
+      name: '模糊目标词',
+      re: /尽可能好|做到最好|高质量|专业一点|更专业|眼前一亮|优秀的|尽量好|完美|更棒|更好一点/i,
+      msg: '<b>出现无法验收的模糊目标</b>："好/专业/高质量"没有方向。请翻译成可观测的量，例如"术语首次出现给全称""≤120 字""每个结论标注来源"。'
+    },
+    {
+      id: 'json_no_schema',
+      name: 'JSON 未给 schema',
+      re: /json|JSON|Json/,
+      needs: function (t) {
+        return !/\{\s*["']?\w+["']?\s*:/.test(t) && !/schema|字段|类型|样例|示例输出/i.test(t);
+      },
+      msg: '<b>要求了 JSON 但没给 schema</b>：字段名、类型、包装层全靠猜，下游极易解析失败。请给出完整 schema + 一个 few-shot 样例 + "不要输出解释和代码围栏"。'
+    },
+    {
+      id: 'length',
+      name: '长度未指定',
+      re: /.{10,}/,
+      needs: function (t) {
+        return !/\d+\s*[-–~至到]\s*\d+\s*字|不超过\s*\d+\s*字|字数|max_?tokens|长度|字以内|\d+\s*words?/i.test(t);
+      },
+      msg: '<b>没有指定输出长度</b>：模型按训练分布的平均长度采样，方差可能从 30 字到 1500 字。请给出字数区间 + 结构约束（几段几点）。'
+    },
+    {
+      id: 'pronoun',
+      name: '含糊代词',
+      re: /它(?!们)|这个(?!个词)|那个|这些|那些|上次说的|之前提的|刚才说的/,
+      msg: '<b>存在含糊代词</b>："它/这个/那个/上次说的"需要模型猜测先行词，猜错概率很高。请替换为具体名词、路径或字段名。'
+    },
+    {
+      id: 'multi',
+      name: '一锅端多任务',
+      re: /(1[.、)]|2[.、)]|3[.、)]|（1）|；.*然后.*再)|第一步[\s\S]*第二步[\s\S]*第三步/i,
+      needs: function (t) {
+        var m = t.match(/(^|\n)\s*(\d+)[.、)]/g);
+        return (m && m.length >= 3) || /帮我.*然后.*再.*顺便/.test(t);
+      },
+      msg: '<b>一次塞了 3 个以上并列任务</b>：注意力被切分，越靠后的要求越容易被漏掉（"约束疲劳"）。建议拆成链式调用，每步只做一件事。'
+    },
+    {
+      id: 'long',
+      name: '超长上下文',
+      re: /.{10,}/,
+      needs: function (t) { return t.length > 1200; },
+      msg: '<b>Prompt 过长（>' + '1200 字符）</b>：容易触发 lost-in-the-middle，中段信息被注意力稀释。请先做检索与重排，只放最相关的片段，并把关键内容放到首尾。'
+    },
+    {
+      id: 'math_nocot',
+      name: '数学题无思维链',
+      re: /(计算|算一下|求|答案|等于几|多少[个元人件台]).{0,40}[?？]|[\d]\s*[+\-*/×÷]\s*[\d]/,
+      needs: function (t) {
+        return !/一步一步|逐步|step by step|思维链|推理过程|写出步骤|先推理/i.test(t);
+      },
+      msg: '<b>数学/多步计算题没有要求分步推理</b>：固定深度的 Transformer 无法在一次前向内完成多步串行运算，会靠模式匹配猜答案。请加"请一步一步推理，最后输出「答案：X」"。'
+    },
+    {
+      id: 'temp',
+      name: '缺少采样参数',
+      re: /.{10,}/,
+      needs: function (t) { return !/temperature|top_?p|top_?k|温度|采样参数/i.test(t); },
+      msg: '<b>Prompt 里没有任何采样参数约定</b>：抽取类任务建议 temperature 0–0.2、top_p 0.9–1.0；创意类建议 0.8–1.1。把参数与 prompt 一起版本化管理。'
+    },
+    {
+      id: 'instr_position',
+      name: '指令位置偏僻',
+      re: /.{10,}/,
+      needs: function (t) {
+        // 指令类关键词若只出现在后半段，视为"指令埋在后面"
+        var m = t.match(/请|要求|输出|请输出|格式|规则|必须|task|output/i);
+        return m && m.index > t.length * 0.55 && t.length > 300;
+      },
+      msg: '<b>任务指令出现在文本靠后的位置</b>：长文本中段/尾部之外的内容容易被忽略。请把任务与输出格式前置到开头，并在结尾复述一次动作。'
+    },
+    {
+      id: 'no_fallback',
+      name: '未定义兜底行为',
+      re: /.{10,}/,
+      needs: function (t) { return !/未提及|不知道|无法确定|信息不足|N\/?A|null|若没有|如果没有/i.test(t); },
+      msg: '<b>没有定义"信息不足时怎么办"</b>：模型默认会继续流畅生成 → 幻觉。请明确写上"若资料中没有相关信息，回答『未提及』，不要编造"。'
+    }
+  ];
+
+  function $(id) { return document.getElementById(id); }
+
+  function analyze(text) {
+    var hits = [];
+    for (var i = 0; i < RULES.length; i++) {
+      var r = RULES[i];
+      var matched = false;
+      if (r.re && r.re.test(text)) matched = true;
+      if (r.needs) {
+        if (r.needs(text)) matched = true;
+        else if (r.re && r.re.source === '.{10,}') matched = false; // 仅由 needs 决定
+      }
+      if (r.id === 'length' || r.id === 'temp' || r.id === 'no_fallback' || r.id === 'long' || r.id === 'instr_position') {
+        matched = r.needs ? r.needs(text) : matched;
+      }
+      if (r.id === 'multi') matched = r.needs ? r.needs(text) : matched;
+      if (r.id === 'json_no_schema') matched = (r.re.test(text) && r.needs && r.needs(text));
+      if (r.id === 'math_nocot') matched = (r.re.test(text) && r.needs && r.needs(text));
+      if (r.id === 'negation' || r.id === 'vague' || r.id === 'pronoun') matched = r.re.test(text);
+      if (matched) hits.push(r);
+    }
+    return hits;
+  }
+
+  /* --- 改写：把用户 prompt 重构为一条合格的 prompt --- */
+  function rewrite(text, hits) {
+    var t = text.trim();
+    if (!t) return '（请输入原始 prompt）';
+
+    // 抽取可能的约束句
+    var lines = t.split(/\n+/).map(function (s) { return s.trim(); }).filter(Boolean);
+    var taskLine = '';
+    var constraints = [];
+    var dataLines = [];
+
+    lines.forEach(function (ln) {
+      if (!taskLine && /(请|帮我|写|生成|分析|提取|总结|翻译|判断|改)/.test(ln) && ln.length < 200) {
+        taskLine = ln; return;
+      }
+      if (/不要|别|不能|禁止|尽量|最好|must|≤|不超过|\d+\s*字/.test(ln)) constraints.push(ln);
+      else if (ln.length > 200) dataLines.push(ln);
+      else constraints.push(ln);
+    });
+    if (!taskLine) taskLine = lines[0] || t;
+
+    // 否定 → 正面
+    var pos = [];
+    constraints.forEach(function (c) {
+      var m = c.match(/不要?用?|别用?|不能|禁止/);
+      if (m) {
+        var tail = c.slice(m.index + m[0].length).replace(/[。；;！!]+$/, '').trim();
+        if (tail) pos.push('改用具体、可核查的表述替代「' + tail + '」这类笼统说法（给出具体的参数、场景或数据）');
+      } else {
+        pos.push(c);
+      }
+    });
+
+    var out = [];
+    out.push('# 任务');
+    out.push(taskLine.replace(/。$/, '') + '。');
+    out.push('');
+    out.push('# 硬性约束（必须全部满足，共 ' + Math.min(pos.length || 1, 5) + ' 条）');
+
+    var hard = pos.slice(0, 5);
+    if (!hard.length) hard = ['面向目标读者，用具体事实与数据说话，不使用空泛形容词'];
+    hard.forEach(function (c, i) { out.push((i + 1) + '. ' + c); });
+
+    if (hits.some(function (h) { return h.id === 'length'; })) {
+      out.push((hard.length + 1) + '. 总长度控制在 150–250 字（给出区间，不要自由发挥）');
+    }
+    out.push('');
+    out.push('# 输出格式');
+    if (hits.some(function (h) { return h.id === 'json_no_schema'; })) {
+      out.push('只输出一个 JSON 对象，不要输出任何解释、寒暄或 Markdown 代码围栏。');
+      out.push('');
+      out.push('{');
+      out.push('  "summary": string,        // 一句话概括，≤40 字');
+      out.push('  "points": string[],       // 3-5 条要点，每条 ≤15 字');
+      out.push('  "confidence": number      // 0-1 之间的浮点数');
+      out.push('}');
+      out.push('');
+      out.push('样例：');
+      out.push('{"summary":"财务对账工具可把月结对账从三天压缩到半小时。","points":["自动匹配发票","差异高亮","一键导出"],"confidence":0.86}');
+    } else {
+      out.push('结构固定为：');
+      out.push('① 一句话结论');
+      out.push('② 3 条要点（每条一行，以「- 」开头）');
+      out.push('③ 一句话说明适用范围');
+      out.push('只输出正文，不要标题，不要额外解释。');
+    }
+
+    if (hits.some(function (h) { return h.id === 'math_nocot'; })) {
+      out.push('');
+      out.push('# 推理要求');
+      out.push('请一步一步推理，写出每一步的计算过程，最后单独一行输出「答案：X」。');
+    }
+    if (hits.some(function (h) { return h.id === 'multi'; })) {
+      out.push('');
+      out.push('# 执行顺序（本 prompt 只做第 1 步）');
+      out.push('① 本步：完成上面「任务」所述内容。');
+      out.push('② 后续步骤请等我基于本步输出再发起新请求。');
+    }
+
+    out.push('');
+    out.push('# 信息不足时的行为');
+    out.push('若给定的输入材料中不包含足以作答的信息，直接回答「材料中未提及」，严禁编造。');
+
+    if (hits.some(function (h) { return h.id === 'temp'; })) {
+      out.push('');
+      out.push('# 采样与参数建议');
+      out.push('- 抽取 / 分类类任务：temperature 0.0–0.2，top_p 0.9–1.0');
+      out.push('- 推理 / 计算类任务：temperature 0.0–0.3，top_p 0.95');
+      out.push('- 创意 / 文案类任务：temperature 0.8–1.1，top_p 0.95');
+    }
+
+    if (dataLines.length) {
+      out.push('');
+      out.push('# 输入材料（放在最后，并在上方指令中已引用）');
+      out.push('<' + '输入>' + dataLines[0] + '<' + '/输入>');
+    } else {
+      out.push('');
+      out.push('# 输入材料');
+      out.push('<' + '输入>\n（把待处理的内容粘贴到这里）\n<' + '/输入>');
+    }
+    out.push('');
+    out.push('# 现在开始执行上面的「任务」，按「输出格式」直接输出：');
+
+    return out.join('\n');
+  }
+
+  function render(hits, text) {
+    var score = Math.max(0, 100 - hits.length * 9);
+    var sEl = $('lab-score');
+    var ring = $('lab-ring');
+    if (sEl) sEl.textContent = score;
+    if (ring) {
+      var deg = score * 3.6;
+      var color = score >= 80 ? '#10a37f' : score >= 55 ? '#f59e0b' : '#ef4444';
+      ring.style.background = 'conic-gradient(' + color + ' ' + deg + 'deg, #eef1f8 ' + deg + 'deg)';
+    }
+    var prob = $('lab-prob');
+    if (!prob) return;
+    var html = '';
+    if (!hits.length) {
+      html = '<div class="prob-item"><span class="dot ok"></span><span class="txt"><b>没有命中已知的 12 个坑</b>，这条 prompt 的结构质量不错。仍建议按下方检查清单逐条核对一遍边界情况。</span></div>';
+    } else {
+      hits.forEach(function (h) {
+        html += '<div class="prob-item"><span class="dot bad"></span><span class="txt">' + h.msg + '</span></div>';
+      });
+      html += '<div class="prob-item"><span class="dot ok"></span><span class="txt">右侧已生成一份<b>改写版 prompt</b>，可直接复制使用。</span></div>';
+    }
+    prob.innerHTML = html;
+  }
+
+  function run() {
+    var el = $('lab-input');
+    var txt = el ? el.value : '';
+    if (!txt.trim()) {
+      var prob = $('lab-prob');
+      if (prob) prob.innerHTML = '<div class="prob-item"><span class="dot bad"></span><span class="txt">请先粘贴一段 prompt。</span></div>';
+      return;
+    }
+    var hits = analyze(txt);
+    render(hits, txt);
+    var out = $('lab-out');
+    if (out) out.textContent = rewrite(txt, hits);
+  }
+
+  function demo() {
+    var el = $('lab-input');
+    if (!el) return;
+    el.value = '请给我写一个产品介绍，要尽可能好、专业一点，体现出水平。\n' +
+      '不要写得太长，也不要用那种很空的词，别用感叹号。\n' +
+      '我们公司是做 SaaS 的，产品是财务对账工具，主打自动匹配发票，把月底对账从三天缩到半小时，用户是中小企业的会计。\n' +
+      '顺便把这段也翻译成英文，再总结三个卖点，最后输出 JSON。\n' +
+      '另外老师上次说的那个问题也一起改了吧。';
+    run();
+  }
+
+  function clear() {
+    var el = $('lab-input');
+    if (el) el.value = '';
+    var out = $('lab-out');
+    if (out) out.textContent = '点击「开始体检」后，这里会生成一份改写过的 prompt。';
+    var s = $('lab-score');
+    if (s) s.textContent = '—';
+    var ring = $('lab-ring');
+    if (ring) ring.style.background = 'conic-gradient(#10a37f 0deg, #eef1f8 0deg)';
+    var prob = $('lab-prob');
+    if (prob) prob.innerHTML = '<div class="prob-item"><span class="dot ok"></span><span class="txt">等待体检……</span></div>';
+  }
+
+  function copy() {
+    var out = $('lab-out');
+    if (!out) return;
+    var txt = out.textContent || '';
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(txt).then(function () {
+        out.style.outline = '2px solid #10a37f';
+        setTimeout(function () { out.style.outline = ''; }, 600);
+      }, function () { fallbackCopy(txt, out); });
+    } else {
+      fallbackCopy(txt, out);
+    }
+  }
+
+  function fallbackCopy(txt, out) {
+    try {
+      var ta = document.createElement('textarea');
+      ta.value = txt;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      out.style.outline = '2px solid #10a37f';
+      setTimeout(function () { out.style.outline = ''; }, 600);
+    } catch (e) {
+      alert('复制失败，请手动选择文本复制。');
+    }
+  }
+
+  return { run: run, demo: demo, clear: clear, copy: copy };
+})();
+
+/* ===== 检查清单 ===== */
+var Checklist = (function () {
+  'use strict';
+
+  function update() {
+    var boxes = document.querySelectorAll('#ck-list [data-ck]');
+    var on = 0;
+    Array.prototype.forEach.call(boxes, function (b) { if (b.classList.contains('on')) on++; });
+    var fill = document.getElementById('ck-fill');
+    var num = document.getElementById('ck-num');
+    if (fill) fill.style.width = (boxes.length ? on / boxes.length * 100 : 0) + '%';
+    if (num) num.textContent = on + ' / ' + boxes.length;
+    // 注意：庆祝文案写在独立的 #ck-done 里，绝不能覆盖 #ck-msg，
+    // 否则会连带把 #ck-num 这个进度节点一起抹掉，导致后续更新找不到节点。
+    var done = document.getElementById('ck-done');
+    if (done) {
+      if (on === boxes.length && boxes.length > 0) {
+        done.style.display = '';
+        done.innerHTML = '<b>🎉 全部 ' + boxes.length + ' 项已完成！</b> 这条 prompt 已经通过了工程上线的基本门槛。' +
+          '别忘了把它和模型版本、参数一起打进版本管理，并补充固定的回归测试集。';
+      } else {
+        done.style.display = 'none';
+        done.innerHTML = '';
+      }
+    }
+  }
+
+  function init() {
+    var boxes = document.querySelectorAll('#ck-list [data-ck]');
+    Array.prototype.forEach.call(boxes, function (b) {
+      b.addEventListener('click', function () {
+        b.classList.toggle('on');
+        b.textContent = b.classList.contains('on') ? '✓' : '';
+        update();
+      });
+    });
+    update();
+  }
+
+  return { init: init };
+})();
+
+/* ===== 坑位筛选 ===== */
+function initFilters() {
+  var bar = document.getElementById('filter-bar');
+  if (!bar) return;
+  var chips = bar.querySelectorAll('.chip');
+  Array.prototype.forEach.call(chips, function (chip) {
+    chip.addEventListener('click', function () {
+      Array.prototype.forEach.call(chips, function (c) { c.classList.remove('on'); });
+      chip.classList.add('on');
+      var f = chip.getAttribute('data-f');
+      var blocks = document.querySelectorAll('.blk[data-pit]');
+      Array.prototype.forEach.call(blocks, function (blk) {
+        var show = (f === 'all' || blk.getAttribute('data-cat') === f);
+        blk.style.display = show ? '' : 'none';
+      });
+    });
+  });
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+  initFilters();
+  Checklist.init();
+  // KaTeX 兜底渲染
+  setTimeout(function () {
+    if (window.renderMathInElement) {
+      try {
+        window.renderMathInElement(document.body, {
+          delimiters: [{ left: '$$', right: '$$', display: true }, { left: '\\(', right: '\\)', display: false }],
+          throwOnError: false
+        });
+      } catch (e) { /* ignore */ }
+    }
+  }, 600);
+});
+</script>
+</body>
+</html>

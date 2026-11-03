@@ -1,0 +1,1257 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🕵️ 大模型诊所：给模型"看病" · agent-nlp-llm</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+<link rel="stylesheet" href="css/site.css">
+<style>
+.reveal { opacity: 0; transform: translateY(18px); transition: opacity .55s ease, transform .55s ease; }
+.reveal.revealed { opacity: 1; transform: none; }
+
+/* ---- 诊所专用样式 ---- */
+.clinic-hero { text-align: center; padding: 40px 0 34px; }
+.clinic-hero h1 {
+  font-size: clamp(1.9rem, 4.2vw, 3rem); font-weight: 800; line-height: 1.25; margin-bottom: 18px;
+  background: linear-gradient(120deg, #0ea5a4, #3b6fe0 45%, #7c3aed);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.clinic-hero p.sub { font-size: 1.12rem; color: var(--text-2); max-width: 780px; margin: 0 auto 26px; }
+
+.scoreboard {
+  display: flex; gap: 14px; flex-wrap: wrap; justify-content: center;
+  background: #fff; border: 1px solid var(--border); border-radius: 16px;
+  padding: 18px 22px; box-shadow: var(--shadow); margin: 26px auto 0; max-width: 860px;
+}
+.sb-item { text-align: center; flex: 1 1 110px; }
+.sb-item b {
+  display: block; font-size: 1.55rem; font-weight: 800; font-family: var(--mono);
+  background: linear-gradient(120deg, #0ea5a4, #3b6fe0);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.sb-item span { font-size: .78rem; color: var(--text-3); }
+.sb-item.ok b { background: linear-gradient(120deg, #10a37f, #34d399); -webkit-background-clip: text; background-clip: text; }
+.sb-item.bad b { background: linear-gradient(120deg, #ef4444, #f59e0b); -webkit-background-clip: text; background-clip: text; }
+
+.sb-bar { height: 8px; background: #eef1f8; border-radius: 20px; overflow: hidden; margin-top: 14px; width: 100%; }
+.sb-bar > i { display: block; height: 100%; width: 0; border-radius: 20px;
+  background: linear-gradient(90deg, #0ea5a4, #3b6fe0, #7c3aed); transition: width .45s ease; }
+
+.difficulty { font-size: .7rem; font-weight: 700; padding: 2px 9px; border-radius: 20px; letter-spacing: .02em; }
+.d1 { background: var(--green-lt); color: var(--green); }
+.d2 { background: var(--blue-lt); color: var(--blue); }
+.d3 { background: var(--orange-lt); color: #c47d08; }
+.d4 { background: #ffe9ec; color: #d13b4e; }
+
+.case-card { position: relative; overflow: hidden; }
+.case-card::before {
+  content: ''; position: absolute; top: 0; left: 0; width: 5px; height: 100%;
+  background: linear-gradient(180deg, #0ea5a4, #3b6fe0);
+}
+.case-head { display: flex; align-items: flex-start; gap: 14px; margin-bottom: 6px; flex-wrap: wrap; }
+.case-no {
+  flex: 0 0 46px; height: 46px; border-radius: 13px; display: flex; align-items: center; justify-content: center;
+  font-weight: 800; color: #fff; font-size: 1rem; font-family: var(--mono);
+  background: linear-gradient(135deg, #0ea5a4, #3b6fe0);
+}
+.case-title { font-size: 1.08rem; font-weight: 800; margin: 0 0 4px; }
+.case-meta { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+
+.symptom {
+  background: linear-gradient(120deg, #f4fbfa, #f7f9ff); border: 1px dashed #c9e7e4;
+  border-radius: 11px; padding: 14px 18px; margin: 14px 0; font-size: .93rem;
+}
+.symptom .label { font-size: .72rem; font-weight: 800; letter-spacing: .06em; color: #0f766e; text-transform: uppercase; display: block; margin-bottom: 6px; }
+.symptom code { background: #e6f4f2; color: #0f766e; padding: 1px 5px; border-radius: 4px; font-size: .86em; }
+
+.opt-list { display: grid; gap: 9px; margin: 14px 0 6px; }
+.opt {
+  display: flex; align-items: flex-start; gap: 11px; text-align: left; width: 100%;
+  background: #fff; border: 1.5px solid var(--border-2); border-radius: 11px;
+  padding: 12px 15px; cursor: pointer; font-size: .93rem; font-family: inherit;
+  color: var(--text); line-height: 1.6; transition: all .16s;
+}
+.opt:hover:not(:disabled) { border-color: var(--blue); background: var(--blue-lt); transform: translateX(3px); }
+.opt:disabled { cursor: default; }
+.opt .mark {
+  flex: 0 0 24px; height: 24px; border-radius: 7px; background: #f1f3f8; color: var(--text-2);
+  display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: .78rem;
+  font-family: var(--mono); transition: all .16s;
+}
+.opt.picked-right { border-color: var(--green); background: var(--green-lt); }
+.opt.picked-right .mark { background: var(--green); color: #fff; }
+.opt.picked-wrong { border-color: #ef4444; background: #fff1f2; }
+.opt.picked-wrong .mark { background: #ef4444; color: #fff; }
+.opt.reveal-right { border-color: var(--green); background: #f3fcf9; border-style: dashed; }
+.opt.reveal-right .mark::after { content: '✓'; }
+.opt.reveal-right .mark { background: var(--green-lt); color: var(--green); }
+.opt .opt-tag { font-size: .68rem; font-weight: 700; border-radius: 6px; padding: 1px 7px; background: #eef1f8; color: var(--text-2); margin-left: 6px; white-space: nowrap; }
+
+.verdict { display: none; margin-top: 16px; }
+.verdict.show { display: block; animation: fadeUp .35s ease; }
+@keyframes fadeUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+.verdict-head {
+  display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 1rem;
+  padding: 12px 16px; border-radius: 11px 11px 0 0;
+}
+.verdict-head.right { background: linear-gradient(120deg, #10a37f, #34d399); color: #fff; }
+.verdict-head.wrong { background: linear-gradient(120deg, #ef4444, #f97316); color: #fff; }
+.verdict-body { border: 1px solid var(--border); border-top: none; border-radius: 0 0 11px 11px; padding: 18px 20px; background: #fff; }
+.verdict-body h4 { font-size: .95rem; font-weight: 800; margin: 16px 0 7px; display: flex; align-items: center; gap: 7px; }
+.verdict-body h4:first-child { margin-top: 0; }
+.dx-cause h4 { color: #b45309; }
+.dx-cure h4 { color: #0f766e; }
+.dx-body { font-size: .93rem; color: var(--text-2); }
+.dx-body ul { margin: 6px 0 6px 20px; }
+.dx-body li { margin: 3px 0; }
+.dx-body code { background: #eef1f8; color: #b5326e; padding: 1px 6px; border-radius: 5px; font-family: var(--mono); font-size: .86em; }
+.rx {
+  background: linear-gradient(120deg, #f4fbfa, #f7f9ff); border-left: 3px solid #0ea5a4;
+  border-radius: 8px; padding: 12px 16px; margin: 12px 0; font-size: .91rem;
+}
+.rx b { color: #0f766e; }
+
+.filter-bar { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin: 30px 0 24px; }
+.chip {
+  border: 1px solid var(--border-2); background: #fff; border-radius: 20px; padding: 7px 15px;
+  font-size: .84rem; font-weight: 600; cursor: pointer; color: var(--text-2); font-family: inherit; transition: all .16s;
+}
+.chip:hover { border-color: var(--blue); color: var(--blue); }
+.chip.on { background: linear-gradient(120deg, #0ea5a4, #3b6fe0); color: #fff; border-color: transparent; }
+
+.dx-report { display: none; margin-top: 26px; }
+.dx-report.show { display: block; }
+.rpt-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px dashed var(--border); font-size: .92rem; }
+.rpt-row:last-child { border-bottom: none; }
+.rpt-dot { flex: 0 0 10px; height: 10px; border-radius: 50%; background: var(--border-2); }
+.rpt-dot.ok { background: var(--green); }
+.rpt-dot.bad { background: #ef4444; }
+.rpt-name { flex: 1 1 auto; }
+.rpt-tag { font-size: .76rem; font-family: var(--mono); color: var(--text-3); }
+@media (max-width: 640px) {
+  .case-no { flex: 0 0 38px; height: 38px; font-size: .86rem; border-radius: 11px; }
+  .scoreboard { padding: 14px; gap: 8px; }
+}
+</style>
+</head>
+<body>
+
+<nav class="navbar">
+  <div class="nav-inner">
+    <a href="index.html" class="nav-logo">💬 agent-nlp-llm</a>
+    <button class="nav-toggle" onclick="document.querySelector('.nav-links').classList.toggle('open')" aria-label="菜单">☰</button>
+    <div class="nav-links">
+      <a href="index.html" class="nav-link">🏠 首页</a>
+      <a href="playground.html" class="nav-link">🎨 玩法</a>
+      <a href="nlp/index.html" class="nav-link">📝 NLP</a>
+      <a href="llm/index.html" class="nav-link">🤖 LLM</a>
+      <a href="bpe.html" class="nav-link">🔤 分词器</a>
+      <a href="embedding.html" class="nav-link">🧭 词向量</a>
+      <a href="attention.html" class="nav-link">🎯 注意力</a>
+      <a href="papers.html" class="nav-link">📚 论文</a>
+      <a href="clinic.html" class="nav-link active">🕵️ 诊所</a>
+      <a href="pitfalls.html" class="nav-link">💥 踩坑</a>
+      <a href="benchmark.html" class="nav-link">📊 选型</a>
+      <a href="universe.html" class="nav-link">🌌 宇宙</a>
+      <a href="https://github.com/yejinlei/agent-nlp-llm" target="_blank" rel="noopener" class="nav-gh" aria-label="GitHub"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg></a>
+    </div>
+  </div>
+</nav>
+
+<div class="wrap page">
+
+  <section class="clinic-hero">
+    <h1>🕵️ 大模型诊所：给模型"看病"</h1>
+    <p class="sub">模型不会喊疼，它只会用一堆奇怪的数字和行为向你求救。<br>
+      这里有 <strong>10 份真实病历</strong>：先读症状，再下诊断，然后看主治医师的病因分析与处方。<br>
+      诊断错了不要紧——<b>误诊也是学习</b>。</p>
+    <div class="scoreboard">
+      <div class="sb-item"><b id="sb-done">0</b><span>已诊断病历</span></div>
+      <div class="sb-item ok"><b id="sb-right">0</b><span>诊断正确</span></div>
+      <div class="sb-item bad"><b id="sb-wrong">0</b><span>误诊次数</span></div>
+      <div class="sb-item"><b id="sb-acc">—</b><span>正确率</span></div>
+      <div class="sb-item"><b id="sb-score">0</b><span>积分</span></div>
+      <div style="flex:1 1 100%">
+        <div class="sb-bar"><i id="sb-bar-fill"></i></div>
+      </div>
+    </div>
+    <div class="btn-row" style="margin-top:22px">
+      <button class="btn btn-outline" onclick="Clinic.reset()">🔄 重置全部病历</button>
+      <button class="btn btn-outline" onclick="Clinic.revealAll()">📖 一键揭开全部谜底</button>
+      <button class="btn btn-primary" onclick="Clinic.showReport()">📋 查看我的诊断报告</button>
+    </div>
+  </section>
+
+  <div class="filter-bar" id="filter-bar">
+    <button class="chip on" data-f="all">全部 10 例</button>
+    <button class="chip" data-f="fit">📉 拟合与泛化</button>
+    <button class="chip" data-f="grad">⚡ 梯度与数值</button>
+    <button class="chip" data-f="mem">🧠 记忆与遗忘</button>
+    <button class="chip" data-f="align">🎭 对齐与生成</button>
+    <button class="chip" data-f="sys">🖥️ 系统与资源</button>
+  </div>
+
+  <section class="dx-report" id="dx-report">
+    <div class="card">
+      <h2 class="blk-title"><span class="num">报告</span>🩺 你的诊断报告</h2>
+      <p class="blk-desc">下面是你对每份病历的作答记录。绿色的病例说明你一次命中，红色的说明你误诊过（但仍可以继续重试）。</p>
+      <div id="rpt-body"></div>
+      <div class="hint good" id="rpt-summary" style="margin-top:16px"></div>
+    </div>
+  </section>
+
+  <!-- ============ 病历 01 ============ -->
+  <section class="blk reveal" data-case="c1" data-cat="fit">
+    <div class="card case-card">
+      <div class="case-head">
+        <div class="case-no">01</div>
+        <div style="flex:1 1 260px">
+          <h3 class="case-title">👦 记忆力超群的"考试型选手"</h3>
+          <div class="case-meta">
+            <span class="difficulty d2">难度 ★★</span>
+            <span class="tag tag-blue">过拟合</span>
+            <span class="tag tag-gray">监督微调 / 分类头</span>
+          </div>
+        </div>
+      </div>
+      <div class="symptom">
+        <span class="label">病人症状</span>
+        一个文本分类模型，在训练集上跑 50 个 epoch 后准确率 <code>99.2%</code>、loss <code>0.02</code>；
+        换到测试集上准确率只有 <code>60.4%</code>。训练 loss 曲线一路平滑下降，验证 loss 从第 8 个 epoch 起
+        开始<b>掉头上扬</b>。数据没有泄漏，测试集分布也算干净。
+      </div>
+      <div class="opt-list" data-answer="C">
+        <button class="opt" data-key="A"><span class="mark">A</span><span>训练数据被清洗坏了，应该重新标注训练集，加大数据量<span class="opt-tag">数据问题</span></span></button>
+        <button class="opt" data-key="B"><span class="mark">B</span><span>学习率太小导致收敛不彻底，把 lr 提高 10 倍再训<span class="opt-tag">优化器</span></span></button>
+        <button class="opt" data-key="C"><span class="mark">C</span><span>典型的过拟合：模型把训练集的噪声和偶然模式也背下来了，泛化能力被牺牲<span class="opt-tag">泛化</span></span></button>
+        <button class="opt" data-key="D"><span class="mark">D</span><span>测试集太小，指标没有统计意义，应扩充测试集<span class="opt-tag">评测问题</span></span></button>
+      </div>
+      <div class="verdict" data-explain>
+        <div class="verdict-head"></div>
+        <div class="verdict-body">
+          <div class="dx-cause dx-body">
+            <h4>🔍 病因：模型容量 &gt; 数据信息量</h4>
+            <p>这是机器学习最经典的病症。<b>训练集准确率很高、验证/测试集明显更低，且验证 loss 出现谷底后回升</b>，几乎可以确诊为过拟合（overfitting）。</p>
+            <p>本质是模型参数太多、数据太少或训练太久，模型学会了去拟合训练样本里的<b>噪声</b>，而不是可迁移的<b>真实规律</b>。用偏差-方差的语言说：模型 <b>方差（variance）过大</b>，换一个测试样本预测就抖得厉害。它的相邻病症是「欠拟合」，差异很好看：</p>
+            <table class="tb">
+              <tr><th>指标</th><th>过拟合</th><th>欠拟合</th></tr>
+              <tr><td>训练 loss</td><td>很低</td><td>下降困难，长期偏高</td></tr>
+              <tr><td>训练/验证差距</td><td>差距<b>很大</b></td><td>差距很小但都很差</td></tr>
+              <tr><td>处方方向</td><td>限制模型/增加数据（降方差）</td><td>增大容量/加特征（降偏差）</td></tr>
+            </table>
+            <p>为什么选项 A、B、D 不算错？因为如果只把训练集重标一遍（A），99% → 60% 的落差依然客观存在；学习率过小（B）只会让 loss 下降更慢、表面"看起来像没训完"，但这里验证 loss 已经上扬了；测试集太小（D）只会让误差棒变宽，不会让验证 loss 掉头。</p>
+          </div>
+          <div class="dx-cure dx-body">
+            <h4>💊 处方：降方差四件套</h4>
+            <ul>
+              <li><b>正则化</b>：L2 权重衰减（<code>weight_decay=0.01</code>），对大权重施加惩罚
+                <span class="math">\(\mathcal{L} = \mathcal{L}_{\text{task}} + \lambda \lVert \theta \rVert_2^2\)</span></li>
+              <li><b>Dropout</b>：训练时以概率 <span class="math">\(p\)</span>（常取 0.1–0.3）随机丢弃激活值，逼模型不要依赖单一路径，
+                等价于对指数多个子网络做集成</li>
+              <li><b>早停（Early Stopping）</b>：监控验证指标，连续 <code>patience=3</code> 个 epoch 不提升就停止，
+                并回滚到最优 checkpoint。这是最便宜的一味药</li>
+              <li><b>数据增强 / 增加数据</b>：文本可用回译、同义替换、EDA；更大的语料是根治手段</li>
+              <li><b>降低模型复杂度</b>：减层数、减维度、对嵌入层做共享或冻结</li>
+            </ul>
+          </div>
+          <div class="rx">
+            <b>🩺 主治医师备注：</b>诊断过拟合不靠"训练准确率高"这一条，而要看<b>验证 loss 曲线的形状</b>。
+            训练 loss 单看没有意义，一定要有 held-out 集作为体温计。真实项目里，先在 3 个 epoch 内确认模型能过拟合一个小批量（
+            <i>overfit-a-tiny-batch</i> 自检），再放开训练，能避免 80% 的"参数调不通"。
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 病历 02 ============ -->
+  <section class="blk reveal" data-case="c2" data-cat="fit">
+    <div class="card case-card">
+      <div class="case-head">
+        <div class="case-no">02</div>
+        <div style="flex:1 1 260px">
+          <h3 class="case-title">🐢 怎么学都学不会的"榆木脑袋"</h3>
+          <div class="case-meta">
+            <span class="difficulty d2">难度 ★★</span>
+            <span class="tag tag-blue">欠拟合</span>
+            <span class="tag tag-gray">模型容量 / 优化</span>
+          </div>
+        </div>
+      </div>
+      <div class="symptom">
+        <span class="label">病人症状</span>
+        用一个只有 2 层、隐藏维度 <code>16</code> 的小模型做 10 类情感分类。
+        训练 <code>200</code> 个 epoch 后，训练 loss 停在 <code>2.21</code> 附近几乎不动（随机猜测约 <code>2.30</code>），
+        训练准确率 <code>13%</code>，测试准确率 <code>12%</code>。学习率试过 <code>1e-2</code> 到 <code>1e-5</code> 都差不多。
+      </div>
+      <div class="opt-list" data-answer="B">
+        <button class="opt" data-key="A"><span class="mark">A</span><span>过拟合太严重，应该加更强的 Dropout 和权重衰减<span class="opt-tag">泛化</span></span></button>
+        <button class="opt" data-key="B"><span class="mark">B</span><span>模型容量不足（欠拟合）：瓶颈在表达力，不在训练时长<span class="opt-tag">容量</span></span></button>
+        <button class="opt" data-key="C"><span class="mark">C</span><span>训练数据有脏标签，清洗后即可解决<span class="opt-tag">数据问题</span></span></button>
+        <button class="opt" data-key="D"><span class="mark">D</span><span>一定要换 GPU 并增加 batch size 才能训起来<span class="opt-tag">硬件</span></span></button>
+      </div>
+      <div class="verdict" data-explain>
+        <div class="verdict-head"></div>
+        <div class="verdict-body">
+          <div class="dx-cause dx-body">
+            <h4>🔍 病因：模型"脑容量"不够，或输入信息被压没了</h4>
+            <p><b>训练集都学不好</b>（训练 loss 卡在随机水平、训练准确率 ≈ 测试准确率 ≈ 瞎猜）是欠拟合（underfitting）的典型体征。
+              注意和病历 01 的区别：过拟合是训练好、验证差；欠拟合是<b>两者都差</b>。</p>
+            <p>可能的具体病因：</p>
+            <ul>
+              <li><b>容量不足</b>：隐藏维度 16 对 10 类任务严重偏小，模型没有足够的函数逼近能力去切分决策边界。</li>
+              <li><b>特征/表示瓶颈</b>：只有一个池化层或用了平均词向量，序列里的关键区分信息被平均掉了。</li>
+              <li><b>优化受阻</b>：学习率不当、缺少归一化层（LayerNorm/BatchNorm）、初始化方差过小（激活值全部塌缩）。</li>
+              <li><b>输入被截断</b>：max_length 设得过小，把判断情感的关键句尾全截没了。</li>
+            </ul>
+            <p>为什么不是 A：加正则只会让欠拟合更严重——正则的作用是压制方差，而这里的问题是偏差。C 也不对，脏标签通常带来高训练准确率下异常的输出分布，不会让 loss 停在随机值。D 更无关：换硬件不改变函数逼近能力。</p>
+          </div>
+          <div class="dx-cure dx-body">
+            <h4>💊 处方：提偏差三板斧</h4>
+            <ul>
+              <li><b>先做可行性自检</b>：拿 64 条样本，关掉正则，看能不能训到 loss ≈ 0。
+                如果一个小批量都过不了拟合，那就是代码或容量问题，不是数据问题。</li>
+              <li><b>加大容量</b>：隐藏维度 16 → 256，层数 2 → 4，或直接用预训练编码器（BERT/中文 RoBERTa）做基础。</li>
+              <li><b>改善优化</b>：换 AdamW，加 LayerNorm，检查初始化；用 lr finder 找一个 loss 下降最陡的学习率。</li>
+              <li><b>补足表示</b>：用 <code>[CLS]</code> 池化替代 mean pooling；增加 max_length 并核对截断策略。</li>
+            </ul>
+            <div class="math">
+              <span class="math">\(\text{Total Error} = \text{Bias}^2 + \text{Variance} + \sigma^2\)</span><br>
+              欠拟合要压的是 <span class="math">\(\text{Bias}^2\)</span>（提高模型复杂度），过拟合要压的是 <span class="math">\(\text{Variance}\)</span>（限制复杂度）。
+              方向搞反，越调越糟。
+            </div>
+          </div>
+          <div class="rx">
+            <b>🩺 主治医师备注：</b>"训不动"和"训太好"是两种完全相反的病，但很多工程师第一反应都是"再加点正则"。
+            请永远先看四条曲线：训练 loss、验证 loss、训练/验证准确率。它们的关系就是化验单。
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 病历 03 ============ -->
+  <section class="blk reveal" data-case="c3" data-cat="grad">
+    <div class="card case-card">
+      <div class="case-head">
+        <div class="case-no">03</div>
+        <div style="flex:1 1 260px">
+          <h3 class="case-title">🎢 坐过山车的损失值</h3>
+          <div class="case-meta">
+            <span class="difficulty d3">难度 ★★★</span>
+            <span class="tag tag-orange">梯度爆炸</span>
+            <span class="tag tag-gray">RNN / 深层网络</span>
+          </div>
+        </div>
+      </div>
+      <div class="symptom">
+        <span class="label">病人症状</span>
+        训练一个 LSTM 语言模型。前 200 步 loss 从 <code>5.1</code> 降到 <code>4.8</code>，
+        随后开始剧烈震荡：<code>3.2 → 9.7 → 2.1 → 14.3 → NaN</code>。
+        开启 <code>torch.autograd.set_detect_anomaly(True)</code> 后，反向传播中某层的梯度范数一路飙到
+        <code>1e+9</code> 量级。
+      </div>
+      <div class="opt-list" data-answer="A">
+        <button class="opt" data-key="A"><span class="mark">A</span><span>梯度爆炸：需要梯度裁剪 + 调整学习率/初始化来稳住反向传播<span class="opt-tag">梯度</span></span></button>
+        <button class="opt" data-key="B"><span class="mark">B</span><span>梯度消失：深层网络梯度传不到前面，需加残差和换激活函数<span class="opt-tag">梯度</span></span></button>
+        <button class="opt" data-key="C"><span class="mark">C</span><span>过拟合导致 loss 突然爆炸，加 Dropout 即可<span class="opt-tag">泛化</span></span></button>
+        <button class="opt" data-key="D"><span class="mark">D</span><span>数据里有异常长的句子，删除长样本即可根治<span class="opt-tag">数据问题</span></span></button>
+      </div>
+      <div class="verdict" data-explain>
+        <div class="verdict-head"></div>
+        <div class="verdict-body">
+          <div class="dx-cause dx-body">
+            <h4>🔍 病因：连乘效应让梯度指数放大</h4>
+            <p>循环网络沿时间展开后，反向传播要穿过 <span class="math">\(T\)</span> 个时间步的雅可比矩阵连乘：</p>
+            <div class="math">
+              <span class="math">\(\frac{\partial \mathcal{L}}{\partial h_1} = \frac{\partial \mathcal{L}}{\partial h_T}\prod_{t=2}^{T}\frac{\partial h_t}{\partial h_{t-1}}\)</span>
+            </div>
+            <p>如果每一步的谱范数 <span class="math">\(\lVert J_t \rVert > 1\)</span>，连乘 <span class="math">\(T\)</span> 次就是指数增长；反之 <span class="math">\(< 1\)</span> 就指数衰减。这就是梯度爆炸与梯度消失其实是<b>同一枚硬币的两面</b>。</p>
+            <table class="tb">
+              <tr><th>表现</th><th>梯度爆炸</th><th>梯度消失</th></tr>
+              <tr><td>梯度范数</td><td>指数增大、常见 inf/NaN</td><td>趋近 0，深层几乎不更新</td></tr>
+              <tr><td>loss 曲线</td><td>剧烈震荡后 NaN</td><td>平稳但长时间不降</td></tr>
+              <tr><td>典型场景</td><td>RNN/LSTM 长序列、lr 过大、无归一化</td><td>深层前馈网络、饱和激活（sigmoid/tanh）</td></tr>
+            </table>
+            <p>本例梯度范数冲到 <code>1e+9</code>、loss 直接 NaN，是爆炸的确证。B 的症状应该是"梯度范数 ≈ 0、loss 长时间不降"，与这里相反。C 的过拟合不会造成 loss 数值爆炸。D 长句只是<b>放大镜</b>，删掉它等于把体温计扔掉——换个长句还会复发。</p>
+          </div>
+          <div class="dx-cure dx-body">
+            <h4>💊 处方：裁剪 + 稳定化</h4>
+            <ul>
+              <li><b>梯度裁剪（首选）</b>：按全局范数裁剪，把 <span class="math">\(\lVert g \rVert\)</span> 限制在阈值 <span class="math">\(c\)</span> 内：
+                <div class="math">
+                  <span class="math">\(g \leftarrow g \cdot \min\!\left(1, \frac{c}{\lVert g \rVert_2 + \varepsilon}\right),\quad c \in [0.5, 1.0]\)</span>
+                </div>
+                一行 <code>torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)</code> 就能救命。</li>
+              <li><b>降学习率 + warmup</b>：爆炸常由 lr 过大触发，前 1–2% 步数线性 warmup 非常有效。</li>
+              <li><b>更稳的初始化</b>：正交初始化 / Xavier，把循环矩阵的谱半径往 1 附近推。</li>
+              <li><b>结构改良</b>：换 GRU / 加 LayerNorm / 用 Transformer（自注意力路径更短，系统性缓解连乘问题）。</li>
+              <li><b>混合精度注意</b>：fp16 的动态范围小，训练时应开 loss scaling。</li>
+            </ul>
+          </div>
+          <div class="rx">
+            <b>🩺 主治医师备注：</b>把梯度范数打到 TensorBoard 上和 loss 并排看，是排查数值问题的第一动作。
+            梯度裁剪几乎零成本，所有 RNN/长序列训练都建议默认开启，阈值 1.0 是一个很安全的起点。
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 病历 04 ============ -->
+  <section class="blk reveal" data-case="c4" data-cat="grad">
+    <div class="card case-card">
+      <div class="case-head">
+        <div class="case-no">04</div>
+        <div style="flex:1 1 260px">
+          <h3 class="case-title">👻 前面几层"装死"的网络</h3>
+          <div class="case-meta">
+            <span class="difficulty d3">难度 ★★★</span>
+            <span class="tag tag-orange">梯度消失</span>
+            <span class="tag tag-gray">深层网络 / 激活函数</span>
+          </div>
+        </div>
+      </div>
+      <div class="symptom">
+        <span class="label">病人症状</span>
+        一个 12 层的全连接网络，激活函数是 <code>sigmoid</code>。
+        loss 能下降但极慢，最终停在明显高于基线的位置。可视化逐层梯度范数后发现：
+        第 12 层梯度约 <code>1e-2</code>，第 6 层 <code>1e-6</code>，第 1–3 层 <code>&lt; 1e-9</code>——几乎等于零。
+        把网络砍到 2 层，效果立刻变好。
+      </div>
+      <div class="opt-list" data-answer="D">
+        <button class="opt" data-key="A"><span class="mark">A</span><span>梯度爆炸，需要梯度裁剪压低梯度范数<span class="opt-tag">梯度</span></span></button>
+        <button class="opt" data-key="B"><span class="mark">B</span><span>数据量太大导致训练不充分，应减少训练数据<span class="opt-tag">数据问题</span></span></button>
+        <button class="opt" data-key="C"><span class="mark">C</span><span>过拟合，前面几层被正则压得太狠<span class="opt-tag">泛化</span></span></button>
+        <button class="opt" data-key="D"><span class="mark">D</span><span>梯度消失：sigmoid 饱和 + 深层连乘使浅层几乎收不到梯度，应换 ReLU/残差/归一化<span class="opt-tag">表示</span></span></button>
+      </div>
+      <div class="verdict" data-explain>
+        <div class="verdict-head"></div>
+        <div class="verdict-body">
+          <div class="dx-cause dx-body">
+            <h4>🔍 病因：激活函数把梯度"吃"掉了</h4>
+            <p>sigmoid 的导数最大只有 <span class="math">\(\sigma'(z) \le 0.25\)</span>，一旦输入落到饱和区（<span class="math">\(|z| &gt; 4\)</span>），导数趋近 0。层与层之间连乘：</p>
+            <div class="math">
+              <span class="math">\(\frac{\partial \mathcal{L}}{\partial W_1} = \frac{\partial \mathcal{L}}{\partial a_L}\prod_{l=2}^{L}\big(W_l^{\top}\,\sigma'(z_{l-1})\big)\)</span>
+            </div>
+            <p>12 层 × 每层最多 0.25，上界已经衰减到 <span class="math">\(0.25^{11} \approx 2.4\times10^{-7}\)</span>，再叠加权重矩阵的收缩效应，浅层梯度直接进入 1e-9 量级。这正是"浅层装死、loss 缓慢"的成因。</p>
+            <p>关键的鉴别点：本例梯度范数<b>逐层递减</b>（越靠前越小），而病历 03 是<b>整体暴涨到 1e9</b>。一个看梯度范数的绝对值，另一个看它的层间趋势。B、C 都与"浅层梯度趋零"这一化验结果无关。</p>
+          </div>
+          <div class="dx-cure dx-body">
+            <h4>💊 处方：让梯度有"高速公路"</h4>
+            <ul>
+              <li><b>换激活函数</b>：ReLU / GELU / SiLU 在正区间导数为 1，从根本上避免饱和（注意 ReLU 的 dying-ReLU 问题，可用 LeakyReLU 或 GELU）。</li>
+              <li><b>残差连接</b>：<span class="math">\(y = x + F(x)\)</span>，反向时恒等路径的梯度是 1，直接绕过连乘衰减，这是 ResNet 与 Transformer 的核心。</li>
+              <li><b>归一化层</b>：LayerNorm / BatchNorm 把每层输入重新标准化，抑制协变量偏移，稳定梯度尺度。</li>
+              <li><b>门控结构</b>：LSTM / GRU 用门控给梯度开"记忆通道"。</li>
+              <li><b>合适的初始化</b>：He 初始化（配 ReLU）、Xavier（配 tanh），让各层方差守恒。</li>
+            </ul>
+          </div>
+          <div class="rx">
+            <b>🩺 主治医师备注：</b>梯度的"层间分布"是一张极有价值的体检图。凡是出现逐层指数衰减（或放大），
+            基本都能靠残差 + 归一化 + 合适激活这"现代架构三件套"解决。这也解释了为什么今天的网络动辄几十上百层却比当年的 MLP 更好训。
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 病历 05 ============ -->
+  <section class="blk reveal" data-case="c5" data-cat="grad">
+    <div class="card case-card">
+      <div class="case-head">
+        <div class="case-no">05</div>
+        <div style="flex:1 1 260px">
+          <h3 class="case-title">💀 loss 变成 NaN 的一瞬间</h3>
+          <div class="case-meta">
+            <span class="difficulty d4">难度 ★★★★</span>
+            <span class="tag tag-orange">数值不稳定</span>
+            <span class="tag tag-gray">学习率 / logits 溢出</span>
+          </div>
+        </div>
+      </div>
+      <div class="symptom">
+        <span class="label">病人症状</span>
+        训练一个分类模型，用 <code>nn.CrossEntropyLoss()</code>。学习率手设为 <code>0.5</code>。
+        第 1 个 step loss <code>2.30</code>，第 2 个 step <code>1.87</code>，第 3 个 step 输出
+        <code>inf</code>，第 4 个 step <code>NaN</code>，此后全部 NaN。
+        把 lr 改到 <code>1e-5</code> 就正常，但收敛慢得让人想辞职。
+      </div>
+      <div class="opt-list" data-answer="B">
+        <button class="opt" data-key="A"><span class="mark">A</span><span>这是正常的：NaN 说明模型收敛了，可以停止训练<span class="opt-tag">无关</span></span></button>
+        <button class="opt" data-key="B"><span class="mark">B</span><span>学习率过大导致参数被推入极端区域，logits 溢出 → softmax 分母为 inf → NaN；需降 lr + warmup + 数值稳定技巧<span class="opt-tag">优化器</span></span></button>
+        <button class="opt" data-key="C"><span class="mark">C</span><span>标签编码错误，应把交叉熵换成 MSE 损失<span class="opt-tag">损失函数</span></span></button>
+        <button class="opt" data-key="D"><span class="mark">D</span><span>显存溢出导致计算被截断，需要减小 batch size<span class="opt-tag">硬件</span></span></button>
+      </div>
+      <div class="verdict" data-explain>
+        <div class="verdict-head"></div>
+        <div class="verdict-body">
+          <div class="dx-cause dx-body">
+            <h4>🔍 病因：一步迈太大，参数飞出可行域</h4>
+            <p>梯度下降的更新是 <span class="math">\(\theta_{t+1} = \theta_t - \eta \nabla \mathcal{L}\)</span>。
+              当 <span class="math">\(\eta\)</span> 过大时，一步就能把参数推进 loss 地形的高墙之上；损失函数陡峭区的梯度又更大，于是下一步推得更远——形成正反馈，直接冲出浮点表示范围。</p>
+            <p>NaN 的具体传播链条：参数爆炸 → logits 变成 <span class="math">\(\pm\infty\)</span> → softmax 出现 <span class="math">\(\exp(\infty)/\exp(\infty) = \text{NaN}\)</span> → 梯度 NaN → 所有参数被污染 → 永远 NaN（不可恢复）。</p>
+            <div class="math">
+              <span class="math">\(p_i = \frac{e^{z_i}}{\sum_j e^{z_j}} \quad\xrightarrow{z_i \to \infty}\quad \frac{\infty}{\infty} = \text{NaN}\)</span>
+            </div>
+            <p>选项 A 是彻底的误解（NaN 与收敛无关）；C 方向反了——交叉熵恰恰配合 log-softmax 才是数值稳定的；D 混淆了概念，OOM 会直接抛异常而不是静默产生 NaN。</p>
+          </div>
+          <div class="dx-cure dx-body">
+            <h4>💊 处方：把步长管住，把数值管稳</h4>
+            <ul>
+              <li><b>降学习率 + warmup</b>：先用 lr finder 找到下降最陡的区间，通常在 <code>1e-4 ~ 3e-4</code>（AdamW）；前 500 步线性 warmup。</li>
+              <li><b>梯度裁剪</b>：范数阈值 1.0，防止单步巨幅更新。</li>
+              <li><b>用稳定的损失实现</b>：优先 <code>F.cross_entropy(logits, labels)</code>（内部用 log-sum-exp 技巧），
+                绝不要自己写 <code>log(softmax(x))</code>。</li>
+              <li><b>加归一化与残差</b>，控制激活和 logits 的量级；<b>fp16 训练</b>务必开启 loss scaling。</li>
+              <li><b>可恢复性</b>：加 <code>torch.nan_to_num</code> / 梯度有限性断言 + 自动回滚 checkpoint，让训练不至于一次崩死。</li>
+            </ul>
+          </div>
+          <div class="rx">
+            <b>🩺 主治医师备注：</b>NaN 是"不可逆伤害"——一旦出现，网络里的参数就永久坏了。
+            所以要在每一步之后做 <code>torch.isfinite(loss).all()</code> 断言，第一时间定位到是哪一步、哪个模块炸的。
+            另外记住：<b>lr 从 0.5 改到 1e-5 能用</b>，恰恰说明病根在优化器步长，而非别的。
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 病历 06 ============ -->
+  <section class="blk reveal" data-case="c6" data-cat="mem">
+    <div class="card case-card">
+      <div class="case-head">
+        <div class="case-no">06</div>
+        <div style="flex:1 1 260px">
+          <h3 class="case-title">🧩 学会新活，忘了旧手艺</h3>
+          <div class="case-meta">
+            <span class="difficulty d3">难度 ★★★</span>
+            <span class="tag tag-purple">灾难性遗忘</span>
+            <span class="tag tag-gray">微调 / 持续学习</span>
+          </div>
+        </div>
+      </div>
+      <div class="symptom">
+        <span class="label">病人症状</span>
+        拿一个通用中文大模型做<b>客服话术全参数微调</b>，数据只有 3000 条，训了 3 个 epoch。
+        微调后客服任务表现极佳（评分 9.2/10），但让它做摘要、写代码、做数学题的能力全面崩塌——
+        连"把这句话翻译成英文"都开始胡言乱语。对比微调前的 checkpoint，通用基准平均下降 <code>41%</code>。
+      </div>
+      <div class="opt-list" data-answer="C">
+        <button class="opt" data-key="A"><span class="mark">A</span><span>训练数据太少，模型欠拟合，应加大 epoch 数继续训<span class="opt-tag">拟合</span></span></button>
+        <button class="opt" data-key="B"><span class="mark">B</span><span>分词器被换掉了，导致原有词表错位<span class="opt-tag">数据问题</span></span></button>
+        <button class="opt" data-key="C"><span class="mark">C</span><span>灾难性遗忘：全参数微调在窄分布上过拟合，覆盖了预训练学到的通用能力<span class="opt-tag">持续学习</span></span></button>
+        <button class="opt" data-key="D"><span class="mark">D</span><span>这是幻觉，模型本来就不会摘要，与微调无关<span class="opt-tag">生成</span></span></button>
+      </div>
+      <div class="verdict" data-explain>
+        <div class="verdict-head"></div>
+        <div class="verdict-body">
+          <div class="dx-cause dx-body">
+            <h4>🔍 病因：参数空间里的"覆盖写"</h4>
+            <p>预训练把海量知识编码进权重矩阵；全参数微调时，梯度只来自 3000 条客服数据，优化器会把权重整体拉向<b>这一个窄分布的最优解</b>。
+              那些原本承载"摘要""翻译""代码"能力的参数方向被重写掉了——这就是灾难性遗忘（catastrophic forgetting）。</p>
+            <p>从几何上看，预训练的解是参数空间里的一个"平坦盆地"，微调数据稀少时梯度噪声大，很容易把这个盆地整块推平。数据越少、lr 越大、step 越多，遗忘越严重（本例 3000 条 × 3 epoch 是高风险组合）。</p>
+            <p>排除法：欠拟合（A）会表现为客服任务都做不好，与实际相反；分词器（B）会一致性地影响所有任务包括客服；幻觉（D）无法解释"微调前能做、微调后不能做"的对比结论。</p>
+          </div>
+          <div class="dx-cure dx-body">
+            <h4>💊 处方：参数高效微调（PEFT）为主</h4>
+            <ul>
+              <li><b>LoRA / QLoRA（首选）</b>：冻结全部原始权重，只训练低秩增量
+                <span class="math">\(W' = W + \Delta W = W + BA\)</span>，
+                其中 <span class="math">\(B \in \mathbb{R}^{d\times r},\; A \in \mathbb{R}^{r\times k},\; r \ll \min(d,k)\)</span>。
+                原能力被完整保留，只"挂"了一层小补丁。</li>
+              <li><b>部分层冻结</b>：只训最后 2–4 层或仅训输出头，保留底层通用表示。</li>
+              <li><b>回放（Replay）</b>：在微调数据里混入 5%–20% 的通用语料，把遗忘压下去。</li>
+              <li><b>正则约束类方法</b>：EWC 对重要参数加约束
+                <span class="math">\(\mathcal{L} + \lambda\sum_i F_i(\theta_i - \theta_i^{*})^2\)</span>；LwF 用旧模型输出做蒸馏。</li>
+              <li><b>降 lr、减 epoch</b>：微调 lr 通常取预训练的 1/10 ~ 1/100，1–2 epoch 就够。</li>
+            </ul>
+          </div>
+          <div class="rx">
+            <b>🩺 主治医师备注：</b>微调后必须做<b>回归评测</b>——固定一套通用能力测试集（MMLU 子集 / 翻译 / 摘要），
+            每次上线前跑一遍对照。只看目标任务涨分而不管通用能力，是很多"上线一周后翻车"事故的直接原因。
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 病历 07 ============ -->
+  <section class="blk reveal" data-case="c7" data-cat="mem">
+    <div class="card case-card">
+      <div class="case-head">
+        <div class="case-no">07</div>
+        <div style="flex:1 1 260px">
+          <h3 class="case-title">🕶️ 只看开头和结尾的"近视眼"</h3>
+          <div class="case-meta">
+            <span class="difficulty d3">难度 ★★★</span>
+            <span class="tag tag-purple">长文本失效</span>
+            <span class="tag tag-gray">位置编码 / 注意力</span>
+          </div>
+        </div>
+      </div>
+      <div class="symptom">
+        <span class="label">病人症状</span>
+        把训练时上下文长度 2048 的模型，直接拿去处理 8000 token 的文档做问答。
+        <b>关键信息放在开头或结尾时，回答准确率约 85%；放在中间第 3000–5000 个 token 处时，准确率掉到 22%。</b>
+        loss 在训练时是正常收敛的，模型本身并没有损坏。
+      </div>
+      <div class="opt-list" data-answer="D">
+        <button class="opt" data-key="A"><span class="mark">A</span><span>模型过拟合了训练数据，需要加 Dropout<span class="opt-tag">泛化</span></span></button>
+        <button class="opt" data-key="B"><span class="mark">B</span><span>tokenizer 在长文本上会串行，应换 BPE 分词器<span class="opt-tag">数据问题</span></span></button>
+        <button class="opt" data-key="C"><span class="mark">C</span><span>这是纯粹的幻觉问题，和上下文长度无关<span class="opt-tag">生成</span></span></button>
+        <button class="opt" data-key="D"><span class="mark">D</span><span>位置外推不足 + lost-in-the-middle：模型没见过超长位置，且注意力对中段天然衰减；需位置插值/长上下文续训 + 关键信息前置<span class="opt-tag">位置编码</span></span></button>
+      </div>
+      <div class="verdict" data-explain>
+        <div class="verdict-head"></div>
+        <div class="verdict-body">
+          <div class="dx-cause dx-body">
+            <h4>🔍 病因：两个叠加的机制</h4>
+            <p><b>第一层——位置外推失效。</b>若用 RoPE 旋转位置编码，位置 <span class="math">\(m\)</span> 处的旋转角是 <span class="math">\(\theta_d = m \cdot \omega_d\)</span>。
+              训练只见过 <span class="math">\(m \le 2048\)</span>，推理时突然出现 <span class="math">\(m = 8000\)</span>，注意力的相位进入完全没见过的区间，
+              相对位置关系判断错乱，中段信息首当其冲。</p>
+            <p><b>第二层——lost in the middle。</b>即使上下文窗口够长，注意力分布也天然呈现"两头高、中间低"的 U 形：
+              首个 token 因 attention sink 效应被持续关注（<span class="math">\(\lVert \cdot \rVert\)</span> 上常是 BOS 吸收了大量注意力），
+              最近的 token 因位置邻近、语义相关而权重高，中间的长尾段落则被稀释。</p>
+            <p>排除法：A 无法解释"位置依存"的准确率落差（过拟合按样本随机，不会形成 U 形曲线）；B 分词器问题会造成全局性能下降而非局部特征；C 混淆了检索/利用失败与生成幻觉。</p>
+          </div>
+          <div class="dx-cure dx-body">
+            <h4>💊 处方：扩窗 + 改注意力分布</h4>
+            <ul>
+              <li><b>位置插值（PI）</b>：把位置按比例压缩，<span class="math">\(m' = m \cdot \frac{L_{\text{train}}}{L_{\text{target}}}\)</span>，让外推位置落回训练区间。</li>
+              <li><b>NTK-aware / YaRN 插值</b>：按频率维度分别缩放，低频维少插值、高频维多插值，代价更小、效果更好（Llama 系常用）。</li>
+              <li><b>长上下文续训</b>：用 8k–128k 长度的语料做少量继续预训练，让模型真正"见过"长位置。</li>
+              <li><b>推理侧缓解</b>：把关键信息前置；或用"重排序 + 分块摘要"（把长文档切块，逐块抽取再汇总），
+                把 U 形曲线的中段搬回两端。</li>
+              <li><b>替代方案</b>：Sliding Window Attention / 稀疏注意力 / RoPE 底座上的 ALiBi 偏置。</li>
+            </ul>
+          </div>
+          <div class="rx">
+            <b>🩺 主治医师备注：</b>"支持 128k 上下文"和"能在 128k 上用好"是两件事。
+            上线长文本应用前，请用一份<b>信息位置扫描测试</b>（把答案分别放在 10%、30%、50%、70%、90% 位置各测一遍）画出自己的 U 形曲线，
+            这比看模型卡片上的标称窗口长度可靠得多。
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 病历 08 ============ -->
+  <section class="blk reveal" data-case="c8" data-cat="align">
+    <div class="card case-card">
+      <div class="case-head">
+        <div class="case-no">08</div>
+        <div style="flex:1 1 260px">
+          <h3 class="case-title">🤥 一本正经胡说八道的"自信病人"</h3>
+          <div class="case-meta">
+            <span class="difficulty d3">难度 ★★★</span>
+            <span class="tag tag-purple">幻觉</span>
+            <span class="tag tag-gray">检索增强 / 对齐</span>
+          </div>
+        </div>
+      </div>
+      <div class="symptom">
+        <span class="label">病人症状</span>
+        问模型某篇具体论文的作者和发表年份，它流畅地给出了一个格式完美、语气笃定的答案——
+        但作者名字是编的、年份也是错的。追问"你确定吗"，它道歉并给出<b>另一个同样错误</b>的答案。
+        在不含事实性问题的任务（改写、分类）上，它的表现无可挑剔。
+      </div>
+      <div class="opt-list" data-answer="B">
+        <button class="opt" data-key="A"><span class="mark">A</span><span>模型权重损坏了，需要重新下载模型文件<span class="opt-tag">无关</span></span></button>
+        <button class="opt" data-key="B"><span class="mark">B</span><span>幻觉：模型在按"像答案的分布"采样而非检索事实，需 RAG 接地 + 拒答训练 + 校验提示<span class="opt-tag">接地与对齐</span></span></button>
+        <button class="opt" data-key="C"><span class="mark">C</span><span>温度调成 0 就能彻底消除幻觉<span class="opt-tag">解码</span></span></button>
+        <button class="opt" data-key="D"><span class="mark">D</span><span>模型欠拟合，加大训练数据规模即可解决<span class="opt-tag">拟合</span></span></button>
+      </div>
+      <div class="verdict" data-explain>
+        <div class="verdict-head"></div>
+        <div class="verdict-body">
+          <div class="dx-cause dx-body">
+            <h4>🔍 病因：语言流畅性与事实正确性不是同一个目标</h4>
+            <p>语言模型的训练目标是最大化下一个 token 的似然
+              <span class="math">\(\mathcal{L} = -\sum_t \log P(x_t \mid x_{&lt;t})\)</span>。
+              这个目标奖励<b>"像人类文本"</b>，而"论文的作者"这个事实只在预训练语料里出现过有限次数，
+              模型学到的是"人名 + 年份 + 期刊"的<b>格式分布</b>，而不是一个可检索的数据库。</p>
+            <p>所以幻觉本质上不是"模型坏了"，而是它<b>在信息不足时选择了继续流畅生成，而不是说"我不知道"</b>。
+              RLHF 阶段如果奖励了"自信回答"的偏好，还会进一步加重这个倾向。</p>
+            <table class="tb">
+              <tr><th>幻觉类型</th><th>成因</th><th>典型场景</th></tr>
+              <tr><td>事实性幻觉</td><td>知识缺失 / 长尾事实</td><td>冷门论文、最新事件</td></tr>
+              <tr><td>忠实性幻觉</td><td>没遵循给定上下文</td><td>摘要、RAG 生成</td></tr>
+              <tr><td>时间性幻觉</td><td>知识截止时间外</td><td>询问本月新闻</td></tr>
+            </table>
+            <p>为什么 C 不完全对：温度 = 0（贪心解码）只能减少"随机编造"，但最可能的下一个 token 本来就是那个错误的答案，
+              它会<b>稳定地、确定地胡说</b>。为什么 A、D 不对：权重损坏会全面退化，欠拟合不会只错在长尾事实上。</p>
+          </div>
+          <div class="dx-cure dx-body">
+            <h4>💊 处方：三管齐下</h4>
+            <ul>
+              <li><b>RAG 接地（最有效）</b>：先检索真实文档，再让模型<b>只依据检索片段</b>作答，并在提示词里明确写
+                "若资料中没有答案，回答'资料中没有提及'"。把闭卷考试改成开卷考试。</li>
+              <li><b>拒答/不确定性训练</b>：在 SFT/DPO 数据里加入"不知道就说不知道"的正样本，用偏好优化奖励诚实。</li>
+              <li><b>解码与提示技巧</b>：self-consistency（多次采样投票）、Chain-of-Verification（先答再自检）、
+                要求模型给出<b>引用来源</b>并逐句核对。</li>
+              <li><b>后验校验</b>：对关键实体/数字做程序化事实核查（正则提取 + 外部知识库比对）。</li>
+              <li><b>换更合适的采样参数</b>：事实问答建议 temperature 0.0–0.3，降低发散。</li>
+            </ul>
+          </div>
+          <div class="rx">
+            <b>🩺 主治医师备注：</b>对幻觉不要抱"根除"的期待，要按<b>风险分层</b>处理：医疗、法律、金融场景必须强制引用来源 + 人工复核；
+            创意写作场景则可以容忍。另外记住那句经验：<b>"模型的自信程度与正确率之间几乎没有相关性"</b>。
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 病历 09 ============ -->
+  <section class="blk reveal" data-case="c9" data-cat="align">
+    <div class="card case-card">
+      <div class="case-head">
+        <div class="case-no">09</div>
+        <div style="flex:1 1 260px">
+          <h3 class="case-title">🔁 复读机式的"卡带病人"</h3>
+          <div class="case-meta">
+            <span class="difficulty d2">难度 ★★</span>
+            <span class="tag tag-purple">重复退化</span>
+            <span class="tag tag-gray">解码策略 / 数据分布</span>
+          </div>
+        </div>
+      </div>
+      <div class="symptom">
+        <span class="label">病人症状</span>
+        让模型写一段产品介绍，它输出：
+        <code>"我们的产品性能优异，性能优异，性能优异，性能优异……"</code>，一直重复到触发 max_new_tokens。
+        在抓取来的网页爬虫语料上微调过之后，这个现象明显加重。
+        另外问它复杂问题时，它总给一句"这是一个很好的问题，让我来回答"然后就没有然后了。
+      </div>
+      <div class="opt-list" data-answer="A">
+        <button class="opt" data-key="A"><span class="mark">A</span><span>重复退化：解码陷入自增强循环，需 repetition penalty + 采样策略；根因常含训练数据重复与过短/无终止训练<span class="opt-tag">解码</span></span></button>
+        <button class="opt" data-key="B"><span class="mark">B</span><span>梯度爆炸造成参数震荡，先做梯度裁剪<span class="opt-tag">梯度</span></span></button>
+        <button class="opt" data-key="C"><span class="mark">C</span><span>模型容量不足，扩大参数量即可避免重复<span class="opt-tag">容量</span></span></button>
+        <button class="opt" data-key="D"><span class="mark">D</span><span>显存不足触发了截断，重启服务即可<span class="opt-tag">硬件</span></span></button>
+      </div>
+      <div class="verdict" data-explain>
+        <div class="verdict-head"></div>
+        <div class="verdict-body">
+          <div class="dx-cause dx-body">
+            <h4>🔍 病因：自回归的"回音室效应"</h4>
+            <p>自回归生成把<b>自己刚生成的文本</b>当作下一轮输入。一旦某个短语被生成，它进入上下文后就成了强证据：
+              <span class="math">\(P(x_{t+1} = \text{"性能优异"} \mid \text{上文含"性能优异"})\)</span> 被显著抬高，
+              于是模型越来越确信应该继续重复——形成正反馈循环。这是<b>曝光偏差（exposure bias）</b>的直观体现。</p>
+            <p><b>三个加重因素：</b></p>
+            <ul>
+              <li><b>训练数据重复</b>：爬虫语料里同一句话反复出现，模型学到了"重复是正常的"分布。（本例明确命中）</li>
+              <li><b>解码策略</b>：beam search 在长生成上天然偏好"安全、高频"的延续，重复概率更高；纯贪心解码也容易锁死。</li>
+              <li><b>训练不足 / 无 EOS</b>：模型没学好"何时该结束"，于是靠重复填充 token 预算。</li>
+            </ul>
+            <p>"输出很短的通用回复"是同一病根的另一面：SFT 数据里大量礼貌性套话且长度偏短，模型学到"长回答风险大，短回答最安全"。
+              排除 B（梯度问题会造成 NaN 而非结构化的重复）、C（重复是分布问题不是容量问题）、D（OOM 会直接报错）。</p>
+          </div>
+          <div class="dx-cure dx-body">
+            <h4>💊 处方：解码层 + 数据层双管齐下</h4>
+            <ul>
+              <li><b>重复惩罚</b>：<code>repetition_penalty=1.05~1.2</code>，对已出现 token 的 logit 做惩罚
+                <span class="math">\(z_i \leftarrow z_i / p \;(z_i&gt;0)\)</span>。</li>
+              <li><b>采样组合</b>：<code>temperature=0.7, top_p=0.9, top_k=50</code>——
+                temperature 调高、top-p 截断长尾，能显著降低死循环。</li>
+              <li><b>no_repeat_ngram_size=3~4</b>：硬性禁止 3-gram 重复，简单粗暴但有效。</li>
+              <li><b>数据清洗（根治）</b>：对训练语料做 MinHash / SimHash 去重，去除模板化文本，
+                这是本例最该做的一步。</li>
+              <li><b>训练侧</b>：确保样本包含完整 EOS；对"太短/太泛"的回答做负样本、对详细回答做正样本（DPO）。</li>
+            </ul>
+          </div>
+          <div class="rx">
+            <b>🩺 主治医师备注：</b>看到重复，先问"训练语料里有重复吗"。
+            很多工程师在解码参数上反复试，但真正的病根在数据——同一句话出现十万次的语料，无论怎么调参数都会让模型觉得重复是常态。
+            <b>去重一小时的收益，常常大于调参一周。</b>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 病历 10 ============ -->
+  <section class="blk reveal" data-case="c10" data-cat="sys">
+    <div class="card case-card">
+      <div class="case-head">
+        <div class="case-no">10</div>
+        <div style="flex:1 1 260px">
+          <h3 class="case-title">💥 显存撑爆的"大胃王"</h3>
+          <div class="case-meta">
+            <span class="difficulty d3">难度 ★★★</span>
+            <span class="tag tag-orange">OOM</span>
+            <span class="tag tag-gray">显存管理 / 分布式</span>
+          </div>
+        </div>
+      </div>
+      <div class="symptom">
+        <span class="label">病人症状</span>
+        在 24GB 显卡上微调 7B 模型，batch size=8、seq_len=2048、AdamW 全参数训练。
+        启动即报 <code>CUDA out of memory. Tried to allocate 2.00 GiB</code>。
+        把 batch size 降到 1 依然 OOM。
+      </div>
+      <div class="opt-list" data-answer="C">
+        <button class="opt" data-key="A"><span class="mark">A</span><span>显卡坏了，换一张更强的 GPU 是唯一出路<span class="opt-tag">硬件</span></span></button>
+        <button class="opt" data-key="B"><span class="mark">B</span><span>这是梯度爆炸导致显存被异常占用，先做梯度裁剪<span class="opt-tag">梯度</span></span></button>
+        <button class="opt" data-key="C"><span class="mark">C</span><span>全参数训练 7B 的<b>优化器状态 + 梯度 + 激活</b>远超 24GB，需梯度累积 / LoRA / ZeRO / 混合精度 / 梯度检查点<span class="opt-tag">显存优化</span></span></button>
+        <button class="opt" data-key="D"><span class="mark">D</span><span>把 seq_len 调到 8192 让注意力更稀疏即可省显存<span class="opt-tag">无关</span></span></button>
+      </div>
+      <div class="verdict" data-explain>
+        <div class="verdict-head"></div>
+        <div class="verdict-body">
+          <div class="dx-cause dx-body">
+            <h4>🔍 病因：算一笔显存账就清楚了</h4>
+            <p>全参数训练 7B（fp16 权重）时，每一份参数要配四类开销：</p>
+            <table class="tb">
+              <tr><th>项目</th><th>精度</th><th>大小</th></tr>
+              <tr><td>模型权重</td><td>fp16 (2B/参数)</td><td>7B × 2 = <b>14 GB</b></td></tr>
+              <tr><td>梯度</td><td>fp16 (2B/参数)</td><td>7B × 2 = <b>14 GB</b></td></tr>
+              <tr><td>AdamW 优化器状态 (m, v)</td><td>fp32 ×2 (8B/参数)</td><td>7B × 8 = <b>56 GB</b></td></tr>
+              <tr><td>激活值（batch 相关）</td><td>fp16</td><td>与 batch × seq_len 成正比</td></tr>
+            </table>
+            <p><b>合计静态开销已超过 80GB</b>，远超 24GB。这也解释了为什么"batch size 降到 1 还是 OOM"——静态部分就已经装不下了，
+              减小 batch 只影响激活值那一项。</p>
+            <div class="math">
+              <span class="math">\text{Memory}_{\text{train}} \approx \underbrace{2P}_{\text{权重}} + \underbrace{2P}_{\text{梯度}} + \underbrace{8P}_{\text{Adam 状态}} + \underbrace{A(b, s, L)}_{\text{激活}}</span>
+            </div>
+            <p>排除法：A 不是硬件故障（换个 80GB 卡能跑，但那是用钱解决问题）；B 梯度爆炸不会造成稳定的启动即 OOM；
+              D 方向反了——seq_len 越大显存越高。</p>
+          </div>
+          <div class="dx-cure dx-body">
+            <h4>💊 处方：从这五条里按需组合</h4>
+            <ul>
+              <li><b>① 梯度累积（零成本，先做）</b>：<code>gradient_accumulation_steps=16</code>，
+                用小 batch 累积出等效大 batch，显存立刻降一个量级。</li>
+              <li><b>② LoRA / QLoRA（性价比最高）</b>：只训 <span class="math">\(r=8\!\sim\!64\)</span> 的低秩矩阵，
+                可训练参数降到原来的 0.1%–1%，优化器状态几乎消失；QLoRA 再把基座 4-bit 量化，7B 模型单卡 24GB 可训。</li>
+              <li><b>③ 混合精度 + 8-bit 优化器</b>：bf16/fp16 计算，<code>bitsandbytes</code> 的 8-bit Adam 把 56GB → 14GB。</li>
+              <li><b>④ 梯度检查点（Gradient Checkpointing）</b>：用时间换空间，激活显存降约 <span class="math">\(\sqrt{L}\)</span> 倍（多花约 30% 时间）。</li>
+              <li><b>⑤ ZeRO / 分布式</b>：ZeRO-2 分片优化器状态与梯度，ZeRO-3 连权重一起分片，
+                配合 <code>device_map="auto"</code> 或 FSDP 做多卡切分。</li>
+            </ul>
+            <div class="demo-box">
+              <div class="kv"><span>方案组合</span><span>LoRA + bf16 + grad_ckpt</span></div>
+              <div class="kv"><span>7B 微调显存占用</span><span>≈ 10–14 GB（24GB 单卡可跑）</span></div>
+              <div class="kv"><span>可训练参数占比</span><span>≈ 0.5%（约 400 万参数）</span></div>
+              <div class="kv"><span>相对全参训练</span><span>显存 ↓ 约 6×，速度 ↓ 约 1.3×</span></div>
+            </div>
+          </div>
+          <div class="rx">
+            <b>🩺 主治医师备注：</b>OOM 的第一动作永远是<b>算账</b>，而不是瞎调参数。
+            用上面的公式把 2P+2P+8P 估一遍，就知道瓶颈在哪一项。经验值：24GB 单卡配 LoRA 可以舒适地微调 7B；
+            要全参数微调 7B，至少准备 4×80GB 或者直接上 ZeRO-3。
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 病历 11（数据泄漏）============ -->
+  <section class="blk reveal" data-case="c11" data-cat="fit">
+    <div class="card case-card">
+      <div class="case-head">
+        <div class="case-no">11</div>
+        <div style="flex:1 1 260px">
+          <h3 class="case-title">🏆 业绩好到不真实的"天选之子"</h3>
+          <div class="case-meta">
+            <span class="difficulty d3">难度 ★★★</span>
+            <span class="tag tag-blue">数据泄漏</span>
+            <span class="tag tag-gray">评测流程</span>
+          </div>
+        </div>
+      </div>
+      <div class="symptom">
+        <span class="label">病人症状</span>
+        一个文本分类任务，离线评测 AUC <code>0.997</code>，团队准备直接上线。
+        上线后线上 AUC 只有 <code>0.63</code>，比随机好一点。
+        复查数据处理代码发现：<b>划分训练/测试集之前，先对全量数据做了归一化和 TF-IDF 拟合
+        （即 <code>fit_transform</code> 用在了整个数据集上）</b>，且同一用户的多条样本被随机拆到了训练集和测试集两边。
+      </div>
+      <div class="opt-list" data-answer="A">
+        <button class="opt" data-key="A"><span class="mark">A</span><span>数据泄漏：预处理器在测试集上 fit + 同源样本跨集拆分，导致离线指标被严重高估<span class="opt-tag">评测泄漏</span></span></button>
+        <button class="opt" data-key="B"><span class="mark">B</span><span>过拟合导致的，加 Dropout 就能修复离线指标的虚高<span class="opt-tag">泛化</span></span></button>
+        <button class="opt" data-key="C"><span class="mark">C</span><span>线下线上环境不一致，属于工程问题与数据无关<span class="opt-tag">工程</span></span></button>
+        <button class="opt" data-key="D"><span class="mark">D</span><span>标签定义太简单，应重新设计标签体系<span class="opt-tag">标注</span></span></button>
+      </div>
+      <div class="verdict" data-explain>
+        <div class="verdict-head"></div>
+        <div class="verdict-body">
+          <div class="dx-cause dx-body">
+            <h4>🔍 病因：测试集的信息"偷渡"进了训练流程</h4>
+            <p>数据泄漏（data leakage）指训练过程中以任何形式接触到了测试集的信息。这里有两处泄漏：</p>
+            <ul>
+              <li><b>预处理泄漏</b>：TF-IDF / 归一化的统计量（词频、均值、方差）本应从<b>训练集单独拟合</b>，
+                却用了全量数据。测试集的词汇分布信息被写进了特征空间，模型"提前看到了考题"。</li>
+              <li><b>分组泄漏</b>：同一用户的多条记录被随机拆开，训练集里已经出现了测试集用户的相似样本，
+                模型只需记住用户特征就能答对——这是离线 0.997 却线上 0.63 的真正杀手。</li>
+            </ul>
+            <p><b>鉴别要点：</b>0.997 这种"好到不真实"的指标，第一反应就应该是"是不是泄漏了"。
+              真实的分类任务，尤其是用户行为类任务，AUC 到 0.8–0.9 已经相当不错。</p>
+            <p>为什么 B 不对：过拟合是模型层问题，加正则可能把指标降下来，但仍然<b>不诚实地虚高</b>，
+              因为泄漏在数据管线里没被清除。为什么 C 片面：环境不一致只解释"线上低"，不解释"离线高得离谱"。</p>
+          </div>
+          <div class="dx-cure dx-body">
+            <h4>💊 处方：让管线先划界，再拟合</h4>
+            <ul>
+              <li><b>先划分，后拟合</b>：严格 <code>train_test_split</code> → <code>fit</code> on train → <code>transform</code> on test，
+                用 sklearn 的 <code>Pipeline</code> 从结构上杜绝。</li>
+              <li><b>分组划分</b>：同用户/同文档/同时间段的数据必须整组进同一边，用 <code>GroupShuffleSplit</code>；
+                时间序列任务用<b>时序划分</b>，绝不用随机划分。</li>
+              <li><b>去重</b>：训练集与测试集做精确 + 近邻去重（MinHash/SimHash），防止同一样本以变体形式同时出现。</li>
+              <li><b>LLM 时代的新泄漏</b>：评测集可能已进入预训练语料，出现"刷榜虚高"。
+                需用私有测试集或动态更新的新数据评测。</li>
+              <li><b>制度</b>：指标异常好时，先做"标签洗牌测试"——把标签打乱重训，若指标仍高，必有泄漏。</li>
+            </ul>
+          </div>
+          <div class="rx">
+            <b>🩺 主治医师备注：</b>"太好了"往往比"太差了"更危险。
+            在医疗、金融风控这类高风险场景，一个被高估的离线指标可能导致完全错误的业务决策。
+            请把<b>数据泄漏审计</b>作为模型上线的强制关卡。
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 病历 12（学习率）============ -->
+  <section class="blk reveal" data-case="c12" data-cat="grad">
+    <div class="card case-card">
+      <div class="case-head">
+        <div class="case-no">12</div>
+        <div style="flex:1 1 260px">
+          <h3 class="case-title">🚶 一直在谷底来回横跳的"迷路者"</h3>
+          <div class="case-meta">
+            <span class="difficulty d3">难度 ★★★</span>
+            <span class="tag tag-orange">学习率不当</span>
+            <span class="tag tag-gray">调度器 / 优化器</span>
+          </div>
+        </div>
+      </div>
+      <div class="symptom">
+        <span class="label">病人症状</span>
+        loss 从 <code>4.6</code> 快速降到 <code>2.1</code>，然后就开始在 <code>2.08 ~ 2.19</code> 之间
+        <b>来回抖动</b>，3000 步内再没下降。放大 loss 曲线能看到明显的锯齿。
+        训练准确率在 <code>71%</code> 附近震荡。当前配置：AdamW，<code>lr=1e-3</code> 恒定不变，无调度器。
+      </div>
+      <div class="opt-list" data-answer="B">
+        <button class="opt" data-key="A"><span class="mark">A</span><span>模型容量不足导致的欠拟合，应扩大隐藏层维度<span class="opt-tag">容量</span></span></button>
+        <button class="opt" data-key="B"><span class="mark">B</span><span>学习率偏大且恒定不变：步长跨过了极小值，需要学习率调度（warmup + cosine decay）<span class="opt-tag">优化器</span></span></button>
+        <button class="opt" data-key="C"><span class="mark">C</span><span>梯度消失造成参数无法更新，应加残差连接<span class="opt-tag">梯度</span></span></button>
+        <button class="opt" data-key="D"><span class="mark">D</span><span>batch size 太大，应改为在线 SGD<span class="opt-tag">数据加载</span></span></button>
+      </div>
+      <div class="verdict" data-explain>
+        <div class="verdict-head"></div>
+        <div class="verdict-body">
+          <div class="dx-cause dx-body">
+            <h4>🔍 病因：步长 > 谷底宽度，于是来回蹦</h4>
+            <p>loss 先快速下降、然后进入锯齿状平台，是<b>学习率过大</b>的经典签名：
+              参数在极小值附近的陡壁之间来回弹跳，无法收敛到谷底。</p>
+            <div class="math">
+              <span class="math">\theta_{t+1} = \theta_t - \eta \nabla \mathcal{L}(\theta_t)</span>
+            </div>
+            <p>当 <span class="math">\(\eta > \frac{2}{\lambda_{\max}}\)</span>（<span class="math">\(\lambda_{\max}\)</span> 是 Hessian 最大特征值）时，
+              迭代甚至可能发散；接近这个边界时，就表现为这种"下降后震荡"。</p>
+            <p><b>三种学习率病症的鉴别：</b></p>
+            <table class="tb">
+              <tr><th>症状</th><th>诊断</th><th>处理</th></tr>
+              <tr><td>loss 下降极慢、几乎不动</td><td>lr 太小</td><td>提高 lr 或换自适应优化器</td></tr>
+              <tr><td>loss 快速下降后剧烈震荡</td><td><b>lr 太大（本例）</b></td><td>降 lr + 加调度器</td></tr>
+              <tr><td>loss 突然爆 NaN</td><td>lr 过大到发散</td><td>降一个量级 + warmup</td></tr>
+            </table>
+            <p>排除法：欠拟合（A）不会出现"先降后震"的形状；梯度消失（C）会让 loss 一直平着不动，不会有下降段；
+              batch size（D）影响的是梯度噪声与收敛稳定性，但恒定 lr=1e-3 配 AdamW 本身就是高风险配置。</p>
+          </div>
+          <div class="dx-cure dx-body">
+            <h4>💊 处方：给学习率一条曲线，而不是一个常数</h4>
+            <ul>
+              <li><b>Warmup</b>：前 1%–5% 的步数从 0 线性升到峰值，避开训练初期梯度方向混乱的阶段。
+                <span class="math">\(\eta_t = \eta_{\max}\cdot\frac{t}{T_w},\; t \le T_w\)</span></li>
+              <li><b>Cosine Decay（首选）</b>：
+                <span class="math">\(\eta_t = \eta_{\min} + \tfrac{1}{2}(\eta_{\max}-\eta_{\min})\left(1+\cos\tfrac{t\pi}{T}\right)\)</span>，
+                后期自动把步长收到很小，帮助模型落入谷底。</li>
+              <li><b>OneCycle / 余弦退火重启</b>：单周期先升后降，常能同时提速和提质。</li>
+              <li><b>LR Finder</b>：从 1e-7 指数增长到 1，画 loss-lr 曲线，取最陡下降段的中点作为峰值 lr。</li>
+              <li><b>调参顺序</b>：先把 lr 调对，再调 warmup 比例，最后调权重衰减。</li>
+            </ul>
+            <div class="demo-box">
+              <div class="kv"><span>峰值学习率（AdamW）</span><span>1e-5 ~ 5e-4（LLM 微调常用 2e-4）</span></div>
+              <div class="kv"><span>Warmup 比例</span><span>1% ~ 5%</span></div>
+              <div class="kv"><span>最终学习率</span><span>峰值的 1% ~ 10%</span></div>
+              <div class="kv"><span>经验法则</span><span>lr 与 batch size 大致线性缩放</span></div>
+            </div>
+          </div>
+          <div class="rx">
+            <b>🩺 主治医师备注：</b>现代训练几乎不用恒定学习率，调度器的收益是"免费的性能"。
+            看 loss 曲线的<b>形状</b>（而非绝对值）就能判断 lr 是否合适：
+            锯齿平台 → 太大；直线缓降 → 太小；平滑收敛 → 刚好。
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="blk reveal">
+    <div class="card">
+      <h2 class="blk-title"><span class="num">总结</span>📌 十三个病例的速查表</h2>
+      <p class="blk-desc">把所有病历的症状签名与处方浓缩成一张表，方便你在真实项目里对照排查。</p>
+      <table class="tb">
+        <tr><th>症状签名</th><th>诊断</th><th>首选处方</th><th>关键超参</th></tr>
+        <tr><td>训练好 / 验证差，验证 loss 回升</td><td>过拟合</td><td>早停 + Dropout + L2 + 数据增强</td><td>dropout 0.1–0.3, wd 0.01</td></tr>
+        <tr><td>训练和验证都差，loss 卡在随机水平</td><td>欠拟合</td><td>加容量 + 加特征 + 换优化</td><td>hidden 256+, LayerNorm</td></tr>
+        <tr><td>梯度范数 &gt; 1e6，loss 震荡后 NaN</td><td>梯度爆炸</td><td>梯度裁剪 + warmup + 降 lr</td><td>clip 1.0</td></tr>
+        <tr><td>梯度逐层递减到 1e-9，浅层不动</td><td>梯度消失</td><td>ReLU/GELU + 残差 + 归一化</td><td>He init</td></tr>
+        <tr><td>loss 出现 inf 后永久 NaN</td><td>数值不稳定</td><td>降 lr + 稳定损失实现 + 有限性断言</td><td>lr ≤ 3e-4</td></tr>
+        <tr><td>微调后通用能力骤降</td><td>灾难性遗忘</td><td>LoRA + 回放 + 部分冻结</td><td>r=8–64, 1–2 epoch</td></tr>
+        <tr><td>长文本中段信息失效</td><td>位置外推不足 + lost-in-middle</td><td>PI/YaRN + 长上下文续训 + 前置关键信息</td><td>插值比 = L_train/L_target</td></tr>
+        <tr><td>自信地输出错误事实</td><td>幻觉</td><td>RAG 接地 + 拒答训练 + 引用校验</td><td>temperature 0–0.3</td></tr>
+        <tr><td>输出重复同一短语 / 过短泛化</td><td>重复退化</td><td>数据去重（根治）+ 重复惩罚 + 采样</td><td>rep_penalty 1.1, top_p 0.9</td></tr>
+        <tr><td>离线指标高到不真实，线上崩</td><td>数据泄漏</td><td>先划分后拟合 + 分组/时序划分 + 去重</td><td>GroupShuffleSplit</td></tr>
+        <tr><td>loss 降到平台后锯齿震荡</td><td>学习率过大</td><td>warmup + cosine decay</td><td>peak lr 2e-4, warmup 3%</td></tr>
+        <tr><td>启动即 OOM，减小 batch 无效</td><td>显存不足</td><td>梯度累积 + LoRA/QLoRA + ZeRO + 梯度检查点</td><td>2P+2P+8P+激活</td></tr>
+      </table>
+      <div class="hint good">
+        <b>💡 通用诊断流程：</b>① 先确认能过拟合一个小批量 → ② 看训练/验证曲线形状定位拟合问题 →
+        ③ 打印梯度范数的层间分布定位数值问题 → ④ 审计数据划分定位泄漏 → ⑤ 最后才调超参。
+        顺序倒过来，就是在黑暗中调参。
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<footer class="site"><p>💬 agent-nlp-llm · 自然语言技术本体论研究站</p></footer>
+
+<script src="js/site.js"></script>
+<script>
+/* ===== 大模型诊所：病例诊断游戏 ===== */
+var Clinic = (function () {
+  'use strict';
+
+  var total = 0, done = 0, right = 0, wrong = 0, score = 0;
+  var state = {};   // caseId -> { answered:bool, firstTryRight:bool, tries:int }
+
+  function $(s, r) { return (r || document).querySelector(s); }
+  function $$(s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); }
+
+  var EXTRA = {
+    A: '这个方向看似合理，但它无法解释本例最核心的化验结果。',
+    B: '注意这个选项与患者的关键指标不匹配，先看曲线的形状再下结论。',
+    C: '这个选项描述的是另一种病症，和本例的症状签名正好相反或无关。',
+    D: '听起来专业，但它不能解释症状中"位置/数值/比例"这类结构性证据。'
+  };
+
+  /* 取选项的正文（排除 .opt-tag 标签），兼容 innerText 缺失的环境 */
+  function optText(card, key) {
+    var el = $('.opt[data-key="' + key + '"]', card);
+    if (!el) return '';
+    var clone = el.cloneNode(true);
+    $$('.opt-tag, .mark', clone).forEach(function (n) { n.remove(); });
+    return (clone.textContent || '').replace(/\s+/g, ' ').trim();
+  }
+
+  function stats() {
+    $('#sb-done').textContent = done;
+    $('#sb-right').textContent = right;
+    $('#sb-wrong').textContent = wrong;
+    $('#sb-score').textContent = score;
+    $('#sb-acc').textContent = done ? Math.round(right / done * 100) + '%' : '—';
+    var bar = $('#sb-bar-fill');
+    if (bar) bar.style.width = (done / 12 * 100) + '%';
+  }
+
+  /* 打开某一病例的解析 */
+  function grade(card, pickedKey, answerKey, firstTry) {
+    var verdict = $('.verdict', card);
+    var head = $('.verdict-head', card);
+    if (!verdict || !head) return;
+    var isRight = pickedKey === answerKey;
+    head.className = 'verdict-head ' + (isRight ? 'right' : 'wrong');
+    head.innerHTML = isRight
+      ? '✅ 诊断正确！你抓住了病因。'
+      : '❌ 误诊了——正确答案是 <b style="margin-left:4px">' + answerKey + '</b>。不过误诊也是学习，下面是完整病理报告。';
+    verdict.classList.add('show');
+    return isRight;
+  }
+
+  function answer(card, key) {
+    // data-case 挂在包裹的 section.blk 上，卡片本身没有该属性
+    var host = card.closest('[data-case]') || card.parentNode || card;
+    var caseId = (host && host.getAttribute && host.getAttribute('data-case')) || card.getAttribute('data-case') || 'x';
+    var answerKey = $('.opt-list', card).getAttribute('data-answer');
+    var st = state[caseId] || (state[caseId] = { answered: false, firstTryRight: false, tries: 0 });
+    if (st.answered) return;
+
+    st.tries++;
+    var isRight = grade(card, key, answerKey, st.tries === 1);
+    var opts = $$('.opt', card);
+
+    opts.forEach(function (o) {
+      o.disabled = true;
+      var k = o.getAttribute('data-key');
+      if (k === key) o.classList.add(isRight ? 'picked-right' : 'picked-wrong');
+      if (k === answerKey && !isRight) o.classList.add('reveal-right');
+    });
+
+    // 若答错，附加一条"为什么这个选项不对"的提示
+    if (!isRight) {
+      var verdictBody = $('.verdict-body', card);
+      var tip = document.createElement('div');
+      tip.className = 'hint warn';
+      tip.style.marginTop = '14px';
+      tip.innerHTML = '<b>❌ 关于选项 ' + key + '：</b>' +
+        (EXTRA[key] || '这个选项不是本例的病因。') +
+        '<br><b>👉 正确诊断是 ' + answerKey + '：</b>' + optText(card, answerKey);
+      verdictBody.appendChild(tip);
+      st.answered = true;
+      st.firstTryRight = false;
+      wrong++;
+      score += 0;
+    } else {
+      st.answered = true;
+      st.firstTryRight = st.tries === 1;
+      right++;
+      var bonus = Math.max(4, 14 - (st.tries - 1) * 4);
+      score += bonus;
+    }
+    done++;
+    stats();
+    updateReport();
+  }
+
+  function revealAll() {
+    $$('.blk[data-case]').forEach(function (blk) {
+      var card = blk.querySelector('.case-card');
+      if (!card) return;
+      var caseId = blk.getAttribute('data-case');
+      var answerKey = $('.opt-list', card).getAttribute('data-answer');
+      var st = state[caseId];
+      if (st && st.answered) return;
+      $$('.opt', card).forEach(function (o) {
+        o.disabled = true;
+        if (o.getAttribute('data-key') === answerKey) o.classList.add('reveal-right');
+      });
+      var verdict = $('.verdict', card);
+      var head = $('.verdict-head', card);
+      if (verdict && head) {
+        head.className = 'verdict-head wrong';
+        head.innerHTML = '📖 谜底揭晓：正确诊断是 <b style="margin-left:4px">' + answerKey + '</b>';
+        verdict.classList.add('show');
+      }
+      state[caseId] = { answered: true, firstTryRight: false, tries: 0, revealed: true };
+      done++; wrong++;
+    });
+    stats();
+    updateReport();
+  }
+
+  function reset() {
+    state = {}; total = 0; done = 0; right = 0; wrong = 0; score = 0;
+    $$('.blk[data-case]').forEach(function (blk) {
+      var card = blk.querySelector('.case-card');
+      if (!card) return;
+      $$('.opt', card).forEach(function (o) {
+        o.disabled = false;
+        o.classList.remove('picked-right', 'picked-wrong', 'reveal-right');
+      });
+      var v = $('.verdict', card);
+      if (v) v.classList.remove('show');
+      $$('.verdict-body .hint.warn', card).forEach(function (h) { h.remove(); });
+    });
+    stats();
+    updateReport();
+    var rpt = $('#dx-report');
+    if (rpt) rpt.classList.remove('show');
+  }
+
+  function updateReport() {
+    var body = $('#rpt-body');
+    if (!body) return;
+    var html = '';
+    $$('.blk[data-case]').forEach(function (blk) {
+      var id = blk.getAttribute('data-case');
+      var title = ($('.case-title', blk) || {}).textContent || id;
+      var st = state[id];
+      var cls = st ? (st.answered && st.firstTryRight ? 'ok' : 'bad') : '';
+      var tag = !st ? '未作答'
+        : st.revealed ? '已揭晓'
+        : (st.firstTryRight ? '✔ 一次命中' : '✘ 曾误诊');
+      html += '<div class="rpt-row"><span class="rpt-dot ' + cls + '"></span>' +
+        '<span class="rpt-name">' + title + '</span>' +
+        '<span class="rpt-tag">' + tag + '</span></div>';
+    });
+    body.innerHTML = html;
+    var sum = $('#rpt-summary');
+    if (sum) {
+      if (!done) {
+        sum.textContent = '还没有作答记录，先去诊断几份病历吧。';
+      } else {
+        var acc = Math.round(right / done * 100);
+        var msg = acc >= 80 ? '🏆 主任医师水平：你对训练动态的直觉相当准！'
+          : acc >= 50 ? '🩺 住院医师水平：方向感不错，细节还需打磨。'
+          : '📚 实习生水平：建议回到上面的解析里逐条读病因，再刷一遍。';
+        sum.innerHTML = '已完成 <b>' + done + '</b> / 12 份病历，正确率 <b>' + acc + '%</b>，累计积分 <b>' + score + '</b>。' + msg;
+      }
+    }
+  }
+
+  function showReport() {
+    var rpt = $('#dx-report');
+    if (!rpt) return;
+    updateReport();
+    rpt.classList.add('show');
+    window.scrollTo({ top: rpt.offsetTop - 90, behavior: 'smooth' });
+  }
+
+  function initFilters() {
+    var bar = $('#filter-bar');
+    if (!bar) return;
+    $$('.chip', bar).forEach(function (chip) {
+      chip.addEventListener('click', function () {
+        $$('.chip', bar).forEach(function (c) { c.classList.remove('on'); });
+        chip.classList.add('on');
+        var f = chip.getAttribute('data-f');
+        $$('.blk[data-case]').forEach(function (blk) {
+          var show = (f === 'all' || blk.getAttribute('data-cat') === f);
+          blk.style.display = show ? '' : 'none';
+        });
+      });
+    });
+  }
+
+  function init() {
+    total = $$('.blk[data-case]').length;
+    $$('.blk[data-case]').forEach(function (blk) {
+      var card = blk.querySelector('.case-card');
+      if (!card) return;
+      $$('.opt', card).forEach(function (o) {
+        o.addEventListener('click', function () { answer(card, o.getAttribute('data-key')); });
+      });
+    });
+    initFilters();
+    stats();
+    updateReport();
+  }
+
+  return { init: init, reset: reset, revealAll: revealAll, showReport: showReport };
+})();
+
+document.addEventListener('DOMContentLoaded', function () {
+  Clinic.init();
+  // KaTeX 可能晚于 DOMContentLoaded 加载完成后才可用，做一次延迟兜底渲染
+  setTimeout(function () {
+    if (window.renderMathInElement) {
+      try {
+        window.renderMathInElement(document.body, {
+          delimiters: [{ left: '$$', right: '$$', display: true }, { left: '\\(', right: '\\)', display: false }],
+          throwOnError: false
+        });
+      } catch (e) { /* ignore */ }
+    }
+  }, 600);
+});
+</script>
+</body>
+</html>
