@@ -370,6 +370,52 @@
   </div>
 </section>
 
+
+<section class="lab-group">
+  <h2>⑦ 原理图图解（一图胜千言）</h2>
+  <div class="lab-grid">
+    <a href="ngram-viz.html" class="lab-card" data-name="N-gram 马尔可夫链 上下文窗口 数据稀疏 平滑">
+      <div class="lab-icon">🔗</div>
+      <div class="lab-body">
+        <h3>N-gram 马尔可夫链</h3>
+        <p>拖动N值看上下文窗口动态移动；自动播放预测过程；稀疏度对数坐标柱状图直观展示爆炸问题</p>
+        <span class="lab-tag tag-nlp">统计语言模型</span>
+      </div>
+    </a>
+    <a href="transformer-arch.html" class="lab-card" data-name="Transformer 架构 Encoder Decoder 自注意力 交叉注意力 FFN Add Norm">
+      <div class="lab-icon">🏗️</div>
+      <div class="lab-body">
+        <h3>Transformer 架构图</h3>
+        <p>悬浮Encoder/Decoder里的每个模块（MHA/Cross Attention/FFN/Add&Norm），右侧显示对应公式和作用</p>
+        <span class="lab-tag tag-attn">架构</span>
+      </div>
+    </a>
+    <a href="rnn-unroll.html" class="lab-card" data-name="RNN 时间步展开 梯度消失 BPTT 梯度反向传播 谱半径 W_hh 共享权重">
+      <div class="lab-icon">🌀</div>
+      <div class="lab-body">
+        <h3>RNN 时间步展开</h3>
+        <p>拖动时间步T看网络展开成T份共享权重；播放梯度反向传播动画；拖动谱半径看梯度消失/爆炸曲线</p>
+        <span class="lab-tag tag-rnn">序列模型</span>
+      </div>
+    </a>
+    <a href="lstm-cell.html" class="lab-card" data-name="LSTM 细胞状态 遗忘门 输入门 输出门 传送带 长期记忆 门控">
+      <div class="lab-icon">🧊</div>
+      <div class="lab-body">
+        <h3>LSTM 细胞解剖图</h3>
+        <p>细胞结构图点击遗忘门/输入门/输出门/更新节点，查看每个门的公式、直觉理解和典型场景</p>
+        <span class="lab-tag tag-rnn">门控RNN</span>
+      </div>
+    </a>
+    <a href="kv-cache.html" class="lab-card" data-name="KV Cache 推理加速 显存 自回归生成 复杂度 K V 缓存 大模型推理">
+      <div class="lab-icon">⚡</div>
+      <div class="lab-body">
+        <h3>KV Cache 加速原理</h3>
+        <p>对比有无Cache的注意力计算矩阵（红色vs绿色格子），拖动已生成token数实时看加速比</p>
+        <span class="lab-tag tag-gpt">推理优化</span>
+      </div>
+    </a>
+  </div>
+</section>
 <div style="height:80px"></div>
 <script src="js/site.js"></script>
 <script src="js/math.js"></script>

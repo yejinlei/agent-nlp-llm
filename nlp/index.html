@@ -233,7 +233,12 @@ print(list(jieba.cut(text)))  # ['我', '爱', '自然语言', '处理']</code><
 
   <!-- HMM -->
   <section id="hmm">
-    <h2 class="text-3xl font-bold">🔗 HMM · 隐马尔可夫模型</h2>
+    
+<div class="play-card" style="margin-top:20px;border-left:4px solid #3b82f6">
+  <h4>🔗 <a href="../ngram-viz.html" style="color:#2563eb;text-decoration:none">动手玩：N-gram 马尔可夫链可视化 →</a></h4>
+  <p>对马尔可夫假设没感觉？拖动 N 值，红色窗口在句子上滑动，看 Bigram/Trigram/4-gram 时上下文窗口和下一节点的概率分布怎么变；自动播放整个句子预测；还能看到"N 越大数据越稀疏"的对数坐标图。</p>
+</div>
+<h2 class="text-3xl font-bold">🔗 HMM · 隐马尔可夫模型</h2>
     <p class="text-gray-700 mb-4">HMM是序列标注任务（分词、词性标注、命名实体识别、语音识别）的经典模型。它是生成式模型，建模<strong>隐含状态序列生成观测序列</strong>的过程。</p>
     
     <p class="text-gray-600 mb-4">HMM有两个基本假设：</p>
@@ -440,6 +445,15 @@ def most_similar(query_id, word_vecs, word_to_id, top=5):
 #     model.update                       # 更新
 #     hs[0] = hs[-1]                       # 把最后状态递交给下一块</code></pre>
     <p class="text-gray-600">💡 <b>LSTM 为什么能缓解？</b> 它用<b>遗忘门</b>把连乘换成了"加法式累积"（细胞状态 C 的更新是 <code>C_t = f_t·C_{t−1} + i_t·C̃_t</code>），梯度沿 C 回传时是乘上接近 1 的 f，而不是一长串小于 1 的连乘，所以记忆能延续几百步。但门控再巧也改不了"串行"的本质，最终仍被可并行的<b>自注意力</b>取代。</p>
+<div class="play-card" style="margin-top:20px;border-left:4px solid #16a34a">
+  <h4>🌀 <a href="../rnn-unroll.html" style="color:#16a34a;text-decoration:none">动手玩：RNN 时间步展开与梯度回传 →</a></h4>
+  <p>为什么 RNN 梯度会消失？拖动时间步 T 看网络展开成 T 份，"播放梯度反向传播"看红色梯度一层层往回传越来越淡；再拖动谱半径 ρ，看 ρ&lt;1 时 30 步后梯度跌到 10⁻⁶ 量级的过程。</p>
+</div>
+<div class="play-card" style="margin-top:14px;border-left:4px solid #ec4899">
+  <h4>🧊 <a href="../lstm-cell.html" style="color:#ec4899;text-decoration:none">动手玩：LSTM 细胞解剖图 →</a></h4>
+  <p>LSTM 三个门到底怎么协作？点击图中的遗忘门/输入门/输出门/更新节点，看细胞传送带 C 的信息流向，搞懂"为什么只有加法和逐元素乘法就能让梯度无损回传"。</p>
+</div>
+
   </section>
 
   <!-- Attention -->
@@ -460,6 +474,11 @@ def most_similar(query_id, word_vecs, word_to_id, top=5):
   <section id="transformer">
     <h2 class="text-3xl font-bold">🧱 Transformer · 注意力就是一切</h2>
     <p class="text-gray-700 mb-4">2017年Google发表《Attention Is All You Need》，提出Transformer架构，完全抛弃循环和卷积，只用自注意力机制，效果更好、训练更快，直接开启了大模型时代。</p>
+<div class="play-card" style="margin-top:20px;border-left:4px solid #8b5cf6">
+  <h4>🏗️ <a href="../transformer-arch.html" style="color:#8b5cf6;text-decoration:none">动手玩：Transformer 架构互动图 →</a></h4>
+  <p>Enc/Dec 六个模块（Masked MHA / Cross Attention / FFN / Add&Norm）分别在做什么？悬浮每个模块看对应的公式和直觉解释，搞懂"交叉注意力为什么是翻译的桥梁"。</p>
+</div>
+
 
     <h4>Transformer Encoder 核心组件</h4>
     <ol class="list-decimal pl-6 text-gray-700 space-y-2 mb-4">

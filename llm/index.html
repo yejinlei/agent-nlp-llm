@@ -176,6 +176,11 @@ h4 { margin-top: 20px; margin-bottom: 12px; color: #6b21a8; }
   <section id="transformer">
     <h2 class="text-3xl font-bold">🧱 Transformer Decoder · 大模型骨架</h2>
     <p class="text-gray-700 mb-4">所有现代大模型都用Transformer Decoder架构，和NLP里讲的Encoder有几个关键区别：</p>
+<div class="play-card" style="margin-top:14px;border-left:4px solid #8b5cf6">
+  <h4>🏗️ <a href="../transformer-arch.html" style="color:#8b5cf6;text-decoration:none">动手玩：Transformer 架构互动图 →</a></h4>
+  <p>GPT 是 Decoder-only 架构。在互动图上看 Decoder 侧 Masked MHA / FFN / Add&Norm 的结构与公式，理解因果掩码在哪里起作用。</p>
+</div>
+
     
     <div class="grid grid-cols-2 gap-4 mb-4">
       <div class="card bg-blue-50 border-blue-200">
@@ -346,6 +351,11 @@ class FeedForward(nn.Module):
         idx = torch.cat((idx, idx_next), dim=1)             # 拼回序列，喂给下一步
     return idx</code></pre>
     <p class="text-gray-600">💡 <b>一句话记住</b>：预训练让模型"会接话"，<b>温度</b>控制它"接得多疯"，<b>top-k</b> 控制它"别离谱到外太空"。调 API 时看到的 <code>temperature</code>、<code>top_p</code> 参数，源头就在这里。</p>
+<div class="play-card" style="margin-top:20px;border-left:4px solid #f97316">
+  <h4>⚡ <a href="../kv-cache.html" style="color:#ea580c;text-decoration:none">动手玩：KV Cache 为什么能让大模型加速 →</a></h4>
+  <p>为什么大模型推理越生成越慢？直接对比"有无 KV Cache"的注意力计算矩阵，拖动已生成 token 数看总计算量和加速比——一图解释"为什么 decode 是 memory bound"和"长上下文为什么吃显存"。</p>
+</div>
+
   </section>
 
   <!-- SFT -->
