@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>互动实验室 · agent-nlp-llm</title>
+<link rel="stylesheet" href="css/site.css">
+<style>
+  .lab-hero {
+    max-width: 1180px; margin: 80px auto 40px; padding: 0 24px;
+    text-align: center;
+  }
+  .lab-hero h1 {
+    font-size: 48px; font-weight: 800; margin: 0 0 16px;
+    background: linear-gradient(135deg, #6366f1, #a855f7, #ec4899);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .lab-hero p { color: #64748b; font-size: 18px; line-height: 1.7; max-width: 760px; margin: 0 auto; }
+  .lab-hero .meta {
+    margin-top: 20px; display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;
+  }
+  .lab-hero .meta span {
+    background: #eef2ff; color: #4f46e5; padding: 6px 14px; border-radius: 999px;
+    font-size: 13px; font-weight: 600;
+  }
+  .lab-group { max-width: 1180px; margin: 40px auto; padding: 0 24px; }
+  .lab-group h2 {
+    font-size: 22px; font-weight: 700; color: #1e293b; margin: 0 0 20px;
+    padding-left: 14px; border-left: 4px solid #6366f1;
+  }
+  .lab-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 18px; }
+  .lab-card {
+    display: flex; gap: 16px; padding: 22px 20px;
+    background: #fff; border: 1px solid #e2e8f0; border-radius: 16px;
+    text-decoration: none; color: inherit;
+    transition: transform .25s ease, box-shadow .25s ease, border-color .25s ease;
+  }
+  .lab-card:hover {
+    transform: translateY(-4px); box-shadow: 0 12px 32px rgba(99,102,241,.15);
+    border-color: #c7d2fe;
+  }
+  .lab-card .lab-icon {
+    flex-shrink: 0; width: 52px; height: 52px; border-radius: 14px;
+    background: linear-gradient(135deg, #eef2ff, #f3e8ff);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 26px;
+  }
+  .lab-card h3 { margin: 0 0 6px; font-size: 17px; font-weight: 700; color: #0f172a; }
+  .lab-card p { margin: 0; font-size: 13.5px; line-height: 1.6; color: #64748b; }
+  @media (max-width: 720px) {
+    .lab-hero h1 { font-size: 34px; }
+    .lab-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<nav class="navbar">
+  <div class="nav-inner">
+    <a href="index.html" class="nav-logo">💬 agent-nlp-llm</a>
+    <button class="nav-toggle" aria-label="菜单" onclick="document.querySelector('.nav-links').classList.toggle('open')">☰</button>
+    <div class="nav-links">
+      <a href="index.html" class="nav-link">🏠&nbsp;首页</a>
+      <a href="nlp/index.html" class="nav-link">📝&nbsp;NLP</a>
+      <a href="llm/index.html" class="nav-link">🤖&nbsp;LLM</a>
+      <a href="lab.html" class="nav-link active">🧪&nbsp;实验室</a>
+      <a href="papers.html" class="nav-link">📚&nbsp;论文</a>
+      <a href="clinic.html" class="nav-link">🕵️&nbsp;诊所</a>
+      <a href="pitfalls.html" class="nav-link">💥&nbsp;踩坑</a>
+      <a href="benchmark.html" class="nav-link">📊&nbsp;选型</a>
+      <a href="universe.html" class="nav-link">🌌&nbsp;宇宙</a>
+      <a href="https://github.com/yejinlei/agent-nlp-llm" target="_blank" rel="noopener" class="nav-gh" aria-label="GitHub"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg></a>
+    </div>
+  </div>
+</nav>
+<div class="lab-hero">
+  <h1>🧪 互动实验室</h1>
+  <p>两本参考书中的全部经典案例，按学习路径分组。每个实验室都是一个可点击、可拖动、可训练的真实互动演示——不是动画假效果，是真正在你浏览器里跑的算法。</p>
+  <div class="meta">
+    <span>📘 《Build a LLM From Scratch》Raschka</span>
+    <span>📗 《深度学习进阶：自然语言处理》斋藤康毅</span>
+    <span>🧮 17 个可交互 demo</span>
+    <span>⚡ 全部浏览器端运行</span>
+  </div>
+</div>
+
+    <section class="lab-group">
+      <h2>① 基础：分词与表示（书1第2章 + 书2第2章）</h2>
+      <div class="lab-grid">
+        <a href="bpe.html" class="lab-card">
+          <div class="lab-icon">🔤</div>
+          <div class="lab-body">
+            <h3>BPE 分词器</h3>
+            <p>拖动合并次数，看词表从小到大生长；亲手拆'hello'成5个token</p>
+          </div>
+        </a>
+        <a href="embedding.html" class="lab-card">
+          <div class="lab-icon">🧭</div>
+          <div class="lab-body">
+            <h3>词向量空间</h3>
+            <p>余弦相似度、king-man+woman≈queen 的真实二维投影</p>
+          </div>
+        </a>
+        <a href="sigmoid.html" class="lab-card">
+          <div class="lab-icon">∫</div>
+          <div class="lab-body">
+            <h3>激活函数曲线</h3>
+            <p>sigmoid/tanh/ReLU/GELU 导数对比，拖动 x 看红色切线（书2附录A）</p>
+          </div>
+        </a>
+      </div>
+    </section>
+    <section class="lab-group">
+      <h2>② Word2Vec（书2第3–4章）</h2>
+      <div class="lab-grid">
+        <a href="word2vec.html" class="lab-card">
+          <div class="lab-icon">🧠</div>
+          <div class="lab-body">
+            <h3>Word2Vec 从零</h3>
+            <p>共现矩阵 → PMI → SVD → CBOW → 负采样，全链路互动</p>
+          </div>
+        </a>
+        <a href="skip-cbow.html" class="lab-card">
+          <div class="lab-icon">⚖️</div>
+          <div class="lab-body">
+            <h3>CBOW vs Skip-gram</h3>
+            <p>并排对比：窗口大小 → 样本数 → 适用场景</p>
+          </div>
+        </a>
+        <a href="cbow.html" class="lab-card">
+          <div class="lab-icon">🧩</div>
+          <div class="lab-body">
+            <h3>CBOW 推理</h3>
+            <p>在你输入的句子上真实训练 300 轮 SGD，看一层一层推理过程</p>
+          </div>
+        </a>
+        <a href="neg-sample.html" class="lab-card">
+          <div class="lab-icon">🎲</div>
+          <div class="lab-body">
+            <h3>负采样</h3>
+            <p>拖动 V/K/H，实时看 FLOPs 对比和加速倍数；0.75 次方分布抽样</p>
+          </div>
+        </a>
+      </div>
+    </section>
+    <section class="lab-group">
+      <h2>③ 序列模型：RNN/LSTM/GRU（书2第5–6章）</h2>
+      <div class="lab-grid">
+        <a href="rnn.html" class="lab-card">
+          <div class="lab-icon">🔁</div>
+          <div class="lab-body">
+            <h3>RNN/LSTM/Attention</h3>
+            <p>BPTT、LSTM四门、seq2seq→Attention，书2后半部总览</p>
+          </div>
+        </a>
+        <a href="lstm-gate.html" class="lab-card">
+          <div class="lab-icon">🚪</div>
+          <div class="lab-body">
+            <h3>LSTM 门控</h3>
+            <p>拖 f/i/g̃/o 四个滑块，实时看记忆单元颜色变化；10 步播放</p>
+          </div>
+        </a>
+        <a href="gru-lstm.html" class="lab-card">
+          <div class="lab-icon">🆚</div>
+          <div class="lab-body">
+            <h3>GRU vs LSTM</h3>
+            <p>三个场景对比：长距离/扰动/持续写入；公式并排+参数量对比</p>
+          </div>
+        </a>
+      </div>
+    </section>
+    <section class="lab-group">
+      <h2>④ 注意力 & 序列到序列（书2第7–8章 + 书1第3章）</h2>
+      <div class="lab-grid">
+        <a href="seq2seq-add.html" class="lab-card">
+          <div class="lab-icon">➕</div>
+          <div class="lab-body">
+            <h3>Seq2Seq 加法</h3>
+            <p>真实训练 Baseline/+Reverse/+Peeky 三个模型，对比复现书2 P311</p>
+          </div>
+        </a>
+        <a href="attn-date.html" class="lab-card">
+          <div class="lab-icon">📅</div>
+          <div class="lab-body">
+            <h3>Attention 日期翻译</h3>
+            <p>输入'September 25, 2024'，实时画注意力热力图（书2图8-19）</p>
+          </div>
+        </a>
+        <a href="attention.html" class="lab-card">
+          <div class="lab-icon">🎯</div>
+          <div class="lab-body">
+            <h3>注意力沙盒</h3>
+            <p>随机 Q/K/V 实时算注意力权重热力图</p>
+          </div>
+        </a>
+        <a href="multihead.html" class="lab-card">
+          <div class="lab-icon">👥</div>
+          <div class="lab-body">
+            <h3>多头分工</h3>
+            <p>8个头：指代消解头(it→animal)/句法头/语义头 切换展示</p>
+          </div>
+        </a>
+      </div>
+    </section>
+    <section class="lab-group">
+      <h2>⑤ GPT 与大模型（书1第2/3/4/5章 + 附录E）</h2>
+      <div class="lab-grid">
+        <a href="context-window.html" class="lab-card">
+          <div class="lab-icon">🪟</div>
+          <div class="lab-body">
+            <h3>滑动窗口 & 因果掩码</h3>
+            <p>自定义 L/stride，实时切 (input,target) 对和 N×N 掩码矩阵</p>
+          </div>
+        </a>
+        <a href="gpt-params.html" class="lab-card">
+          <div class="lab-icon">🔧</div>
+          <div class="lab-body">
+            <h3>GPT 参数量 & 采样</h3>
+            <p>拖动 d_model/heads/layers，实时算 GPT-2 124M；调温度/top-k 采样</p>
+          </div>
+        </a>
+        <a href="ppl.html" class="lab-card">
+          <div class="lab-icon">📏</div>
+          <div class="lab-body">
+            <h3>困惑度 PPL</h3>
+            <p>PPL=e^Loss 推导；调任意 token 概率，看 PPL 飙升；过拟合曲线</p>
+          </div>
+        </a>
+        <a href="lora.html" class="lab-card">
+          <div class="lab-icon">🪢</div>
+          <div class="lab-body">
+            <h3>LoRA 低秩适配</h3>
+            <p>拖 r/α，实时看 ΔW 与 BA·α/r 矩阵对比和近似误差（书1附录E）</p>
+          </div>
+        </a>
+      </div>
+    </section>
+
+<div style="height:80px"></div>
+<script src="js/site.js"></script>
+</body>
+</html>
