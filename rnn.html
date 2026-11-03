@@ -5,9 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>RNN · LSTM · Attention 从零 · 让网络记住过去</title>
 <script src="https://cdn.tailwindcss.com"></script>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
-<script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
 <link rel="stylesheet" href="css/site.css">
@@ -57,6 +54,38 @@ input[type=range]{ flex:1; min-width:140px; accent-color:var(--blue); }
 .hm td, .hm th { border:1px solid #e2e8f0; padding:6px; text-align:center; }
 .hm th { background:#f1f5f9; }
 </style>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<script>
+(function(){
+  function render(){
+    if(typeof renderMathInElement !== 'function') return false;
+    try{
+      renderMathInElement(document.body,{
+        delimiters:[
+          {left:'$$',right:'$$',display:true},
+          {left:'\[',right:'\]',display:true},
+          {left:'\(',right:'\)',display:false},
+          {left:'$',right:'$',display:false}
+        ],
+        ignoredTags:['script','noscript','style','textarea','pre','code'],
+        throwOnError:false
+      });
+    }catch(e){console.warn('katex render error',e)}
+    return true;
+  }
+  function go(){ if(render()) return; setTimeout(go,200); }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',go); else go();
+  window.addEventListener('load',function(){render(); setTimeout(render,500); setTimeout(render,1500)});
+  if(window.MutationObserver){
+    var t=null;
+    new MutationObserver(function(){ clearTimeout(t); t=setTimeout(render,200); })
+      .observe(document.documentElement,{childList:true,subtree:true});
+  }
+  window.__katexRender = render;
+})();
+</script>
 </head>
 <body>
 <nav class="navbar">
@@ -81,7 +110,7 @@ input[type=range]{ flex:1; min-width:140px; accent-color:var(--blue); }
 <div class="wrap">
   <div class="crumb"><a href="index.html">首页</a> / <a href="nlp/index.html">NLP</a> / RNN · LSTM · Attention</div>
   <h1>RNN · LSTM · Attention 从零 🔁</h1>
-  <p class="sub">语言是有顺序的——"猫吃鱼"和"鱼吃猫"意思完全相反。这一页把斋藤康毅《深度学习进阶：NLP》第 5–8 章的主线走完：为什么 RNN 会健忘 → LSTM 四个门如何救场 → seq2seq 怎么翻译 → Attention 如何取代记忆。</p>
+  <p class="sub">语言是有顺序的——"猫吃鱼"和"鱼吃猫"意思完全相反。这一页把循环神经网络的主线走完：为什么 RNN 会健忘 → LSTM 四个门如何救场 → seq2seq 怎么翻译 → Attention 如何取代记忆。</p>
 
   <div class="hero">
     <h2>🎯 一句话抓住本质</h2>
@@ -273,7 +302,7 @@ input[type=range]{ flex:1; min-width:140px; accent-color:var(--blue); }
   <div class="hero" style="background:linear-gradient(135deg,#1e1b4b,#7c3aed)">
     <h2>🧭 一条主线串起来</h2>
     <p><b>语言模型</b>（给句子打分）→ <b>RNN</b>（记住过去）→ <b>BPTT 梯度消失</b>（记性变差的数学根源）→ <b>LSTM 四个门</b>（加一条记忆高速路）→ <b>seq2seq</b>（翻译）→ <b>Attention</b>（不硬记，按需查）→ <b>Transformer</b>（丢开循环，全程注意力）。</p>
-    <p>每一步都是"发现上一个方法的毛病 → 想新招解决"——这正是斋藤康毅在书里反复强调的<b>"从零开始"的思考方式</b>。</p>
+    <p>每一步都是"发现上一个方法的毛病 → 想新招解决"——这正是"从零开始"最核心的思考方式：每一步都要回答"为什么需要它"。</p>
   </div>
 </div>
 

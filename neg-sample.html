@@ -50,7 +50,7 @@ input[type=range]{width:100%}
 
 <main class="container">
   <section class="hero-mini"><h1>🎲 负采样互动实验室</h1>
-    <p class="lead">对应《深度学习入门2》第4章「word2vec 的高速化」。原始 Softmax 要遍历全部词表计算百万级分类，负采样把它偷换成"1个正例 + K个负例"的二分类问题。拖动滑块看计算量对比。</p>
+    <p class="lead">对应</p>
   </section>
 
   <div class="lab">
@@ -65,7 +65,7 @@ input[type=range]{width:100%}
       <div style="font-size:13px;color:#475569">上下文：<b id="ctxWord">[说, 小]</b> → 正例（目标词）：<b style="color:#16a34a" id="posWord">你</b></div>
       <div class="vocab-grid" id="grid"></div>
       <button id="sampleBtn" style="width:100%;padding:10px;background:#6366f1;color:#fff;border:none;border-radius:8px;cursor:pointer;margin-top:8px">🎲 重新采样</button>
-      <div style="font-size:12px;color:#64748b;margin-top:6px">采样按词频^0.75加权（书2 第4.2.4 节），稀有词被抽中的概率被提高。</div>
+      <div style="font-size:12px;color:#64748b;margin-top:6px">采样按词频^0.75加权（），稀有词被抽中的概率被提高。</div>
     </div>
 
     <div class="card">
@@ -90,20 +90,18 @@ input[type=range]{width:100%}
       </div>
 
       <h3 style="margin-top:20px">🔬 Sigmoid 二分类器</h3>
-      <div style="font-size:13px;color:#475569;margin-bottom:6px">每个正/负例用独立的 sigmoid 打分（书2 式4.5）：P(+) = σ(h·vₒ)</div>
+      <div style="font-size:13px;color:#475569;margin-bottom:6px">每个正/负例用独立的 sigmoid 打分（式4.5）：P(+) = σ(h·vₒ)</div>
       <canvas id="cv" width="500" height="130" style="width:100%;border-radius:6px;background:#fafbfc"></canvas>
       <div id="sigLegend" style="font-size:12px;color:#64748b;margin-top:6px"></div>
     </div>
   </div>
 
-  <section class="insight" style="margin-top:24px"><h3>📖 书里的原话总结</h3>
-    <ul><li>书2 P143："在负采样中，准确地说，<b>将多分类问题转化成了二分类问题</b>。"即每个词"是不是目标词"的二分类。</li>
-    <li>书2 P151：采样概率 P(w_i)^0.75 是为了防止"稀有词被完全忽略"——直接按词频采样时 'a/the' 这类词会霸占负样本。</li>
-    <li>书2 P148：K 通常取 5~20。K 越大效果越好但计算越慢；小语料 K 取 5~10，大语料取 2~5。</li></ul>
+  <section class="insight" style="margin-top:24px"><h4>💡 核心要点</h4>
+    <ul><li>"在负采样中，准确地说，<b>将多分类问题转化成了二分类问题</b>。"即每个词"是不是目标词"的二分类。</li>
+    <li>采样概率 P(w_i)^0.75 是为了防止"稀有词被完全忽略"——直接按词频采样时 'a/the' 这类词会霸占负样本。</li>
+    <li>K 通常取 5~20。K 越大效果越好但计算越慢；小语料 K 取 5~10，大语料取 2~5。</li></ul>
   </section>
 </main>
-
-<footer class="site-footer"><p>基于《深度学习入门2》ch04 Negative Sampling 实现</p></footer>
 
 <script>
 const DEMO_VOCAB=['的','了','是','我','你','他','在','有','和','不','这','说','人','就','都','一','个','上','也','到','说','要','去','你','会','着','没有','看','好','自己','这','那','小','猫','狗','今天','学习','深度','学习','神经','网络','词','向量','模型','训练','梯度','反向','传播','算法','计算','嵌入','矩阵','函数','损失','优化','学习率','epoch','batch','数据','样本','正例','负例','sigmoid','softmax','交叉熵','参数','权重','偏置','激活','输出','输入','隐藏层','语言','自然','处理','NLP','智能','人工','大模型','GPT','transformer','注意力','编码','解码','序列','时间','步','记忆','状态','遗忘','门','输入门','输出门','cell'] ;
@@ -185,5 +183,6 @@ function drawSigmoid(picks){
 document.getElementById('sampleBtn').onclick=draw;
 draw();
 </script>
+<script src="js/math.js"></script>
 </body>
 </html>

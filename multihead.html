@@ -43,9 +43,9 @@ canvas{background:#0f172a;border-radius:8px;border:1px solid var(--border);max-w
 </nav>
 <div class="container" style="max-width:1100px">
 <section class="hero">
-<div class="badge">📖《Build a Large Language Model (From Scratch)》第3.4节 · P88-P98（MultiHeadAttention）</div>
+
 <h1>多头注意力：<span class="grad-text">不同头学不同关系</span></h1>
-<p style="color:var(--muted)">书1 P96 实现了 MultiHeadAttentionWrapper：把 QKV 按 n_heads 拆分，每组独立学习一种注意力模式，最后拼接输出。学界发现（Voita et al. 2019, Clark et al. 2019）不同头会自发"分工"——有的只看前一个词，有的管指代，有的关注语义相似词。选一个句子，点击每个头看它的注意力模式。</p>
+<p style="color:var(--muted)">P96 实现了 MultiHeadAttentionWrapper：把 QKV 按 n_heads 拆分，每组独立学习一种注意力模式，最后拼接输出。学界发现（Voita et al. 2019, Clark et al. 2019）不同头会自发"分工"——有的只看前一个词，有的管指代，有的关注语义相似词。选一个句子，点击每个头看它的注意力模式。</p>
 </section>
 
 <div class="demo-box">
@@ -66,7 +66,7 @@ canvas{background:#0f172a;border-radius:8px;border:1px solid var(--border);max-w
 </div>
 
 <div class="demo-box">
-<h3>🧠 为什么要"多头"？书1 P95 数学推导</h3>
+<h3>🧠 为什么要"多头"？P95 数学推导</h3>
 <div style="font-family:monospace;font-size:14px;line-height:1.9;background:#00000040;padding:14px;border-radius:8px">
 <div># 单头：d_out = d_model</div>
 <div>Q = X @ W_q,   K = X @ W_k,   V = X @ W_v    # 线性投影</div>
@@ -78,15 +78,14 @@ canvas{background:#0f172a;border-radius:8px;border:1px solid var(--border);max-w
 <div>out = concat(head_1, ..., head_h) @ W_o</div>
 </div>
 <div class="insight">
-<b>书1 P95 原文：</b>"通过多头注意力，模型可以同时关注多个不同位置的不同表示子空间的信息。" 举个例子："The animal didn't cross the street because <b>it</b> was too tired" 中，"it" 指代 "animal"——<b>这个指代关系**专门**由一个"指代头"学会</b>，其他头不需要管。下面 8 个头就是经典的分工模式。
+<b>P95 原文：</b>"通过多头注意力，模型可以同时关注多个不同位置的不同表示子空间的信息。" 举个例子："The animal didn't cross the street because <b>it</b> was too tired" 中，"it" 指代 "animal"——<b>这个指代关系**专门**由一个"指代头"学会</b>，其他头不需要管。下面 8 个头就是经典的分工模式。
 </div>
 </div>
 </div>
 <footer style="text-align:center;padding:40px 0;color:var(--muted);font-size:13px">
-参考 Sebastian Raschka《Build a Large Language Model (From Scratch)》· Voita et al. 2019 经典多头分析研究
+
 </footer>
 <script>
-fetch('js/nav.json').then(r=>r.json()).then(d=>{document.getElementById('nav').innerHTML=d.html;init();});
 const HEADS=[
 {name:'头1: 前邻词(Prev-Token)',role:'prev',roleName:'短距离语法',
  desc:'每个词强关注自己前一个词。这是最常见的"头"，负责学习局部语法搭配（定冠词+名词、形容词+名词、动词+副词）。'},
@@ -186,5 +185,6 @@ function init(){
 }
 </script>
 <script src="js/site.js"></script>
+<script src="js/math.js"></script>
 </body>
 </html>

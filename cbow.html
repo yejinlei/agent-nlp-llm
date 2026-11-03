@@ -51,7 +51,7 @@
 <main class="container">
   <section class="hero-mini">
     <h1>🧩 CBOW 推理互动实验室</h1>
-    <p class="lead">对应《深度学习入门2》第3章 3.2 节「简单的 word2vec」。CBOW 模型根据上下文词（前后各一个）预测中间的词——拖动选择上下文，实时看嵌入层→中间层→输出层的完整推理过程。</p>
+    <p class="lead">对应</p>
   </section>
 
   <div class="lab">
@@ -89,14 +89,12 @@
       <div id="probList" style="margin-top:20px"></div>
 
       <div class="insight" style="margin-top:20px">
-        <h4>📖 书里怎么说</h4>
-        <p style="font-size:13px;line-height:1.7">书2 第3.2.1 节 CBOW 模型的推理：输入层是上下文的 one-hot 向量（窗口大小=1时是2个），经过输入侧 MatMul（权重 W_in）得到分布式表示，中间层对各上下文的向量取<strong>平均</strong>，再经输出侧 MatMul（权重 W_out）得到每个词的得分，最后通过 Softmax 转成概率。训练的目标就是让正确词的概率最大。</p>
+        <h4>💡 核心要点</h4>
+        <p style="font-size:13px;line-height:1.7">CBOW 模型的推理：输入层是上下文的 one-hot 向量（窗口大小=1时是2个），经过输入侧 MatMul（权重 W_in）得到分布式表示，中间层对各上下文的向量取<strong>平均</strong>，再经输出侧 MatMul（权重 W_out）得到每个词的得分，最后通过 Softmax 转成概率。训练的目标就是让正确词的概率最大。</p>
       </div>
     </div>
   </div>
 </main>
-
-<footer class="site-footer"><p>基于《深度学习入门2：自制框架》ch03 CBOW 实现</p></footer>
 
 <script>
 // ====== CBOW 模型的 JavaScript 从零实现 ======
@@ -218,5 +216,6 @@ document.getElementById('rightCtx').onchange=predict;
 // 默认演示：触发一次训练
 window.addEventListener('load',()=>setTimeout(train,200));
 </script>
+<script src="js/math.js"></script>
 </body>
 </html>

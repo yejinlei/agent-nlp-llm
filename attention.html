@@ -4,9 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>注意力机制 · 让模型学会该看哪 · agent-nlp-llm</title>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
-<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
-<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
 <link rel="stylesheet" href="css/site.css">
 <style>
   .heat { border-collapse: collapse; margin: 8px 0; }
@@ -16,6 +13,38 @@
   .tok:hover { background: #dbe7ff; }
   .tok.sel { outline: 2px solid #ec4899; }
 </style>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<script>
+(function(){
+  function render(){
+    if(typeof renderMathInElement !== 'function') return false;
+    try{
+      renderMathInElement(document.body,{
+        delimiters:[
+          {left:'$$',right:'$$',display:true},
+          {left:'\[',right:'\]',display:true},
+          {left:'\(',right:'\)',display:false},
+          {left:'$',right:'$',display:false}
+        ],
+        ignoredTags:['script','noscript','style','textarea','pre','code'],
+        throwOnError:false
+      });
+    }catch(e){console.warn('katex render error',e)}
+    return true;
+  }
+  function go(){ if(render()) return; setTimeout(go,200); }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',go); else go();
+  window.addEventListener('load',function(){render(); setTimeout(render,500); setTimeout(render,1500)});
+  if(window.MutationObserver){
+    var t=null;
+    new MutationObserver(function(){ clearTimeout(t); t=setTimeout(render,200); })
+      .observe(document.documentElement,{childList:true,subtree:true});
+  }
+  window.__katexRender = render;
+})();
+</script>
 </head>
 <body>
 
@@ -79,21 +108,21 @@
   <section id="math" class="blk reveal">
     <h2 class="blk-title"><span class="num">②</span>数学：缩放点积注意力</h2>
     <p style="color:var(--text-2)">这是 Transformer 的核心公式，一个式子搞定"匹配 + 加权"：</p>
-    <div class="math">\\( \text{Attention}(Q,K,V)=\text{softmax}\!\left(\dfrac{QK^{\top}}{\sqrt{d_k}}\right)V \\)</div>
+    <div class="math">\( \text{Attention}(Q,K,V)=\text{softmax}\!\left(\dfrac{QK^{\top}}{\sqrt{d_k}}\right)V \)</div>
     <p style="color:var(--text-2)">逐步拆解：</p>
     <table class="tb">
       <thead><tr><th>步骤</th><th>表达式</th><th>在干嘛</th></tr></thead>
       <tbody>
-        <tr><td>① 算匹配度</td><td rowspan="1"><span class="math">\\( QK^{\top} \\)</span></td><td>每个 Query 和所有 Key 做点积，得到"像不像"的分数矩阵</td></tr>
-        <tr><td>② 缩放</td><td><span class="math">\\( \div\sqrt{d_k} \\)</span></td><td>维度越大点积越大，除以 <span class="math">\\( \sqrt{d_k} \\)</span> 防止 softmax 进饱和区、梯度消失</td></tr>
-        <tr><td>③ 归一化</td><td><span class="math">\\( \text{softmax}(\cdot) \\)</span></td><td>把分数转成加起来等于 1 的权重</td></tr>
-        <tr><td>④ 加权求和</td><td><span class="math">\\( \cdot\,V \\)</span></td><td>按权重把各词的 Value 混合起来，得到输出</td></tr>
+        <tr><td>① 算匹配度</td><td rowspan="1"><span class="math">\( QK^{\top} \)</span></td><td>每个 Query 和所有 Key 做点积，得到"像不像"的分数矩阵</td></tr>
+        <tr><td>② 缩放</td><td><span class="math">\( \div\sqrt{d_k} \)</span></td><td>维度越大点积越大，除以 <span class="math">\( \sqrt{d_k} \)</span> 防止 softmax 进饱和区、梯度消失</td></tr>
+        <tr><td>③ 归一化</td><td><span class="math">\( \text{softmax}(\cdot) \)</span></td><td>把分数转成加起来等于 1 的权重</td></tr>
+        <tr><td>④ 加权求和</td><td><span class="math">\( \cdot\,V \)</span></td><td>按权重把各词的 Value 混合起来，得到输出</td></tr>
       </tbody>
     </table>
     <h3 style="margin:22px 0 10px">为什么要"多头"？</h3>
     <p style="color:var(--text-2)">一个注意力头只能学一种关注模式。多头 = 多个头并行，各自关注不同关系（一个看语法主谓、一个看指代、一个看修饰），再把结果拼起来：</p>
-    <div class="math">\\( \text{MultiHead}(Q,K,V)=\text{Concat}(\text{head}_1,\dots,\text{head}_h)W^{O},\quad \text{head}_i=\text{Attention}(QW_i^{Q},KW_i^{K},VW_i^{V}) \\)</div>
-    <div class="insight"><b>复杂度警告：</b> 注意力要对每对位置算分数，复杂度是 <span class="math">\\( O(n^2) \\)</span>——序列翻倍，计算量和显存翻 4 倍。这就是长文本处理昂贵、也是 FlashAttention / 稀疏注意力 / 线性注意力等优化方法存在的根本原因。</div>
+    <div class="math">\( \text{MultiHead}(Q,K,V)=\text{Concat}(\text{head}_1,\dots,\text{head}_h)W^{O},\quad \text{head}_i=\text{Attention}(QW_i^{Q},KW_i^{K},VW_i^{V}) \)</div>
+    <div class="insight"><b>复杂度警告：</b> 注意力要对每对位置算分数，复杂度是 <span class="math">\( O(n^2) \)</span>——序列翻倍，计算量和显存翻 4 倍。这就是长文本处理昂贵、也是 FlashAttention / 稀疏注意力 / 线性注意力等优化方法存在的根本原因。</div>
   </section>
 
   <!-- ③ 代码 -->
@@ -136,7 +165,7 @@ out, attn = <span class="f">scaled_dot_product_attention</span>(q, k, v, mask)
     <div class="grid g2">
       <div class="card">
         <h4>加速：FlashAttention</h4>
-        <p style="font-size:.92rem;color:var(--text-2)">传统实现要把 <span class="math">\\( n\times n \\)</span> 的分数矩阵写进显存。FlashAttention 用分块 + 在线 softmax，<strong>不落地完整矩阵</strong>，显存和速度都大幅改善，是现代训练的标配。</p>
+        <p style="font-size:.92rem;color:var(--text-2)">传统实现要把 <span class="math">\( n\times n \)</span> 的分数矩阵写进显存。FlashAttention 用分块 + 在线 softmax，<strong>不落地完整矩阵</strong>，显存和速度都大幅改善，是现代训练的标配。</p>
       </div>
       <div class="card">
         <h4>省 KV 缓存：MQA / GQA</h4>
@@ -148,7 +177,7 @@ out, attn = <span class="f">scaled_dot_product_attention</span>(q, k, v, mask)
       </div>
       <div class="card">
         <h4>长文本的下一站</h4>
-        <p style="font-size:.92rem;color:var(--text-2)">滑动窗口注意力、稀疏注意力、线性注意力、状态空间模型（Mamba）都在试图绕开 <span class="math">\\( O(n^2) \\)</span> 的代价。这是当前最活跃的研究方向之一。</p>
+        <p style="font-size:.92rem;color:var(--text-2)">滑动窗口注意力、稀疏注意力、线性注意力、状态空间模型（Mamba）都在试图绕开 <span class="math">\( O(n^2) \)</span> 的代价。这是当前最活跃的研究方向之一。</p>
       </div>
     </div>
   </section>

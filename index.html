@@ -4,9 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>agent-nlp-llm · 自然语言技术本体论研究站</title>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
-<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
-<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
 <link rel="stylesheet" href="css/site.css">
 <style>
 .reveal { opacity: 0; transform: translateY(18px); transition: opacity .55s ease, transform .55s ease; }
@@ -15,7 +12,6 @@
 .hero-stat div { text-align: center; }
 .hero-stat b { display: block; font-size: 1.8rem; font-weight: 800; background: linear-gradient(120deg,#3b6fe0,#7c3aed); -webkit-background-clip: text; background-clip: text; color: transparent; }
 .hero-stat span { font-size: .84rem; color: var(--text-3); }
-.book-badge { display: inline-flex; align-items: center; gap: 6px; font-size: .78rem; background: #fff8ec; color: #a96b06; border: 1px solid #f5e3c0; padding: 3px 10px; border-radius: 20px; margin: 4px 4px 0 0; }
 .path-step { display: flex; gap: 16px; align-items: flex-start; padding: 18px 0; border-bottom: 1px dashed var(--border); }
 .path-step:last-child { border-bottom: none; }
 .path-lv { flex: 0 0 56px; height: 56px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-weight: 800; color: #fff; font-size: 1rem; }
@@ -25,6 +21,38 @@
 .play-card { text-decoration: none; color: inherit; display: block; }
 .play-card .pc-icon { font-size: 1.9rem; margin-bottom: 10px; display: block; }
 </style>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<script>
+(function(){
+  function render(){
+    if(typeof renderMathInElement !== 'function') return false;
+    try{
+      renderMathInElement(document.body,{
+        delimiters:[
+          {left:'$$',right:'$$',display:true},
+          {left:'\[',right:'\]',display:true},
+          {left:'\(',right:'\)',display:false},
+          {left:'$',right:'$',display:false}
+        ],
+        ignoredTags:['script','noscript','style','textarea','pre','code'],
+        throwOnError:false
+      });
+    }catch(e){console.warn('katex render error',e)}
+    return true;
+  }
+  function go(){ if(render()) return; setTimeout(go,200); }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',go); else go();
+  window.addEventListener('load',function(){render(); setTimeout(render,500); setTimeout(render,1500)});
+  if(window.MutationObserver){
+    var t=null;
+    new MutationObserver(function(){ clearTimeout(t); t=setTimeout(render,200); })
+      .observe(document.documentElement,{childList:true,subtree:true});
+  }
+  window.__katexRender = render;
+})();
+</script>
 </head>
 <body>
 
@@ -273,8 +301,8 @@
 
   <!-- 创意玩法入口 -->
   <section id="playground" class="blk reveal">
-    <h2 class="blk-title"><span class="num">06</span>🎨 两本书里的经典案例，全部做成可玩的互动 Demo</h2>
-    <p class="blk-desc">下面的互动实验<strong>严格对应两本书的具体章节</strong>：你在书里看到公式和代码，这里用真实 JavaScript 实现了相同的计算逻辑，滑块拖动实时看到结果变化。从动手里长出来的理解，比死记硬背牢十倍。</p>
+    <h2 class="blk-title"><span class="num">06</span>🎨 两本教材中的经典案例，全部做成可玩的互动 Demo</h2>
+    <p class="blk-desc">下面的互动实验把 NLP/LLM 的核心算法做成了可拖动、可训练的真实演示——滑块拖动实时看到结果变化。从动手里长出来的理解，比死记硬背牢十倍。</p>
 
     <!-- 实验室总入口 -->
     <a href="lab.html" class="lab-hero-card">
@@ -287,24 +315,24 @@
     </a>
 
     <div class="grid g3">
-      <a class="card play-card" href="sigmoid.html"><span class="pc-icon">∫</span><h4>激活函数曲线<span style="font-size:.7em;color:var(--text-3);margin-left:4px">书2 附录A</span></h4><p style="font-size:.88rem;color:var(--text-2)">sigmoid/tanh/ReLU/GELU 实时切换，拖动 x 看点的切线，理解为什么大模型偏爱 GELU</p></a>
-      <a class="card play-card" href="cbow.html"><span class="pc-icon">🧩</span><h4>CBOW 推理<span style="font-size:.7em;color:var(--text-3);margin-left:4px">书2 第3章</span></h4><p style="font-size:.88rem;color:var(--text-2)">在你自己的句子上真实训练 300 轮 CBOW，看上下文→中间词的完整推理链</p></a>
-      <a class="card play-card" href="neg-sample.html"><span class="pc-icon">🎲</span><h4>负采样<span style="font-size:.7em;color:var(--text-3);margin-left:4px">书2 第4章</span></h4><p style="font-size:.88rem;color:var(--text-2)">拖动词表大小/负样本数，实时看"百万分类→二分类"加速倍数，抽一次样看谁被抽中</p></a>
-      <a class="card play-card" href="lstm-gate.html"><span class="pc-icon">🚪</span><h4>LSTM 三个门控<span style="font-size:.7em;color:var(--text-3);margin-left:4px">书2 第6章</span></h4><p style="font-size:.88rem;color:var(--text-2)">拖遗忘/输入/输出门滑块，10 步记忆单元可视化；一键播放"写入→保留→输出"长记忆场景</p></a>
-      <a class="card play-card" href="seq2seq-add.html"><span class="pc-icon">➕</span><h4>加法数据集实验<span style="font-size:.7em;color:var(--text-3);margin-left:4px">书2 第7章</span></h4><p style="font-size:.88rem;color:var(--text-2)">真实训练 Baseline/Reverse/Peeky 三种 seq2seq，复现书2 P311 "Peeky 在 30 epoch 近 100%"的结果</p></a>
-      <a class="card play-card" href="attn-date.html"><span class="pc-icon">📅</span><h4>Attention 日期翻译<span style="font-size:.7em;color:var(--text-3);margin-left:4px">书2 第8章</span></h4><p style="font-size:.88rem;color:var(--text-2)">输入任意日期格式，实时画出注意力热力图——复现书2图8-19 的对齐可视化</p></a>
-      <a class="card play-card" href="lora.html"><span class="pc-icon">🪢</span><h4>LoRA 低秩适配<span style="font-size:.7em;color:var(--text-3);margin-left:4px">书1 附录E</span></h4><p style="font-size:.88rem;color:var(--text-2)">拖动 r 和 α，实时看 ΔW 矩阵 vs BA·α/r 的近似误差与参数量压缩比</p></a>
-      <a class="card play-card" href="skip-cbow.html"><span class="pc-icon">⚖️</span><h4>CBOW vs Skip-gram<span style="font-size:.7em;color:var(--text-3);margin-left:4px">书2 第3章</span></h4><p style="font-size:.88rem;color:var(--text-2)">两模型并排对比：上下文预测中心词 vs 中心词预测上下文；拖动窗口大小看样本数 2C 倍差距</p></a>
-      <a class="card play-card" href="context-window.html"><span class="pc-icon">🪟</span><h4>滑动窗口 + 因果掩码<span style="font-size:.7em;color:var(--text-3);margin-left:4px">书1 第2-3章</span></h4><p style="font-size:.88rem;color:var(--text-2)">输入句子后滑动窗口切出(X,Y)训练对，实时画出上三角因果掩码矩阵（1/-∞）</p></a>
-      <a class="card play-card" href="multihead.html"><span class="pc-icon">👥</span><h4>多头注意力分工<span style="font-size:.7em;color:var(--text-3);margin-left:4px">书1 第3章</span></h4><p style="font-size:.88rem;color:var(--text-2)">8 个头切换：前邻词/句法/指代消解/自关注/稀有词……复现 Voita & Clark 的经典多头角色分析</p></a>
-      <a class="card play-card" href="gru-lstm.html"><span class="pc-icon">🆚</span><h4>GRU vs LSTM 对比<span style="font-size:.7em;color:var(--text-3);margin-left:4px">书2 第6章</span></h4><p style="font-size:.88rem;color:var(--text-2)">2 个门 vs 3 个门并排走 10 步序列，看 c/h 传送带记忆稳定性差异和参数量对比</p></a>
-      <a class="card play-card" href="gpt-params.html"><span class="pc-icon">🔧</span><h4>GPT 参数量 & 采样<span style="font-size:.7em;color:var(--text-3);margin-left:4px">书1 第4-5章</span></h4><p style="font-size:.88rem;color:var(--text-2)">拖动 d_model/layers/heads 看参数量（GPT-2 124M精确复现），调温度/top-k亲自采样下一词</p></a>
-      <a class="card play-card" href="ppl.html"><span class="pc-icon">📏</span><h4>困惑度 PPL 互动<span style="font-size:.7em;color:var(--text-3);margin-left:4px">书1 第5章</span></h4><p style="font-size:.88rem;color:var(--text-2)">逐词点击调概率看 PPL=exp(Loss) 如何飙升/下降；三句对比+训练曲线可视化过拟合</p></a>
+      <a class="card play-card" href="sigmoid.html"><span class="pc-icon">∫</span><h4>激活函数曲线<span style="font-size:.7em;color:var(--text-3);margin-left:4px">附录A</span></h4><p style="font-size:.88rem;color:var(--text-2)">sigmoid/tanh/ReLU/GELU 实时切换，拖动 x 看点的切线，理解为什么大模型偏爱 GELU</p></a>
+      <a class="card play-card" href="cbow.html"><span class="pc-icon">🧩</span><h4>CBOW 推理<span style="font-size:.7em;color:var(--text-3);margin-left:4px"></span></h4><p style="font-size:.88rem;color:var(--text-2)">在你自己的句子上真实训练 300 轮 CBOW，看上下文→中间词的完整推理链</p></a>
+      <a class="card play-card" href="neg-sample.html"><span class="pc-icon">🎲</span><h4>负采样<span style="font-size:.7em;color:var(--text-3);margin-left:4px"></span></h4><p style="font-size:.88rem;color:var(--text-2)">拖动词表大小/负样本数，实时看"百万分类→二分类"加速倍数，抽一次样看谁被抽中</p></a>
+      <a class="card play-card" href="lstm-gate.html"><span class="pc-icon">🚪</span><h4>LSTM 三个门控<span style="font-size:.7em;color:var(--text-3);margin-left:4px"></span></h4><p style="font-size:.88rem;color:var(--text-2)">拖遗忘/输入/输出门滑块，10 步记忆单元可视化；一键播放"写入→保留→输出"长记忆场景</p></a>
+      <a class="card play-card" href="seq2seq-add.html"><span class="pc-icon">➕</span><h4>加法数据集实验<span style="font-size:.7em;color:var(--text-3);margin-left:4px"></span></h4><p style="font-size:.88rem;color:var(--text-2)">真实训练 Baseline/Reverse/Peeky 三种 seq2seq，复现"Peeky 在 30 epoch 近 100%"的结果</p></a>
+      <a class="card play-card" href="attn-date.html"><span class="pc-icon">📅</span><h4>Attention 日期翻译<span style="font-size:.7em;color:var(--text-3);margin-left:4px"></span></h4><p style="font-size:.88rem;color:var(--text-2)">输入任意日期格式，实时画出注意力热力图——复现的对齐可视化</p></a>
+      <a class="card play-card" href="lora.html"><span class="pc-icon">🪢</span><h4>LoRA 低秩适配<span style="font-size:.7em;color:var(--text-3);margin-left:4px">附录E</span></h4><p style="font-size:.88rem;color:var(--text-2)">拖动 r 和 α，实时看 ΔW 矩阵 vs BA·α/r 的近似误差与参数量压缩比</p></a>
+      <a class="card play-card" href="skip-cbow.html"><span class="pc-icon">⚖️</span><h4>CBOW vs Skip-gram<span style="font-size:.7em;color:var(--text-3);margin-left:4px"></span></h4><p style="font-size:.88rem;color:var(--text-2)">两模型并排对比：上下文预测中心词 vs 中心词预测上下文；拖动窗口大小看样本数 2C 倍差距</p></a>
+      <a class="card play-card" href="context-window.html"><span class="pc-icon">🪟</span><h4>滑动窗口 + 因果掩码<span style="font-size:.7em;color:var(--text-3);margin-left:4px">第2-3章</span></h4><p style="font-size:.88rem;color:var(--text-2)">输入句子后滑动窗口切出(X,Y)训练对，实时画出上三角因果掩码矩阵（1/-∞）</p></a>
+      <a class="card play-card" href="multihead.html"><span class="pc-icon">👥</span><h4>多头注意力分工<span style="font-size:.7em;color:var(--text-3);margin-left:4px">第3章</span></h4><p style="font-size:.88rem;color:var(--text-2)">8 个头切换：前邻词/句法/指代消解/自关注/稀有词……复现 Voita & Clark 的经典多头角色分析</p></a>
+      <a class="card play-card" href="gru-lstm.html"><span class="pc-icon">🆚</span><h4>GRU vs LSTM 对比<span style="font-size:.7em;color:var(--text-3);margin-left:4px"></span></h4><p style="font-size:.88rem;color:var(--text-2)">2 个门 vs 3 个门并排走 10 步序列，看 c/h 传送带记忆稳定性差异和参数量对比</p></a>
+      <a class="card play-card" href="gpt-params.html"><span class="pc-icon">🔧</span><h4>GPT 参数量 & 采样<span style="font-size:.7em;color:var(--text-3);margin-left:4px">第4-5章</span></h4><p style="font-size:.88rem;color:var(--text-2)">拖动 d_model/layers/heads 看参数量（GPT-2 124M精确复现），调温度/top-k亲自采样下一词</p></a>
+      <a class="card play-card" href="ppl.html"><span class="pc-icon">📏</span><h4>困惑度 PPL 互动<span style="font-size:.7em;color:var(--text-3);margin-left:4px">第5章</span></h4><p style="font-size:.88rem;color:var(--text-2)">逐词点击调概率看 PPL=exp(Loss) 如何飙升/下降；三句对比+训练曲线可视化过拟合</p></a>
       <a class="card play-card" href="bpe.html"><span class="pc-icon">🔤</span><h4>BPE 分词器逐步骤</h4><p style="font-size:.88rem;color:var(--text-2)">一步步看 BPE 怎么把字符合并成子词，理解 GPT 分词原理</p></a>
       <a class="card play-card" href="embedding.html"><span class="pc-icon">🧭</span><h4>词向量类比游戏</h4><p style="font-size:.88rem;color:var(--text-2)">国王−男人+女人=？亲手算一算语义空间里的向量运算</p></a>
       <a class="card play-card" href="attention.html"><span class="pc-icon">🎯</span><h4>注意力可视化沙盒</h4><p style="font-size:.88rem;color:var(--text-2)">换句子、调参数，实时看注意力权重怎么分布</p></a>
-      <a class="card play-card" href="word2vec.html"><span class="pc-icon">🧠</span><h4>word2vec 从零代码<span style="font-size:.7em;color:var(--text-3);margin-left:4px">书2 ch3-4</span></h4><p style="font-size:.88rem;color:var(--text-2)">完整教程：共现矩阵→CBOW→skip-gram→负采样，四步教学法讲透</p></a>
-      <a class="card play-card" href="rnn.html"><span class="pc-icon">🔁</span><h4>RNN/LSTM 从零<span style="font-size:.7em;color:var(--text-3);margin-left:4px">书2 ch5-6</span></h4><p style="font-size:.88rem;color:var(--text-2)">梯度消失数学推导 + LSTM 三个门完整实现，拒绝调包</p></a>
+      <a class="card play-card" href="word2vec.html"><span class="pc-icon">🧠</span><h4>word2vec 从零代码<span style="font-size:.7em;color:var(--text-3);margin-left:4px">ch3-4</span></h4><p style="font-size:.88rem;color:var(--text-2)">完整教程：共现矩阵→CBOW→skip-gram→负采样，四步教学法讲透</p></a>
+      <a class="card play-card" href="rnn.html"><span class="pc-icon">🔁</span><h4>RNN/LSTM 从零<span style="font-size:.7em;color:var(--text-3);margin-left:4px">ch5-6</span></h4><p style="font-size:.88rem;color:var(--text-2)">梯度消失数学推导 + LSTM 三个门完整实现，拒绝调包</p></a>
       <a class="card play-card" href="clinic.html"><span class="pc-icon">🕵️</span><h4>大模型错误诊断诊所</h4><p style="font-size:.88rem;color:var(--text-2)">给你"病例"，你当医生诊断是数据问题还是模型问题</p></a>
       <a class="card play-card" href="pitfalls.html"><span class="pc-icon">💥</span><h4>Prompt 踩坑博物馆</h4><p style="font-size:.88rem;color:var(--text-2)">收集真实翻车案例，看别人的坑长什么样</p></a>
       <a class="card play-card" href="benchmark.html"><span class="pc-icon">📊</span><h4>模型选型决策器</h4><p style="font-size:.88rem;color:var(--text-2)">按预算/场景/性能一步步选出合适模型</p></a>
@@ -341,30 +369,8 @@
     <h2 class="blk-title"><span class="num">08</span>📖 参考书地图：本站在两本书上的坐标系</h2>
     <p class="blk-desc">本站的内容体系参考了两本经典著作的知识骨架，你可以把它当成这两本书的"可视化导航"。</p>
     <div class="grid g2">
-      <div class="card">
-        <h4>📕 《从零构建大语言模型》</h4>
-        <p style="font-size:.9rem;color:var(--text-2);margin:8px 0">Sebastian Raschka 著（Manning 原版）。从零实现一个类 GPT 模型，覆盖 LLM 全生命周期。</p>
-        <span class="book-badge">第1章 Transformer 概览</span>
-        <span class="book-badge">第2章 文本处理与词元化</span>
-        <span class="book-badge">第3章 注意力机制</span>
-        <span class="book-badge">第4章 GPT 模型实现</span>
-        <span class="book-badge">第5章 预训练</span>
-        <span class="book-badge">第6章 分类微调</span>
-        <span class="book-badge">第7章 指令微调</span>
-        <p style="font-size:.86rem;color:var(--text-3);margin-top:10px">→ 对应本站 <a href="llm/index.html">LLM 模块</a> 与 <a href="bpe.html">BPE 分词器</a>、<a href="attention.html">注意力沙盒</a></p>
-      </div>
-      <div class="card">
-        <h4>📗 《深度学习入门 2：自制框架》</h4>
-        <p style="font-size:.9rem;color:var(--text-2);margin:8px 0">斋藤康毅 著。从零实现自动微分框架，讲透 NLP 底层原理。</p>
-        <span class="book-badge">第1章 神经网络复习</span>
-        <span class="book-badge">第2章 单词分布式表示</span>
-        <span class="book-badge">第3章 word2vec CBOW</span>
-        <span class="book-badge">第4章 负采样高速化</span>
-        <span class="book-badge">第5章 RNN 语言模型</span>
-        <span class="book-badge">第6章 Gated RNN / LSTM</span>
-        <span class="book-badge">第7章 注意力机制</span>
-        <p style="font-size:.86rem;color:var(--text-3);margin-top:10px">→ 对应本站 <a href="nlp/index.html">NLP 模块</a> 与 <a href="embedding.html">词向量游戏</a></p>
-      </div>
+      
+      
     </div>
   </section>
 

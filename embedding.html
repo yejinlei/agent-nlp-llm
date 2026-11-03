@@ -4,14 +4,43 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>词向量 · 把词变成能算数的东西 · agent-nlp-llm</title>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
-<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
-<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
 <link rel="stylesheet" href="css/site.css">
 <style>
   canvas { max-width: 100%; border-radius: 12px; background: #fbfcff; border: 1px solid var(--border); }
   .vec-out { font-family: var(--mono); font-size: 1rem; }
 </style>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<script>
+(function(){
+  function render(){
+    if(typeof renderMathInElement !== 'function') return false;
+    try{
+      renderMathInElement(document.body,{
+        delimiters:[
+          {left:'$$',right:'$$',display:true},
+          {left:'\[',right:'\]',display:true},
+          {left:'\(',right:'\)',display:false},
+          {left:'$',right:'$',display:false}
+        ],
+        ignoredTags:['script','noscript','style','textarea','pre','code'],
+        throwOnError:false
+      });
+    }catch(e){console.warn('katex render error',e)}
+    return true;
+  }
+  function go(){ if(render()) return; setTimeout(go,200); }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',go); else go();
+  window.addEventListener('load',function(){render(); setTimeout(render,500); setTimeout(render,1500)});
+  if(window.MutationObserver){
+    var t=null;
+    new MutationObserver(function(){ clearTimeout(t); t=setTimeout(render,200); })
+      .observe(document.documentElement,{childList:true,subtree:true});
+  }
+  window.__katexRender = render;
+})();
+</script>
 </head>
 <body>
 
@@ -67,19 +96,19 @@
   <section id="math" class="blk reveal">
     <h2 class="blk-title"><span class="num">②</span>数学：目标函数到底在优化什么</h2>
     <h3 style="margin:18px 0 10px">共现矩阵与相似度</h3>
-    <p style="color:var(--text-2)">先统计词与词在同一窗口里共现的次数，得到矩阵 <span class="math">\\( M \in \mathbb{R}^{|V|\times|V|} \\)</span>。衡量两个词向量相似度最常用<strong>余弦相似度</strong>：</p>
-    <div class="math">\\( \text{sim}(u,v)=\cos\theta=\dfrac{u\cdot v}{\|u\|\,\|v\|}=\dfrac{\sum_i u_i v_i}{\sqrt{\sum_i u_i^2}\sqrt{\sum_i v_i^2}} \\)</div>
+    <p style="color:var(--text-2)">先统计词与词在同一窗口里共现的次数，得到矩阵 <span class="math">\( M \in \mathbb{R}^{|V|\times|V|} \)</span>。衡量两个词向量相似度最常用<strong>余弦相似度</strong>：</p>
+    <div class="math">\( \text{sim}(u,v)=\cos\theta=\dfrac{u\cdot v}{\|u\|\,\|v\|}=\dfrac{\sum_i u_i v_i}{\sqrt{\sum_i u_i^2}\sqrt{\sum_i v_i^2}} \)</div>
     <p style="color:var(--text-2)">它只看方向、不看长度——因为词频高低不该影响"意思像不像"。</p>
 
     <h3 style="margin:22px 0 10px">CBOW 与 Skip-gram</h3>
     <p style="color:var(--text-2)"><strong>CBOW</strong>：拿上下文预测中心词（小上下文窗口，更快）。<strong>Skip-gram</strong>：拿中心词预测上下文（对低频词更好）。以 CBOW 为例，目标是让"给定上下文预测中心词"的条件概率最大：</p>
-    <div class="math">\\( \mathcal{L}=-\dfrac{1}{T}\sum_{t=1}^{T}\log p(w_t \mid w_{t-m},\dots,w_{t+m}) \\)
-    \\( p(w_t\mid \text{ctx})=\dfrac{\exp(u_{w_t}^{\top} h)}{\sum_{w'=1}^{|V|}\exp(u_{w'}^{\top} h)} \\)</div>
-    <p style="color:var(--text-2)">其中 <span class="math">\\( h \\)</span> 是上下文向量的平均。分母要对整个词表求和——词表几万到几十万，这一步太慢，所以有了下面的加速。</p>
+    <div class="math">\( \mathcal{L}=-\dfrac{1}{T}\sum_{t=1}^{T}\log p(w_t \mid w_{t-m},\dots,w_{t+m}) \)
+    \( p(w_t\mid \text{ctx})=\dfrac{\exp(u_{w_t}^{\top} h)}{\sum_{w'=1}^{|V|}\exp(u_{w'}^{\top} h)} \)</div>
+    <p style="color:var(--text-2)">其中 <span class="math">\( h \)</span> 是上下文向量的平均。分母要对整个词表求和——词表几万到几十万，这一步太慢，所以有了下面的加速。</p>
 
     <h3 style="margin:22px 0 10px">负采样：把"几十万分类"变成"一个是非题"</h3>
     <p style="color:var(--text-2)">不预测"到底是哪个词"，只判断"真实搭配 vs 随机乱配"。这就是从多分类变成二分类，核心损失：</p>
-    <div class="math">\\( \mathcal{L}=-\log\sigma(u_o^{\top}h)-\sum_{k=1}^{K}\mathbb{E}_{w_k\sim P_n(w)}\big[\log\sigma(-u_{w_k}^{\top}h)\big] \\)</div>
+    <div class="math">\( \mathcal{L}=-\log\sigma(u_o^{\top}h)-\sum_{k=1}^{K}\mathbb{E}_{w_k\sim P_n(w)}\big[\log\sigma(-u_{w_k}^{\top}h)\big] \)</div>
     <div class="insight"><b>为什么有效？</b> 分母那个巨大求和没了，每次只抽 K 个（通常 5–15 个）负样本。训练速度提升几十倍，效果几乎不损失。这是 word2vec 能流行的关键工程技巧。</div>
   </section>
 
@@ -148,7 +177,7 @@ opt = torch.optim.Adam(model.parameters(), lr=<span class="n">2e-3</span>)
   <!-- 类比游戏 -->
   <section id="play" class="blk reveal">
     <h2 class="blk-title"><span class="num">🧭</span>类比游戏：亲手算一次向量运算</h2>
-    <p class="blk-desc">下面用真实的二维向量表（简化示意，真实维度通常 100–4096）来演示。选三个词做 <span class="math">\\( \vec{A}-\vec{B}+\vec{C} \\)</span>，看看最近的是谁。</p>
+    <p class="blk-desc">下面用真实的二维向量表（简化示意，真实维度通常 100–4096）来演示。选三个词做 <span class="math">\( \vec{A}-\vec{B}+\vec{C} \)</span>，看看最近的是谁。</p>
     <div class="ctrl">
       <select id="vA"><option>国王</option><option>男人</option><option>北京</option><option>猫</option><option>走</option></select>
       <span style="font-weight:800">−</span>

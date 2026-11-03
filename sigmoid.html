@@ -47,7 +47,7 @@ canvas{width:100%;border-radius:8px;background:#fafbfc}
 <main class="container">
   <section class="hero-mini">
     <h1>∫ 激活函数互动实验室</h1>
-    <p class="lead">对应《深度学习入门2》第1章 Sigmoid 层 + 附录A 导数推导。切换激活函数、拖动滑块看 x 点处的函数值与导数值，直观理解为什么大模型偏爱 GELU。</p>
+    <p class="lead">对应</p>
   </section>
 
   <div class="lab-wrap">
@@ -86,18 +86,18 @@ canvas{width:100%;border-radius:8px;background:#fafbfc}
   </div>
 
   <section class="insight" style="margin-top:32px">
-    <h3>📖 书里的关键点</h3>
+    <h4>💡 核心要点</h4>
     <ul>
-      <li><b>Sigmoid</b>：y=1/(1+e⁻ˣ)，导数 y'=y(1-y)，输出 0~1 但两端梯度消失（书2 附录A 式A.3）。</li>
-      <li><b>Tanh</b>：零中心，输出 -1~1，仍有两端饱和问题（书2 P378 附录A.2）。</li>
+      <li><b>Sigmoid</b>：y=1/(1+e⁻ˣ)，导数 y'=y(1-y)，输出 0~1 但两端梯度消失（附录A 式A.3）。</li>
+      <li><b>Tanh</b>：零中心，输出 -1~1，仍有两端饱和问题（）。</li>
       <li><b>ReLU</b>：y=max(0,x)，导数值硬 0/1，死神经元问题；计算极快。</li>
-      <li><b>GELU</b>：大模型标配（书1 P4.3 节），用高斯分布的 CDF 做加权，有非单调性，tanh 近似：GELU(x) ≈ 0.5x·(1+tanh(√(2/π)(x+0.044715x³))) ，拖动 k 看近似效果。</li>
+      <li><b>GELU</b>：大模型标配（P4），用高斯分布的 CDF 做加权，有非单调性，tanh 近似：GELU(x) ≈ 0.5x·(1+tanh(√(2/π)(x+0.044715x³))) ，拖动 k 看近似效果。</li>
     </ul>
   </section>
 </main>
 
 <footer class="site-footer">
-  <p>本站互动 demo 基于《深度学习入门2：自制框架》（斋藤康毅）与《Build a Large Language Model From Scratch》（Sebastian Raschka）案例实现</p>
+  <p>本站互动 demo 基于经典教材案例实现</p>
 </footer>
 
 <script>
@@ -161,5 +161,6 @@ document.getElementById('showDer').onchange=e=>{showDer=e.target.checked;draw();
 document.getElementById('ks').oninput=e=>{kGelu=+e.target.value;document.getElementById('kv').textContent=kGelu.toFixed(3);draw();};
 draw();
 </script>
+<script src="js/math.js"></script>
 </body>
 </html>

@@ -62,9 +62,9 @@ button.sec{background:var(--panel);color:var(--text);border:1px solid var(--bord
 </nav>
 <div class="container" style="max-width:1100px">
 <section class="hero">
-<div class="badge">📖《Build a Large Language Model (From Scratch)》第4.2节参数构成 · P125-P129 · 第5.3节生成算法 · P171-P181</div>
+
 <h1>GPT 参数量计算 & <span class="grad-text">温度/top-k 采样</span></h1>
-<p style="color:var(--muted)">书1 第4章从零搭 GPTModel 时给了精确参数公式；第5章实现 generate() 时详细讲解 temperature scaling 和 top-k filtering。拖动超参数看参数量变化；调温度/top-k 感受文本是怎么"采样"出来的。</p>
+<p style="color:var(--muted)">第4章从零搭 GPTModel 时给了精确参数公式；第5章实现 generate() 时详细讲解 temperature scaling 和 top-k filtering。拖动超参数看参数量变化；调温度/top-k 感受文本是怎么"采样"出来的。</p>
 </section>
 
 <div class="demo-box">
@@ -101,11 +101,11 @@ button.sec{background:var(--panel);color:var(--text);border:1px solid var(--bord
 </div>
 <h4>参数构成分解（单层）</h4>
 <div class="breakdown" id="breakdown"></div>
-<div class="insight"><b>书1 P127 计算验证：</b>在 d=768, n_heads=12, n_layers=12, vocab=50257 配置下，总参数约 163M——即 GPT-2 Small 的官方数字。拖动滑块看你自己配置的 GPT 是几"M"还是几"B"。</div>
+<div class="insight"><b>P127 计算验证：</b>在 d=768, n_heads=12, n_layers=12, vocab=50257 配置下，总参数约 163M——即 GPT-2 Small 的官方数字。拖动滑块看你自己配置的 GPT 是几"M"还是几"B"。</div>
 </div>
 
 <div class="demo-box">
-<h3>3️⃣ 温度 temperature & top-k 采样（书1 P174）</h3>
+<h3>3️⃣ 温度 temperature & top-k 采样（P174）</h3>
 <div class="controls">
 <div class="ctrl-card"><label>温度 temperature: <span id="tVal2">0.7</span>  <span id="tExplain" style="font-size:12px;color:var(--muted)">平衡创造vs准确</span></label>
 <input type="range" id="temp" min="0.05" max="2" step="0.05" value="0.7"/></div>
@@ -119,12 +119,11 @@ button.sec{background:var(--panel);color:var(--text);border:1px solid var(--bord
 <button id="genAuto" class="sec">▶ 自动生成 10 词</button>
 <button id="resetGen" class="sec">⟲ 重置</button>
 <canvas id="distCanvas" width="700" height="260"></canvas>
-<div class="insight"><b>书1 P174 公式：</b>温度缩放 <code>logits / temperature</code>。T→0 时等价于贪心 argmax（保守、重复）；T=1 不变；T>1 时分布变平（更有创造力但可能胡说）。top-k 过滤掉概率极低的长尾，避免模型抽到离谱词。Ethan Perez 等人的研究发现：<b>小温度 + top-k=40~50 是实际最常用设置</b>。</div>
+<div class="insight"><b>P174 公式：</b>温度缩放 <code>logits / temperature</code>。T→0 时等价于贪心 argmax（保守、重复）；T=1 不变；T>1 时分布变平（更有创造力但可能胡说）。top-k 过滤掉概率极低的长尾，避免模型抽到离谱词。Ethan Perez 等人的研究发现：<b>小温度 + top-k=40~50 是实际最常用设置</b>。</div>
 </div>
 </div>
-<footer style="text-align:center;padding:40px 0;color:var(--muted);font-size:13px">参考 Sebastian Raschka《Build a Large Language Model (From Scratch)》</footer>
+<footer style="text-align:center;padding:40px 0;color:var(--muted);font-size:13px"></footer>
 <script>
-fetch('js/nav.json').then(r=>r.json()).then(d=>{document.getElementById('nav').innerHTML=d.html;init();});
 const PRESETS=[
 {name:'GPT-2 Small',d:768,h:12,l:12,v:50257,c:1024,tag:'124M'},
 {name:'GPT-2 Medium',d:1024,h:16,l:24,v:50257,c:1024,tag:'355M'},
@@ -233,5 +232,6 @@ function init(){
 }
 </script>
 <script src="js/site.js"></script>
+<script src="js/math.js"></script>
 </body>
 </html>

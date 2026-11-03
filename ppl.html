@@ -53,13 +53,13 @@ canvas{background:#0f172a;border-radius:8px;border:1px solid var(--border);width
 </nav>
 <div class="container" style="max-width:1100px">
 <section class="hero">
-<div class="badge">📖《Build a Large Language Model (From Scratch)》第5.4节 · P181-P186</div>
+
 <h1>困惑度 Perplexity：<span class="grad-text">衡量模型"惊讶程度"</span></h1>
-<p style="color:var(--muted)">书1 P182 定义 <b>PPL = exp(Loss)</b>，Loss 是平均每 token 的交叉熵。直觉理解：模型在每个位置平均"在多少个候选词里犹豫"。PPL=1 是完美（每步100%确定），PPL=100 表示每步平均在 100 个词里选，PPL=词表大小等于瞎猜。输入一句话，调节每个词的概率看 PPL 如何变化。</p>
+<p style="color:var(--muted)">P182 定义 <b>PPL = exp(Loss)</b>，Loss 是平均每 token 的交叉熵。直觉理解：模型在每个位置平均"在多少个候选词里犹豫"。PPL=1 是完美（每步100%确定），PPL=100 表示每步平均在 100 个词里选，PPL=词表大小等于瞎猜。输入一句话，调节每个词的概率看 PPL 如何变化。</p>
 </section>
 
 <div class="demo-box">
-<h3>1️⃣ 数学定义（书1 P182）</h3>
+<h3>1️⃣ 数学定义（P182）</h3>
 <div class="formula">
 交叉熵损失：Loss = -1/N · Σ<sub>i</sub> log P(x<sub>i</sub> | x<sub>&lt;i</sub>)<br>
 困惑度：<b style="color:#fbbf24">PPL = exp(Loss) = ( Π<sub>i</sub> 1/P(x<sub>i</sub>|x<sub>&lt;i</sub>) )<sup>1/N</sup></b><br>
@@ -113,16 +113,15 @@ canvas{background:#0f172a;border-radius:8px;border:1px solid var(--border);width
 </div>
 
 <div class="demo-box">
-<h3>6️⃣ 训练过程中 Loss/PPL 变化（书1 P201 图5.15）</h3>
+<h3>6️⃣ 训练过程中 Loss/PPL 变化（P201 图5.15）</h3>
 <canvas id="trainCanvas" width="800" height="280"></canvas>
 <div class="insight">
-<b>书1 P186 原文：</b>"PPL 是评估 LLM 最常用的指标之一。训练时 PPL 单调下降（Loss 下降），验证集 PPL 开始上升时说明过拟合。" GPT-3 在 WebText 上的 PPL 约 20-25，Llama-2 在 1T tokens 上约 10-15。
+<b>P186 原文：</b>"PPL 是评估 LLM 最常用的指标之一。训练时 PPL 单调下降（Loss 下降），验证集 PPL 开始上升时说明过拟合。" GPT-3 在 WebText 上的 PPL 约 20-25，Llama-2 在 1T tokens 上约 10-15。
 </div>
 </div>
 </div>
-<footer style="text-align:center;padding:40px 0;color:var(--muted);font-size:13px">参考 Sebastian Raschka《Build a Large Language Model (From Scratch)》第5.4节</footer>
+<footer style="text-align:center;padding:40px 0;color:var(--muted);font-size:13px"></footer>
 <script>
-fetch('js/nav.json').then(r=>r.json()).then(d=>{document.getElementById('nav').innerHTML=d.html;init();});
 
 // 简化的n-gram "语言模型"：根据词频和二元转移给每个位置一个合理的初始P
 const CORPUS_BIGRAM={};
@@ -278,5 +277,6 @@ function init(){
 }
 </script>
 <script src="js/site.js"></script>
+<script src="js/math.js"></script>
 </body>
 </html>

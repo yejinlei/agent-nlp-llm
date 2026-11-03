@@ -5,9 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>NLP · 自然语言处理</title>
 <script src="https://cdn.tailwindcss.com"></script>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
-<script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
 <style>
@@ -42,6 +39,38 @@ h2 { margin-top: 48px; margin-bottom: 24px; padding-bottom: 12px; border-bottom:
 h4 { margin-top: 20px; margin-bottom: 12px; color: #1e40af; }
 </style>
 <link rel="stylesheet" href="../css/site.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<script>
+(function(){
+  function render(){
+    if(typeof renderMathInElement !== 'function') return false;
+    try{
+      renderMathInElement(document.body,{
+        delimiters:[
+          {left:'$$',right:'$$',display:true},
+          {left:'\[',right:'\]',display:true},
+          {left:'\(',right:'\)',display:false},
+          {left:'$',right:'$',display:false}
+        ],
+        ignoredTags:['script','noscript','style','textarea','pre','code'],
+        throwOnError:false
+      });
+    }catch(e){console.warn('katex render error',e)}
+    return true;
+  }
+  function go(){ if(render()) return; setTimeout(go,200); }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',go); else go();
+  window.addEventListener('load',function(){render(); setTimeout(render,500); setTimeout(render,1500)});
+  if(window.MutationObserver){
+    var t=null;
+    new MutationObserver(function(){ clearTimeout(t); t=setTimeout(render,200); })
+      .observe(document.documentElement,{childList:true,subtree:true});
+  }
+  window.__katexRender = render;
+})();
+</script>
 </head>
 <body>
 <!-- 导航栏 -->
@@ -225,7 +254,7 @@ print(list(jieba.cut(text)))  # ['我', '爱', '自然语言', '处理']</code><
       </div>
     </div>
 
-    <h4>📌 书2第2–4章的核心链条（一句话版）</h4>
+    <h4>📌 –4章的核心链条（一句话版）</h4>
     <ul class="list-disc pl-6 text-gray-700 space-y-2 mb-4">
       <li><b>共现矩阵</b>：统计每个词周围出现哪些词，把"上下文"变成可计算的数字。</li>
       <li><b>PMI 点互信息</b>：<span class="mono">PMI = log₂(P(x,y)/P(x)P(y))</span>，把"the 到处共现"的高频噪音压下去，只留真正的语义关联。</li>
@@ -266,7 +295,7 @@ class SkipGram(nn.Module):
     </div>
 
     <h4>🎯 负采样：把 100 万分类变成 5 分类</h4>
-    <p class="text-gray-600 mb-3">原始 Skip-gram 要对 <b>整个词表（几十万～上百万）</b> 做 softmax，算一步就要遍历所有词，慢到无法训练。书2《深度学习入门2：自制框架》第4章的精髓就是用 <b>负采样（Negative Sampling）</b> 把问题偷换成"二分类"：</p>
+    <p class="text-gray-600 mb-3">原始 Skip-gram 要对 <b>整个词表（几十万～上百万）</b> 做 softmax，算一步就要遍历所有词，慢到无法训练。<b>负采样（Negative Sampling）</b> 把问题偷换成"二分类"：</p>
     <div class="callout callout-info">
       <div class="callout-line">不给模型"从 100 万词里挑对的"，而是问它"这个词对是不是真实共现的？"</div>
       <div class="callout-note">正样本 = 真实上下文词；负样本 = 随机抽几个"噪声词"。于是每步只算 1 + k 个（k 通常 5~10）Sigmoid，计算量与词表大小彻底解耦。</div>
@@ -274,7 +303,7 @@ class SkipGram(nn.Module):
     <pre class="code"><code class="language-python">import numpy as np
 
 def get_negative_samples(corpus, target_id, num_neg, vocab_size):
-    """书2第4章：从语料中按词频随机抽负样本，避开目标词本身"""
+    """：从语料中按词频随机抽负样本，避开目标词本身"""
     negs = []
     while len(negs) < num_neg:
         s = np.random.choice(corpus)          # corpus 是所有出现过的词 id 数组
@@ -297,7 +326,7 @@ def negative_sampling_loss(score_pos, score_neg):
       <div class="callout-note">= 1 方向完全相同（同义）；= 0 正交无关；= −1 完全相反。除以两个模长就抹掉了"词频"带来的长度差异。</div>
     </div>
     <pre class="code"><code class="language-python">def cosine_similarity(x, y):
-    """书2第3章的相似度计算，逐元素实现，不用现成库"""
+    """的相似度计算，逐元素实现，不用现成库"""
     nx = x / np.sqrt(np.sum(x ** 2))     # 单位化：除以自身模长
     ny = y / np.sqrt(np.sum(y ** 2))
     return np.dot(nx, ny)
@@ -336,20 +365,20 @@ def most_similar(query_id, word_vecs, word_to_id, top=5):
     <p class="text-gray-600">LSTM虽然能捕捉长距离依赖，但本质还是循环结构，无法并行计算，长距离（超过几百字）效果还是会衰减，后来被自注意力机制彻底取代。</p>
 
     <h4>⚠️ 梯度消失的数学根源：连乘的衰减</h4>
-    <p class="text-gray-600 mb-3">书2《深度学习入门2：自制框架》第5～6章专门拆解了这个问题。RNN 反向传播要沿时间<b>一步步回传</b>，梯度里会出现一连串雅可比矩阵的连乘：</p>
+    <p class="text-gray-600 mb-3">经典教材中专门拆解了这个问题。RNN 反向传播要沿时间<b>一步步回传</b>，梯度里会出现一连串雅可比矩阵的连乘：</p>
     <div class="callout callout-warn">
       <div class="callout-line">∂L/∂h₁ = ∂L/∂h<sub>T</sub> · ∏<sub>t=2..T</sub> ∂h<sub>t</sub>/∂h<sub>t−1</sub></div>
       <div class="callout-note">每一步的雅可比若"谱范数 < 1"，连乘 T 次就指数级趋近 0（梯度消失，学不到远距离依赖）；若 > 1 则指数爆炸（梯度爆炸，训练发散）。这就是 RNN 记不住长句的根本原因。</div>
     </div>
 
     <h4>✂️ 截断反向传播（Truncated BPTT）：工程上的折中</h4>
-    <p class="text-gray-600 mb-3">理论要对整个序列反向传播，但序列可能上万步，显存和时间都扛不住。书2的做法是：<b>把长序列切成固定长度的"块"</b>，块内完整反向传播，块与块之间只传递隐藏状态、<b>不跨块回传梯度</b>。代价是丢失超长依赖，收益是显存可控、可并行流水。这正是所有 RNN 类模型训练的标配。</p>
+    <p class="text-gray-600 mb-3">理论要对整个序列反向传播，但序列可能上万步，显存和时间都扛不住。的做法是：<b>把长序列切成固定长度的"块"</b>，块内完整反向传播，块与块之间只传递隐藏状态、<b>不跨块回传梯度</b>。代价是丢失超长依赖，收益是显存可控、可并行流水。这正是所有 RNN 类模型训练的标配。</p>
     <pre class="code"><code class="language-python">class SimpleRnnlm:
-    """书2第5章：截断 BPTT —— 状态在块间延续，梯度只在块内回传"""
+    """：截断 BPTT —— 状态在块间延续，梯度只在块内回传"""
     def __init__(self, vocab_size, wordvec_size, hidden_size, bptt_len=10):
         V, D, H = vocab_size, wordvec_size, hidden_size
         self.bptt_len = bptt_len                     # 每个块的长度
-        # 书里的 Xavier 初始化：让前向信号方差不随层数爆炸
+        # 教材中的 Xavier 初始化：让前向信号方差不随层数爆炸
         self.Wx  = np.random.randn(V, H) / np.sqrt(V) * 0.01
         self.Wh  = np.random.randn(H, H) / np.sqrt(H)
         self.b   = np.zeros(H)
@@ -512,151 +541,6 @@ print("预测结果:", "正面" if prediction == 1 else "负面")</code></pre>
   </section>
 </div>
 
-<script>
-// 滚动高亮目录
-const sections = document.querySelectorAll('section[id]');
-const navLinks = document.querySelectorAll('.sidebar a');
-window.addEventListener('scroll', () => {
-  let current = '';
-  sections.forEach(section => {
-    const sectionTop = section.offsetTop;
-    if (scrollY >= sectionTop - 100) current = section.getAttribute('id');
-  });
-  navLinks.forEach(link => {
-    link.classList.remove('active');
-    if (link.getAttribute('href') === '#' + current) link.classList.add('active');
-  });
-});
-
-// 平滑滚动
-document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-  anchor.addEventListener('click', function (e) {
-    e.preventDefault();
-    const target = document.querySelector(this.getAttribute('href'));
-    if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  });
-});
-
-// Viterbi分词演示
-const viterbiCanvas = document.getElementById('viterbiCanvas');
-const viterbiCtx = viterbiCanvas.getContext('2d');
-viterbiCanvas.width = viterbiCanvas.offsetWidth;
-viterbiCanvas.height = 250;
-
-// B M E S 状态转移概率（简化版）
-const transP = {
-    'B': {'B':0.0001, 'M':0.3, 'E':0.6998, 'S':0.0001},
-    'M': {'B':0.0001, 'M':0.4, 'E':0.5998, 'S':0.0001},
-    'E': {'B':0.45, 'M':0.0001, 'E':0.0001, 'S':0.5498},
-    'S': {'B':0.45, 'M':0.0001, 'E':0.0001, 'S':0.5498}
-};
-// 发射概率（简化）
-const emitP = 0.5; // 每个字对应每个状态的简化概率
-const states = ['B', 'M', 'E', 'S'];
-const stateColors = {'B':'#3b82f6', 'M':'#8b5cf6', 'E':'#10b981', 'S':'#f59e0b'};
-
-function runViterbi() {
-    const text = document.getElementById('viterbiInput').value;
-    const n = text.length;
-    if (n === 0) return;
-    
-    // Viterbi算法
-    const dp = Array(n).fill(0).map(() => ({}));
-    const back = Array(n).fill(0).map(() => ({}));
-    
-    // 初始化
-    states.forEach(s => dp[0][s] = s === 'B' || s === 'S' ? emitP : 0.0001);
-    
-    // 递推
-    for (let i = 1; i < n; i++) {
-        states.forEach(curr => {
-            let maxP = -1, bestPrev = '';
-            states.forEach(prev => {
-                const p = dp[i-1][prev] * transP[prev][curr] * emitP;
-                if (p > maxP) { maxP = p; bestPrev = prev; }
-            });
-            dp[i][curr] = maxP;
-            back[i][curr] = bestPrev;
-        });
-    }
-    
-    // 回溯找最优路径
-    let lastState = 'E';
-    if (dp[n-1]['S'] > dp[n-1]['E']) lastState = 'S';
-    const path = [lastState];
-    for (let i = n-1; i > 0; i--) {
-        lastState = back[i][lastState];
-        path.unshift(lastState);
-    }
-    
-    // 分词结果
-    let result = '';
-    for (let i = 0; i < n; i++) {
-        result += text[i];
-        if (path[i] === 'E' || path[i] === 'S') result += ' / ';
-    }
-    document.getElementById('viterbiResult').innerHTML = 
-        `<span class="text-gray-500">最优路径:</span> ${path.join(' → ')}<br>
-         <span class="text-gray-500">分词结果:</span> <span class="text-blue-600 font-bold">${result.trim().slice(0,-1)}</span>`;
-    
-    // 画网格
-    viterbiCtx.clearRect(0, 0, viterbiCanvas.width, viterbiCanvas.height);
-    const cellW = (viterbiCanvas.width - 100) / n;
-    const cellH = 40;
-    const startX = 80;
-    const startY = 30;
-    
-    // 状态标签
-    states.forEach((s, i) => {
-        viterbiCtx.fillStyle = stateColors[s];
-        viterbiCtx.fillRect(10, startY + i*cellH + 5, 20, cellH - 10);
-        viterbiCtx.fillStyle = '#1f2937';
-        viterbiCtx.font = '14px sans-serif';
-        viterbiCtx.fillText(s, 40, startY + i*cellH + cellH/2 + 5);
-    });
-    
-    // 画网格
-    for (let i = 0; i < n; i++) {
-        viterbiCtx.fillStyle = '#1f2937';
-        viterbiCtx.textAlign = 'center';
-        viterbiCtx.fillText(text[i], startX + i*cellW + cellW/2, 20);
-        states.forEach((s, j) => {
-            const prob = dp[i][s];
-            const alpha = Math.min(1, prob * 3);
-            viterbiCtx.fillStyle = stateColors[s] + Math.floor(alpha*200).toString(16).padStart(2,'0');
-            viterbiCtx.fillRect(startX + i*cellW + 2, startY + j*cellH + 2, cellW - 4, cellH - 4);
-            viterbiCtx.strokeStyle = '#e5e7eb';
-            viterbiCtx.strokeRect(startX + i*cellW + 2, startY + j*cellH + 2, cellW - 4, cellH - 4);
-        });
-    }
-    
-    // 画最优路径
-    viterbiCtx.strokeStyle = '#ef4444';
-    viterbiCtx.lineWidth = 3;
-    viterbiCtx.beginPath();
-    path.forEach((s, i) => {
-        const j = states.indexOf(s);
-        const x = startX + i*cellW + cellW/2;
-        const y = startY + j*cellH + cellH/2;
-        if (i === 0) viterbiCtx.moveTo(x, y);
-        else viterbiCtx.lineTo(x, y);
-    });
-    viterbiCtx.stroke();
-}
-
-function resetViterbi() {
-    viterbiCtx.clearRect(0, 0, viterbiCanvas.width, viterbiCanvas.height);
-    document.getElementById('viterbiResult').innerHTML = '点击"运行分词"查看Viterbi最优路径计算过程';
-}
-
-resetViterbi();
-
-// 公式渲染与代码高亮
-document.addEventListener('DOMContentLoaded', function() {
-  renderMathInElement(document.body, {delimiters: [{left: '$$', right: '$$', display: true}, {left: '$', right: '$', display: false}]});
-  hljs.highlightAll();
-});
-</script>
 <script src="../js/site.js"></script>
 </body>
 </html>

@@ -4,9 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>模型选型 · 到底该用哪个模型 · agent-nlp-llm</title>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
-<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
-<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
 <link rel="stylesheet" href="css/site.css">
 <style>
   .q-row { margin-bottom: 16px; }
@@ -18,6 +15,38 @@
   .reco { background:linear-gradient(120deg,#f0f6ff,#f7f0ff); border:1px solid var(--border-2); border-radius:14px; padding:22px; }
   .reco b.name { font-size:1.3rem; color:var(--purple); }
 </style>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<script>
+(function(){
+  function render(){
+    if(typeof renderMathInElement !== 'function') return false;
+    try{
+      renderMathInElement(document.body,{
+        delimiters:[
+          {left:'$$',right:'$$',display:true},
+          {left:'\[',right:'\]',display:true},
+          {left:'\(',right:'\)',display:false},
+          {left:'$',right:'$',display:false}
+        ],
+        ignoredTags:['script','noscript','style','textarea','pre','code'],
+        throwOnError:false
+      });
+    }catch(e){console.warn('katex render error',e)}
+    return true;
+  }
+  function go(){ if(render()) return; setTimeout(go,200); }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',go); else go();
+  window.addEventListener('load',function(){render(); setTimeout(render,500); setTimeout(render,1500)});
+  if(window.MutationObserver){
+    var t=null;
+    new MutationObserver(function(){ clearTimeout(t); t=setTimeout(render,200); })
+      .observe(document.documentElement,{childList:true,subtree:true});
+  }
+  window.__katexRender = render;
+})();
+</script>
 </head>
 <body>
 
@@ -153,7 +182,7 @@
       </div>
       <div class="card">
         <h4>② 语言模型困惑度 PPL</h4>
-        <p style="font-size:.92rem;color:var(--text-2)">PPL 越低说明模型对文本的"意外程度"越小。公式 <span class="math">\\( \text{PPL}=\exp\!\big(-\frac{1}{N}\sum_i \log p(w_i)\big) \\)</span>。但 PPL 低不等于任务表现好，只能衡量语言流畅度。</p>
+        <p style="font-size:.92rem;color:var(--text-2)">PPL 越低说明模型对文本的"意外程度"越小。公式 <span class="math">\( \text{PPL}=\exp\!\big(-\frac{1}{N}\sum_i \log p(w_i)\big) \)</span>。但 PPL 低不等于任务表现好，只能衡量语言流畅度。</p>
       </div>
       <div class="card">
         <h4>③ 在自己的数据上测</h4>

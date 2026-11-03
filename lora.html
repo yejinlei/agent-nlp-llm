@@ -48,7 +48,7 @@ canvas{width:100%;border-radius:6px;background:#fafbfc;margin-top:12px}
 
 <main class="container">
   <section class="hero-mini"><h1>🪢 LoRA 低秩适配实验室</h1>
-    <p class="lead">对应《Build a Large Language Model From Scratch》附录E「使用 LoRA 进行参数高效微调」。核心思想：冻结预训练权重 W₀，只训练两个小矩阵 B·A（秩为 r），让 h = W₀x + (α/r)·BAx。拖动滑块看 r 与 α 如何影响参数量和近似精度。</p>
+    <p class="lead">核心思想：冻结预训练权重 W₀，只训练两个小矩阵 B·A（秩为 r），让 h = W₀x + (α/r)·BAx。拖动滑块看 r 与 α 如何影响参数量和近似精度。</p>
   </section>
 
   <div class="lab">
@@ -60,7 +60,7 @@ canvas{width:100%;border-radius:6px;background:#fafbfc;margin-top:12px}
       <div class="slider-row"><label>目标 ΔW 的秩 <b id="tv">满秩</b></label><input type="range" id="trank" min="1" max="64" step="1" value="64"></div>
 
       <div class="lora-formula" style="margin-top:18px">
-        <b>LoRA 公式（书1 附录E 式E.1）：</b><br>
+        <b>LoRA 公式（附录E 式E.1）：</b><br>
         W = W₀ + <span class="del">ΔW</span> = W₀ + <span class="b">B</span><sub>d×r</sub> · <span class="a">A</span><sub>r×d</sub> · (α/r)<br>
         · 前向时：<span class="del">ΔW</span>x = B(Ax) · α/r<br>
         · 推理时可合并到 W₀，零额外开销
@@ -84,9 +84,9 @@ canvas{width:100%;border-radius:6px;background:#fafbfc;margin-top:12px}
 
       <div style="margin-top:14px;font-size:13px" id="errBox"></div>
 
-      <div class="insight" style="margin-top:16px"><h4>📖 书1 附录E 的关键点</h4>
+      <div class="insight" style="margin-top:16px"><h4>📖 附录E 的关键点</h4>
         <ul style="font-size:13px;line-height:1.8">
-          <li><b>r 的选择</b>：经验值 r=4~64，r 太小表达能力不足，r 太大失去参数效率。书1 提到 r=8 或 r=16 在多数任务已足够。</li>
+          <li><b>r 的选择</b>：经验值 r=4~64，r 太小表达能力不足，r 太大失去参数效率。r=8 或 r=16 在多数任务已足够。</li>
           <li><b>α 缩放</b>：α/r 让我们在改变 r 时不必重新调学习率，常用 α=2r（即缩放因子为 2）。</li>
           <li><b>只在注意力投影（Wq/Wv）上用 LoRA</b>是常见做法，MLP 层通常冻结，进一步省参数。</li>
           <li><b>推理合并</b>：训练完后 ΔW = BA·α/r 可以直接加到 W₀ 上，推理和原模型完全一样快——这是 LoRA 相比 Adapter 的最大优势。</li>
@@ -95,8 +95,6 @@ canvas{width:100%;border-radius:6px;background:#fafbfc;margin-top:12px}
     </div>
   </div>
 </main>
-
-<footer class="site-footer"><p>基于《Build a Large Language Model From Scratch》附录E LoRA 实现</p></footer>
 
 <script>
 const cv=document.getElementById('cv'),ctx=cv.getContext('2d');
@@ -212,5 +210,6 @@ function draw(){
 ['dim','rank','alpha','trank'].forEach(id=>document.getElementById(id).oninput=draw);
 draw();
 </script>
+<script src="js/math.js"></script>
 </body>
 </html>

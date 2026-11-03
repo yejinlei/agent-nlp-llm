@@ -53,9 +53,9 @@ canvas{background:var(--panel);border-radius:8px;margin:10px 0;border:1px solid 
 </nav>
 <div class="container" style="max-width:1100px">
 <section class="hero">
-  <div class="badge">📖《深度学习进阶：NLP》第3.3–3.5节 · P113–P131</div>
+  <div class="badge">📖</div>
   <h1>CBOW vs Skip-gram：<span class="grad-text">两种 word2vec 架构</span></h1>
-  <p style="color:var(--muted)">书2第3章指出：CBOW 用多个上下文预测一个目标词，Skip-gram 反过来用一个目标词预测每个上下文词。对小规模/低频词 Skip-gram 更优，CBOW 训练更快。拖动参数实时生成训练样本。</p>
+  <p style="color:var(--muted)">指出：CBOW 用多个上下文预测一个目标词，Skip-gram 反过来用一个目标词预测每个上下文词。对小规模/低频词 Skip-gram 更优，CBOW 训练更快。拖动参数实时生成训练样本。</p>
 </section>
 
 <div class="demo-box">
@@ -83,7 +83,7 @@ canvas{background:var(--panel);border-radius:8px;margin:10px 0;border:1px solid 
 <div class="arrow-row">
 <div class="layer-box" style="background:#7dd3fc40">输入层: C×V one-hot</div>→<div class="layer-box" style="background:#7dd3fc60">W_in（共享）</div>→<div class="layer-box" style="background:#7dd3fc80">平均 h</div>→<div class="layer-box" style="background:#7dd3fc99">W_out</div>→<div class="layer-box" style="background:#0ea5e9;color:#fff">softmax→1词</div>
 </div>
-<p style="font-size:13px;color:var(--muted)">书2 P123：CBOW 一个样本产生 <b>1</b> 个损失，窗口大小 C 时 Skip-gram 产生 <b>2C</b> 个损失。</p>
+<p style="font-size:13px;color:var(--muted)">CBOW 一个样本产生 <b>1</b> 个损失，窗口大小 C 时 Skip-gram 产生 <b>2C</b> 个损失。</p>
 <div id="cbowPairs" class="pair-list"></div>
 <div class="stat-grid" id="cbowStats"></div>
 </div>
@@ -91,11 +91,11 @@ canvas{background:var(--panel);border-radius:8px;margin:10px 0;border:1px solid 
 <div class="skip-col">
 <h3>🟨 Skip-gram</h3>
 <div class="sent-box" id="skipSent"></div>
-<p style="font-size:14px;color:var(--muted)">思路：用<span class="skip-tgt token" style="padding:2px 6px;font-size:13px">中心词</span>预测<span class="skip-ctx token" style="padding:2px 6px;font-size:13px">每个上下文词</span>。书2 P131 末尾："Skip-gram 低频词性能更好"。</p>
+<p style="font-size:14px;color:var(--muted)">思路：用<span class="skip-tgt token" style="padding:2px 6px;font-size:13px">中心词</span>预测<span class="skip-ctx token" style="padding:2px 6px;font-size:13px">每个上下文词</span>。末尾："Skip-gram 低频词性能更好"。</p>
 <div class="arrow-row">
 <div class="layer-box" style="background:#fde04740">输入层: 1个 one-hot</div>→<div class="layer-box" style="background:#fde04760">W_in</div>→<div class="layer-box" style="background:#fde04780">h（就是该词嵌入）</div>→<div class="layer-box" style="background:#fde04799">W_out</div>→<div class="layer-box" style="background:#fbbf24;color:#000">softmax→2C词</div>
 </div>
-<p style="font-size:13px;color:var(--muted)">书2 P129：损失为所有上下文位置的交叉熵之和，等价于训练 <b>2C</b> 个二分类。</p>
+<p style="font-size:13px;color:var(--muted)">损失为所有上下文位置的交叉熵之和，等价于训练 <b>2C</b> 个二分类。</p>
 <div id="skipPairs" class="pair-list"></div>
 <div class="stat-grid" id="skipStats"></div>
 </div>
@@ -106,7 +106,7 @@ canvas{background:var(--panel);border-radius:8px;margin:10px 0;border:1px solid 
 <p style="font-size:14px;color:var(--muted)">句子长 N=7 时，CBOW 样本数=N-2C，Skip-gram 样本数=2C(N-2C)。</p>
 <canvas id="sampleChart" width="900" height="320"></canvas>
 <div class="insight">
-<b>书2 P131 原话总结：</b>“Skip-gram 比 CBOW 对低频词更准确，但训练时间更长（因为样本数多 2C 倍）。” Mikolov 原论文推荐：小语料/重精度用 Skip-gram，大语料/重速度用 CBOW。
+<b>原话总结：</b>“Skip-gram 比 CBOW 对低频词更准确，但训练时间更长（因为样本数多 2C 倍）。” Mikolov 原论文推荐：小语料/重精度用 Skip-gram，大语料/重速度用 CBOW。
 </div>
 </div>
 
@@ -116,10 +116,8 @@ canvas{background:var(--panel);border-radius:8px;margin:10px 0;border:1px solid 
 </div>
 </div>
 <footer style="text-align:center;padding:40px 0;color:var(--muted);font-size:13px">
-  参考 Sebastian Raschka《Build a Large Language Model (From Scratch)》· 斋藤康毅《深度学习进阶：NLP》
-</footer>
+  </footer>
 <script>
-fetch('js/nav.json').then(r=>r.json()).then(d=>{document.getElementById('nav').innerHTML=d.html.replace(/active/gm,k=>k==='skip-cbow'?'active':'');render();});
 const $=id=>document.getElementById(id);
 function render(){
   const win=+$('win').value;$('winVal').textContent=win;
@@ -181,5 +179,6 @@ $('win').addEventListener('input',render);
 $('sent').addEventListener('change',render);
 </script>
 <script src="js/site.js"></script>
+<script src="js/math.js"></script>
 </body>
 </html>

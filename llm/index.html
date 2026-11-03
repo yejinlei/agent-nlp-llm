@@ -5,9 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>LLM · 大语言模型</title>
 <script src="https://cdn.tailwindcss.com"></script>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
-<script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
 <style>
@@ -42,6 +39,38 @@ h2 { margin-top: 48px; margin-bottom: 24px; padding-bottom: 12px; border-bottom:
 h4 { margin-top: 20px; margin-bottom: 12px; color: #6b21a8; }
 </style>
 <link rel="stylesheet" href="../css/site.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<script>
+(function(){
+  function render(){
+    if(typeof renderMathInElement !== 'function') return false;
+    try{
+      renderMathInElement(document.body,{
+        delimiters:[
+          {left:'$$',right:'$$',display:true},
+          {left:'\[',right:'\]',display:true},
+          {left:'\(',right:'\)',display:false},
+          {left:'$',right:'$',display:false}
+        ],
+        ignoredTags:['script','noscript','style','textarea','pre','code'],
+        throwOnError:false
+      });
+    }catch(e){console.warn('katex render error',e)}
+    return true;
+  }
+  function go(){ if(render()) return; setTimeout(go,200); }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',go); else go();
+  window.addEventListener('load',function(){render(); setTimeout(render,500); setTimeout(render,1500)});
+  if(window.MutationObserver){
+    var t=null;
+    new MutationObserver(function(){ clearTimeout(t); t=setTimeout(render,200); })
+      .observe(document.documentElement,{childList:true,subtree:true});
+  }
+  window.__katexRender = render;
+})();
+</script>
 </head>
 <body>
 <!-- 导航栏 -->
@@ -178,7 +207,7 @@ h4 { margin-top: 20px; margin-bottom: 12px; color: #6b21a8; }
     </table>
 
     <h4>🔧 从零实现单头因果自注意力（QKV 是怎么算出来的）</h4>
-    <p class="text-gray-600 mb-3">书1《Build a Large Language Model (From Scratch)》里，注意力被拆成三个矩阵：<b>Query（我在找什么）</b>、<b>Key（我能提供什么）</b>、<b>Value（我实际贡献什么）</b>。缩放点积注意力的公式只有一行，但每个符号都要落实到代码：</p>
+    <p class="text-gray-600 mb-3">经典实现里，注意力被拆成三个矩阵：<b>Query（我在找什么）</b>、<b>Key（我能提供什么）</b>、<b>Value（我实际贡献什么）</b>。缩放点积注意力的公式只有一行，但每个符号都要落实到代码：</p>
     <div class="callout callout-info">
       <div class="callout-line">Attention(Q,K,V) = softmax( <b>Q·Kᵀ / √d<sub>k</sub></b> ) · V</div>
       <div class="callout-note">除以 √d<sub>k</sub> 是防止点积随维度变大而数值爆炸、把 softmax 推入梯度极小的饱和区。</div>
@@ -186,7 +215,7 @@ h4 { margin-top: 20px; margin-bottom: 12px; color: #6b21a8; }
     <pre class="code"><code class="language-python">import torch, torch.nn as nn
 
 class CausalSelfAttention(nn.Module):
-    """书1第3章的单头实现，seq_len 每步只能看见自己及之前的 token"""
+    """第3章的单头实现，seq_len 每步只能看见自己及之前的 token"""
     def __init__(self, d_in, d_out, context_length, dropout, qkv_bias=False):
         super().__init__()
         self.d_out = d_out
@@ -213,9 +242,9 @@ print(CausalSelfAttention(4, 4, 3, 0.0)(x).shape)   # torch.Size([2, 3, 4])</cod
     <p class="text-gray-600 mb-3">把 <code>W_query/W_key/W_value</code> 换成 <b>多组并行</b> 就叫 <b>多头注意力（MHA）</b>：让模型在不同子空间里同时关注不同的关系（一个头盯语法、一个头盯指代……），最后拼接。现代大模型更进一步改为 <b>GQA</b>——多个 Query 头共享同一组 K/V 头，把推理时的 KV Cache 显存降到 1/4～1/8，这也是 Llama-3、Qwen2 的默认选择。</p>
 
     <h4>🧩 GELU：为什么大模型抛弃了 ReLU</h4>
-    <p class="text-gray-600 mb-3">书1里 GPT 的 FFN 层用的是 <b>GELU（高斯误差线性单元）</b> 而不是 ReLU。ReLU 在负半轴直接归零，梯度在 0 处不光滑、容易让神经元"死掉"；GELU 用一个平滑的门控曲线给小负值留一条小通路，梯度更稳、表达更细腻。近似写法：</p>
+    <p class="text-gray-600 mb-3">里 GPT 的 FFN 层用的是 <b>GELU（高斯误差线性单元）</b> 而不是 ReLU。ReLU 在负半轴直接归零，梯度在 0 处不光滑、容易让神经元"死掉"；GELU 用一个平滑的门控曲线给小负值留一条小通路，梯度更稳、表达更细腻。近似写法：</p>
     <pre class="code"><code class="language-python">class GELU(nn.Module):
-    """书1第4章的 tanh 近似实现，和官方精确版本数值误差 < 1e-3"""
+    """第4章的 tanh 近似实现，和官方精确版本数值误差 < 1e-3"""
     def forward(self, x):
         return 0.5 * x * (1.0 + torch.tanh(
             torch.sqrt(torch.tensor(2.0 / torch.pi)) *
@@ -242,7 +271,7 @@ class FeedForward(nn.Module):
     </div>
     <p class="text-gray-600 mb-3">为什么 NLP 偏爱 LayerNorm？因为文本序列长度不一、batch 里样本差异大，BatchNorm 的统计量会剧烈抖动；而 LayerNorm 对每个样本独立计算，<b>天然不受 batch 大小和序列长度影响</b>，训练和推理行为也一致（这点对在线生成至关重要）。</p>
     <pre class="code"><code class="language-python">class LayerNorm(nn.Module):
-    """书1第4章：沿最后一维(feature)做归一化"""
+    """第4章：沿最后一维(feature)做归一化"""
     def __init__(self, emb_dim, eps=1e-5):
         super().__init__()
         self.eps = eps
@@ -258,14 +287,14 @@ class FeedForward(nn.Module):
     <h4>🪟 滑动窗口采样：训练数据是怎么"切"出来的</h4>
     <p class="text-gray-600 mb-3">语言模型训练时，输入和标签是<b>同一段文本错开一位</b>得到的。给定长文本，用一个长度为 <span class="mono">max_length</span> 的窗口滑动取样：</p>
     <pre class="code"><code class="language-python">def create_dataloader(txt, max_length=4, stride=1):
-    """书1第2章：输入=当前窗口，标签=窗口向右错一位"""
+    """第2章：输入=当前窗口，标签=窗口向右错一位"""
     input_ids = tokenizer.encode(txt)
     for i in range(0, len(input_ids) - max_length, stride):
         yield (input_ids[i : i + max_length],       # 输入
                input_ids[i + 1 : i + max_length + 1]) # 标签(错一位)</code></pre>
     <div class="callout callout-info">
       <div class="callout-line">stride 的取舍：stride=1 样本最多、覆盖最全，但相邻样本高度重叠（冗余）；stride=max_length 无重叠、样本最少、冗余最低。</div>
-      <div class="callout-note">书1里默认 stride=1，一个长文档能切出成百上千个训练样本——这也是"无标签语料"能被充分利用的原因。</div>
+      <div class="callout-note">里默认 stride=1，一个长文档能切出成百上千个训练样本——这也是"无标签语料"能被充分利用的原因。</div>
     </div>
   </section>
 
@@ -282,7 +311,7 @@ class FeedForward(nn.Module):
       <div class="callout-note">PPL 可以直观理解为"模型在每一步平均在多少个候选词之间犹豫"。PPL = 10 意味着模型大概在 10 个词里做选择。</div>
     </div>
     <pre class="code"><code class="language-python">def calc_loss_batch(input_batch, target_batch, model, device):
-    """书1第5章的损失计算：输入和标签只错开一个位置"""
+    """第5章的损失计算：输入和标签只错开一个位置"""
     input_batch, target_batch = input_batch.to(device), target_batch.to(device)
     logits = model(input_batch)                      # (B, T, vocab)
     return torch.nn.functional.cross_entropy(
@@ -294,7 +323,7 @@ loss = 3.2
 print(f'Loss={loss}, PPL={torch.exp(torch.tensor(loss)).item():.1f}')  # PPL=24.5</code></pre>
 
     <h4>🎲 生成时的"调味料"：温度与 top-k 采样</h4>
-    <p class="text-gray-600 mb-3">同一个模型，换个采样策略，输出的风格天差地别——这正是书1第5章 <code>generate</code> 函数的核心：</p>
+    <p class="text-gray-600 mb-3">同一个模型，换个采样策略，输出的风格天差地别——这正是第5章 <code>generate</code> 函数的核心：</p>
     <div class="grid grid-cols-2 gap-4 mb-4">
       <div class="card bg-orange-50 border-orange-200">
         <h5 class="font-bold text-orange-800">🌡️ 温度 Temperature</h5>
@@ -316,7 +345,7 @@ print(f'Loss={loss}, PPL={torch.exp(torch.tensor(loss)).item():.1f}')  # PPL=24.
       </div>
     </div>
     <pre class="code"><code class="language-python">def generate(model, idx, max_new_tokens, context_size, temperature=0.0, top_k=None):
-    """书1第5章：自回归逐词生成，temperature 与 top_k 二选一或组合"""
+    """第5章：自回归逐词生成，temperature 与 top_k 二选一或组合"""
     for _ in range(max_new_tokens):
         idx_cond = idx[:, -context_size:]                   # 裁到上下文长度
         with torch.no_grad():
@@ -345,7 +374,7 @@ print(f'Loss={loss}, PPL={torch.exp(torch.tensor(loss)).item():.1f}')  # PPL=24.
     <p class="text-gray-700 mb-4">SFT（Supervised Fine-Tuning）是让模型"听懂人话"的第一步：用高质量的"指令-回答"对微调模型，教它按照人类指令输出格式回答问题，而不是继续续写。</p>
     <p class="text-gray-600 mb-4">SFT数据不需要太多，几万到几十万条高质量指令数据就够了，质量远比数量重要。现在开源社区有大量高质量SFT数据集（Alpaca、ShareGPT、UltraChat等）。</p>
 
-    <h4>🍽️ 书1第6章实战：分类微调——让 GPT 识别垃圾短信</h4>
+    <h4>🍽️ 第6章实战：分类微调——让 GPT 识别垃圾短信</h4>
     <p class="text-gray-600 mb-3">微调不止能"对话"，还能把 GPT 改造成一个<b>分类器</b>（比如判断短信是不是垃圾邮件）。做法只改两处：</p>
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
       <div class="p-4 bg-blue-50 rounded-lg border border-blue-200">
@@ -358,7 +387,7 @@ print(f'Loss={loss}, PPL={torch.exp(torch.tensor(loss)).item():.1f}')  # PPL=24.
       </div>
     </div>
     <pre class="code"><code class="language-python">class SpamClassifier(nn.Module):
-    """书1第6章：GPT 改造为二分类器"""
+    """第6章：GPT 改造为二分类器"""
     def __init__(self, cfg):
         super().__init__()
         self.gpt = GPTModel(cfg)                 # 预训练好的 GPT 主干
@@ -374,13 +403,13 @@ for p in classifier.gpt.parameters():
 for p in classifier.gpt.out_head.parameters():
     p.requires_grad = True   # 只训练新加的分类头</code></pre>
     <div class="callout callout-info">
-      <div class="callout-line">在书1的垃圾短信数据集上，微调后准确率可达 97% 以上，而完全没微调的 GPT 只能瞎猜（约 50%）。</div>
+      <div class="callout-line">在的垃圾短信数据集上，微调后准确率可达 97% 以上，而完全没微调的 GPT 只能瞎猜（约 50%）。</div>
       <div class="callout-note">关键技巧：<b>微调时其实只需要训练最后几层</b>，前面的层已经学会了通用的语言特征，冻住它们既省算力又防过拟合。</div>
     </div>
 
-    <h4>💬 书1第7章实战：指令微调——从"接话茬"到"听人话"</h4>
+    <h4>💬 第7章实战：指令微调——从"接话茬"到"听人话"</h4>
     <p class="text-gray-600 mb-3">基座模型只会续写。要让它回答问题，得用"指令-回答"数据微调。数据格式有讲究，每个样本是一条结构化的对话：</p>
-    <pre class="code"><code class="language-python"># 书1第7章的指令数据格式（Alpaca 风格）
+    <pre class="code"><code class="language-python"># 第7章的指令数据格式（Alpaca 风格）
 data = {
     "instruction": "把下面这句话翻译成英文",
     "input": "今天天气真好",
@@ -401,7 +430,7 @@ def instruction_loss(logits, target_ids, response_start):
     <h4>🧭 微调全景：三个阶段各干什么</h4>
     <div class="table-wrap overflow-x-auto">
       <table class="w-full">
-        <tr><th>阶段</th><th>数据</th><th>目标</th><th>书1对应章节</th></tr>
+        <tr><th>阶段</th><th>数据</th><th>目标</th><th>对应章节</th></tr>
         <tr><td>预训练</td><td>无标签互联网文本</td><td>学会语言与世界知识</td><td>第5章</td></tr>
         <tr><td>分类微调</td><td>带标签的分类数据</td><td>学会特定判断任务</td><td>第6章</td></tr>
         <tr><td>指令微调</td><td>指令-回答对</td><td>学会听懂并执行指令</td><td>第7章</td></tr>
@@ -638,101 +667,6 @@ class CausalSelfAttention(nn.Module):
   </section>
 </div>
 
-<script>
-// 滚动高亮目录
-const sections = document.querySelectorAll('section[id]');
-const navLinks = document.querySelectorAll('.sidebar a');
-window.addEventListener('scroll', () => {
-  let current = '';
-  sections.forEach(section => {
-    const sectionTop = section.offsetTop;
-    if (scrollY >= sectionTop - 100) current = section.getAttribute('id');
-  });
-  navLinks.forEach(link => {
-    link.classList.remove('active');
-    if (link.getAttribute('href') === '#' + current) link.classList.add('active');
-  });
-});
-
-// 平滑滚动
-document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-  anchor.addEventListener('click', function (e) {
-    e.preventDefault();
-    const target = document.querySelector(this.getAttribute('href'));
-    if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  });
-});
-
-// BPE演示
-const bpeCanvas = document.getElementById('bpeCanvas');
-const bpeCtx = bpeCanvas.getContext('2d');
-bpeCanvas.width = bpeCanvas.offsetWidth;
-bpeCanvas.height = 200;
-let bpeSteps = [];
-let currentStep = 0;
-
-function getPairs(words) {
-    const pairs = {};
-    words.forEach(word => {
-        const chars = word.split('');
-        for (let i = 0; i < chars.length - 1; i++) {
-            const pair = chars[i] + chars[i+1];
-            pairs[pair] = (pairs[pair] || 0) + 1;
-        }
-    });
-    return pairs;
-}
-
-function mergePair(words, pair) {
-    return words.map(word => word.split(pair).join(pair));
-}
-
-function runBPE() {
-    const text = document.getElementById('bpeInput').value;
-    let words = text.split(' ').map(w => w.split('').join(' ') + ' </w>');
-    bpeSteps = [words.join(' | ')];
-    
-    for (let i = 0; i < 10; i++) {
-        const pairs = getPairs(words);
-        if (Object.keys(pairs).length === 0) break;
-        const bestPair = Object.entries(pairs).sort((a,b) => b[1] - a[1])[0][0];
-        words = mergePair(words, bestPair);
-        bpeSteps.push(`合并 "${bestPair}": ` + words.join(' | '));
-    }
-    currentStep = 0;
-    drawBPEStep();
-}
-
-function drawBPEStep() {
-    bpeCtx.clearRect(0, 0, bpeCanvas.width, bpeCanvas.height);
-    bpeCtx.fillStyle = '#1f2937';
-    bpeCtx.font = '14px monospace';
-    bpeSteps.slice(0, currentStep + 1).forEach((step, i) => {
-        bpeCtx.fillStyle = i === currentStep ? '#7c3aed' : '#4b5563';
-        bpeCtx.fillText(`Step ${i}: ${step}`, 20, 30 + i * 22);
-    });
-    document.getElementById('bpeResult').textContent = bpeSteps[currentStep];
-    if (currentStep < bpeSteps.length - 1) {
-        currentStep++;
-        setTimeout(drawBPEStep, 800);
-    }
-}
-
-function resetBPE() {
-    bpeCtx.clearRect(0, 0, bpeCanvas.width, bpeCanvas.height);
-    document.getElementById('bpeResult').textContent = '点击"运行BPE合并"查看字节对编码过程';
-    bpeSteps = [];
-    currentStep = 0;
-}
-
-resetBPE();
-
-// 公式渲染与代码高亮
-document.addEventListener('DOMContentLoaded', function() {
-  renderMathInElement(document.body, {delimiters: [{left: '$$', right: '$$', display: true}, {left: '$', right: '$', display: false}]});
-  hljs.highlightAll();
-});
-</script>
 <script src="../js/site.js"></script>
 </body>
 </html>

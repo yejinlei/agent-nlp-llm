@@ -5,9 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Word2Vec 从零 · 词向量是怎么"学"出来的</title>
 <script src="https://cdn.tailwindcss.com"></script>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
-<script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
 <link rel="stylesheet" href="css/site.css">
@@ -62,6 +59,38 @@ input[type=range]{ flex:1; min-width:140px; accent-color:var(--blue); }
 .bar { height:22px; border-radius:5px; background:linear-gradient(90deg,#60a5fa,#2563eb); }
 .barlab { display:grid; grid-template-columns:120px 1fr 60px; align-items:center; gap:10px; margin:6px 0; font-size:13.5px; }
 </style>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<script>
+(function(){
+  function render(){
+    if(typeof renderMathInElement !== 'function') return false;
+    try{
+      renderMathInElement(document.body,{
+        delimiters:[
+          {left:'$$',right:'$$',display:true},
+          {left:'\[',right:'\]',display:true},
+          {left:'\(',right:'\)',display:false},
+          {left:'$',right:'$',display:false}
+        ],
+        ignoredTags:['script','noscript','style','textarea','pre','code'],
+        throwOnError:false
+      });
+    }catch(e){console.warn('katex render error',e)}
+    return true;
+  }
+  function go(){ if(render()) return; setTimeout(go,200); }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',go); else go();
+  window.addEventListener('load',function(){render(); setTimeout(render,500); setTimeout(render,1500)});
+  if(window.MutationObserver){
+    var t=null;
+    new MutationObserver(function(){ clearTimeout(t); t=setTimeout(render,200); })
+      .observe(document.documentElement,{childList:true,subtree:true});
+  }
+  window.__katexRender = render;
+})();
+</script>
 </head>
 <body>
 <nav class="navbar">
@@ -86,7 +115,7 @@ input[type=range]{ flex:1; min-width:140px; accent-color:var(--blue); }
 <div class="wrap">
   <div class="crumb"><a href="index.html">首页</a> / <a href="nlp/index.html">NLP</a> / Word2Vec 从零</div>
   <h1>Word2Vec 从零 🧠</h1>
-  <p class="sub">词向量不是"算"出来的，是"训练"出来的。这一页把斋藤康毅《深度学习进阶：NLP》第 2–4 章的完整链路摊开：从共现矩阵 → PMI → SVD，到 CBOW → Embedding 层 → 负采样的高速化，每一步都有可跑的代码和能点的交互。</p>
+  <p class="sub">词向量不是"算"出来的，是"训练"出来的。这一页把词向量的完整链路摊开：从共现矩阵 → PMI → SVD，到 CBOW → Embedding 层 → 负采样的高速化，每一步都有可跑的代码和能点的交互。</p>
 
   <div class="hero">
     <h2>🎯 一句话抓住本质</h2>
@@ -120,7 +149,7 @@ input[type=range]{ flex:1; min-width:140px; accent-color:var(--blue); }
 
   <h2 id="count">1. 基于计数的方法：共现矩阵</h2>
   <p>最直觉的做法：统计每个词周围都出现哪些词，做成一张表。这就是<b>共现矩阵（co-occurrence matrix）</b>。</p>
-  <p>先看语料库（斋藤书里的经典例子）：</p>
+  <p>先看一段最经典的玩具语料：</p>
   <pre><code class="language-python">corpus = [
   "you say goodbye and i say hello .",
   "i say hello and you say goodbye .",
@@ -388,146 +417,5 @@ word_vecs = weight_in  # shape: (V, H)</code></pre>
 </div>
 
 <script src="js/site.js"></script>
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-  if (window.renderMathInElement) {
-    renderMathInElement(document.body, { delimiters: [
-      {left:'$$',right:'$$',display:true}, {left:'$',right:'$',display:false}
-    ], throwOnError:false });
-  }
-  if (window.hljs) hljs.highlightAll();
-
-  // ===== 共现矩阵 =====
-  const vocab = ['you','say','goodbye','and','i','hello','.'];
-  // 对称共现计数（窗口=1，语料中 you say goodbye and i say hello . 的两遍）
-  const C = [
-    [0,1,0,0,0,0,0], // you
-    [1,0,1,1,1,0,0], // say (与 you,goodbye,and,i,hello 共现)
-    [0,1,0,1,0,0,0], // goodbye (say, and)
-    [0,1,1,0,1,0,1], // and
-    [0,1,0,1,0,1,0], // i
-    [0,0,0,0,1,0,1], // hello
-    [0,0,0,1,0,1,0], // .
-  ];
-  const maxC = 2;
-  const tbl = document.getElementById('coTable');
-  let html = '<tr><th></th>' + vocab.map(v=>'<th>'+v+'</th>').join('') + '</tr>';
-  C.forEach((row,i)=>{
-    html += '<tr><th>'+vocab[i]+'</th>';
-    row.forEach(c=>{
-      const a = c===0 ? 0 : 0.15 + 0.6*(c/maxC);
-      const bg = c===0 ? '#fff' : 'rgba(37,99,235,'+a+')';
-      const col = c>=1 && a>0.4 ? '#fff' : '#334155';
-      html += '<td style="background:'+bg+';color:'+col+'">'+(c||'')+'</td>';
-    });
-    html += '</tr>';
-  });
-  tbl.innerHTML = html;
-
-  // 余弦相似度
-  function cos(a,b){ let d=0,na=0,nb=0; for(let i=0;i<a.length;i++){d+=a[i]*b[i];na+=a[i]*a[i];nb+=b[i]*b[i];} return d/(Math.sqrt(na)*Math.sqrt(nb)+1e-9); }
-  function rankSim(qi){
-    const res = vocab.map((w,i)=> i===qi?null:{w, s:cos(C[qi],C[i])}).filter(Boolean).sort((x,y)=>y.s-x.s);
-    return res.map(r=>'<span class="pill">'+r.w+' '+r.s.toFixed(3)+'</span>').join('');
-  }
-  const simBtns = document.getElementById('simBtns');
-  vocab.forEach((w,i)=>{
-    const b = document.createElement('button');
-    b.className='act ghost'; b.textContent=w;
-    b.onclick=()=>{ document.getElementById('simOut').innerHTML = '<b>和「'+w+'」最像的词：</b><br>'+rankSim(i); };
-    simBtns.appendChild(b);
-  });
-
-  // ===== PMI =====
-  const pmiA = document.getElementById('pmiAlpha');
-  function renderPMI(){
-    const a = parseFloat(pmiA.value);
-    document.getElementById('pmiAlphaVal').textContent = a.toFixed(2);
-    // 演示：3 个词对，稀有词关联被放大
-    const pairs = [
-      {name:'哈-利（稀有·强关联）', pmi:4.2,  freq:0.001},
-      {name:'猫-喵（中频·较强）',   pmi:2.1,  freq:0.02},
-      {name:'the-猫（高频·弱）',   pmi:0.3,  freq:0.9},
-      {name:'啊-冰箱（随机·无）',   pmi:-1.4, freq:0.05},
-    ];
-    let h = '';
-    pairs.forEach(p=>{
-      // 用 freq 作为"稀有度"权重：越稀有，α 的放大效应越明显
-      const w = Math.pow(1 - Math.min(p.freq,0.99), a*2);
-      const v = Math.max(0, p.pmi) * (1 + w);
-      const pct = Math.min(100, Math.abs(v)*18);
-      h += '<div class="barlab"><span>'+p.name+'</span><div class="bar" style="width:'+pct+'%"></div><span class="mono">'+v.toFixed(2)+'</span></div>';
-    });
-    document.getElementById('pmiOut').innerHTML = h + '<div style="font-size:12.5px;color:var(--mute);margin-top:8px">α 越大，稀有词（左）的相对权重被抬得越高，高频词（the）的噪音被压得越低。</div>';
-  }
-  pmiA.addEventListener('input', renderPMI);
-  document.getElementById('pmiReset').onclick=()=>{ pmiA.value=1; renderPMI(); };
-  renderPMI();
-
-  // ===== SVD 降维可视化 =====
-  const kS = document.getElementById('kSlider');
-  const cv = document.getElementById('svdCanvas');
-  // 预设的"词在语义空间中的真实位置"（2D）——用来模拟降维后的聚类效果
-  const semantic = {
-    'you':[-1.0, 0.6], 'say':[-0.2, 0.9], 'goodbye':[-1.3,-0.5],
-    'and':[0.6, 0.2], 'i':[-0.5, 0.3], 'hello':[0.9, 0.8],
-    '.':[1.2,-0.7],
-  };
-  // 每个维度 k 对应"能看到多少结构"：k 越大，点越接近真实位置
-  function posOf(word, k){
-    const p = semantic[word];
-    const t = Math.min(1, k/4);           // k=1 时挤在一起，k=4 时清晰
-    const jitter = (1-t) * 0.9;
-    const seed = word.charCodeAt(0);
-    return [ p[0]*t + Math.cos(seed)*jitter, p[1]*t + Math.sin(seed*1.7)*jitter ];
-  }
-  function drawSVD(){
-    if(!cv) return;
-    const ctx = cv.getContext && cv.getContext('2d');
-    if(!ctx) return;
-    const k = parseInt(kS.value);
-    document.getElementById('kVal').textContent = k;
-    const W = cv.width, H = cv.height, ox = W/2, oy = H/2, sc = 95;
-    ctx.clearRect(0,0,W,H);
-    ctx.strokeStyle='#e5e7eb'; ctx.lineWidth=1;
-    for(let gx=-3;gx<=3;gx++){ ctx.beginPath(); ctx.moveTo(ox+gx*sc,0); ctx.lineTo(ox+gx*sc,H); ctx.stroke(); }
-    for(let gy=-2;gy<=2;gy++){ ctx.beginPath(); ctx.moveTo(0,oy+gy*sc); ctx.lineTo(W,oy+gy*sc); ctx.stroke(); }
-    ctx.strokeStyle='#cbd5e1'; ctx.beginPath(); ctx.moveTo(ox,0); ctx.lineTo(ox,H); ctx.moveTo(0,oy); ctx.lineTo(W,oy); ctx.stroke();
-    vocab.forEach(w=>{
-      const [x,y] = posOf(w,k);
-      const px = ox + x*sc, py = oy - y*sc;
-      ctx.fillStyle = '#2563eb';
-      ctx.beginPath(); ctx.arc(px,py,5,0,Math.PI*2); ctx.fill();
-      ctx.fillStyle = '#1a1a2e'; ctx.font='13px sans-serif';
-      ctx.fillText(w, px+8, py+4);
-    });
-    document.getElementById('svdOut').innerHTML = '保留 <b>k='+k+'</b> 维。' + (k<3 ? '维度太少，语义结构被压缩掉，所有词挤成一团。' : (k<5 ? '已经能看出"问候类(say/hello/you)"和"连接词类(and/.)"开始分离。' : '维度充足，语义相近的词清晰聚在一起。'));
-  }
-  if(cv) kS.addEventListener('input', drawSVD);
-  drawSVD();
-
-  // ===== 负采样分布 =====
-  const smE = document.getElementById('smExp');
-  const demoVocab = [
-    {w:'the', f:0.30}, {w:'a', f:0.20}, {w:'cat', f:0.05},
-    {w:'say', f:0.04}, {w:'hello', f:0.03}, {w:'quantum', f:0.002}, {w:'zebra', f:0.0008},
-  ];
-  function renderSm(){
-    const e = parseFloat(smE.value);
-    document.getElementById('smExpVal').textContent = e.toFixed(2);
-    const raw = demoVocab.map(d=>Math.pow(d.f, e));
-    const sum = raw.reduce((a,b)=>a+b,0);
-    const probs = raw.map(r=>r/sum);
-    const mx = Math.max(...probs);
-    let h = '';
-    demoVocab.forEach((d,i)=>{
-      h += '<div class="barlab"><span>'+d.w+'</span><div class="bar" style="width:'+(probs[i]/mx*100).toFixed(1)+'%"></div><span class="mono">'+(probs[i]*100).toFixed(2)+'%</span></div>';
-    });
-    document.getElementById('smOut').innerHTML = h + '<div style="font-size:12.5px;color:var(--mute);margin-top:8px">指数 0 = 均匀采样（稀有词也被大量抽中，浪费算力）；指数 1 = 纯词频（the 霸榜，稀有词几乎抽不到）；<b>0.75 是经验甜点</b>——既压低高频词，又不至于饿死低频词。</div>';
-  }
-  smE.addEventListener('input', renderSm);
-  renderSm();
-});
-</script>
 </body>
 </html>

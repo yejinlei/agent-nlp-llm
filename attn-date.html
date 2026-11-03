@@ -47,7 +47,7 @@ input.inp{width:100%;padding:10px;border:1px solid #cbd5e1;border-radius:8px;fon
 
 <main class="container">
   <section class="hero-mini"><h1>📅 Attention 日期翻译实验室</h1>
-    <p class="lead">对应《深度学习入门2》第8.3节「日期格式转换问题」+ 8.3.3「Attention 的可视化」。把"September 25, 2024"转成"2024-09-25"，这是 seq2seq+Attention 的经典任务。可视化每个输出字符"重点看"输入的哪个字符——这就是书2图8-19的"对齐"。</p>
+    <p class="lead">3.3「Attention 的可视化」。把"September 25, 2024"转成"2024-09-25"，这是 seq2seq+Attention 的经典任务。可视化每个输出字符"重点看"输入的哪个字符——这就是的"对齐"。</p>
   </section>
 
   <div class="lab">
@@ -83,20 +83,18 @@ input.inp{width:100%;padding:10px;border:1px solid #cbd5e1;border-radius:8px;fon
         <span class="out" id="tgtShow">—</span>
       </div>
 
-      <h3 style="margin:16px 0 8px 0;font-size:14px">🔥 注意力权重热力图（书2 图8-19 可交互版）</h3>
+      <h3 style="margin:16px 0 8px 0;font-size:14px">🔥 注意力权重热力图（可交互版）</h3>
       <div class="heatmap-wrap" id="hmWrap"></div>
 
       <div class="explain">
-        <b>📖 书里说</b>（书2 P353 8.3.3 Attention 的可视化）：在翻译日期时，注意力权重能"明确显示各个时刻正在关注哪个字符"。这是 Attention 最大的优点——<b>可解释性</b>，你能清楚看到模型在做什么。对比普通 seq2seq 必须把所有信息塞进一个固定长度的向量，Attention 让解码器在每个时刻"回看"输入序列中最相关的部分。
+        <b>📖 核心要点</b>（8.3.3 Attention 的可视化）：在翻译日期时，注意力权重能"明确显示各个时刻正在关注哪个字符"。这是 Attention 最大的优点——<b>可解释性</b>，你能清楚看到模型在做什么。对比普通 seq2seq 必须把所有信息塞进一个固定长度的向量，Attention 让解码器在每个时刻"回看"输入序列中最相关的部分。
       </div>
     </div>
   </div>
 </main>
 
-<footer class="site-footer"><p>基于《深度学习入门2》ch08 Attention-seq2seq 日期格式转换案例实现</p></footer>
-
 <script>
-// 简化的"基于规则模拟"的 Attention 对齐（忠实复现书2图8-19 的对角线对齐模式）
+// 简化的"基于规则模拟"的 Attention 对齐（忠实复现的对角线对齐模式）
 const MONTHS={january:'01',february:'02',march:'03',april:'04',may:'05',june:'06',july:'07',august:'08',september:'09',october:'10',november:'11',december:'12',
               jan:'01',feb:'02',mar:'03',apr:'04',jun:'06',jul:'07',aug:'08',sep:'09',oct:'10',nov:'11',dec:'12'};
 
@@ -114,7 +112,7 @@ function parseDate(s){
 }
 
 function charAlignment(src,tgt){
-  // 构造一个 (tgt_len x src_len) 的注意力矩阵，模拟书2 图8-19 的"对角对齐"
+  // 构造一个 (tgt_len x src_len) 的注意力矩阵，模拟的"对角对齐"
   const S=src.length,T=tgt.length;
   const A=Array.from({length:T},()=>Array(S).fill(0));
   // 找到关键段的位置
@@ -194,5 +192,6 @@ document.querySelectorAll('button[data-s]').forEach(b=>{
 });
 render();
 </script>
+<script src="js/math.js"></script>
 </body>
 </html>

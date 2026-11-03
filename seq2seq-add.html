@@ -47,7 +47,7 @@ button.run:disabled{background:#cbd5e1;cursor:wait}
 
 <main class="container">
   <section class="hero-mini"><h1>➕ seq2seq 加法实验实验室</h1>
-    <p class="lead">对应《深度学习入门2》第7章 7.2.4 节加法数据集 + 7.4 节 seq2seq 的改进。给加法问题（如"57+32"），模型要输出结果"_89"。比较三种模型：<b>Baseline / Reverse（反转输入） / Peeky（窥视编码器）</b>。</p>
+    <p class="lead">对应<b>Baseline / Reverse（反转输入） / Peeky（窥视编码器）</b>。</p>
   </section>
 
   <div class="lab">
@@ -69,8 +69,8 @@ button.run:disabled{background:#cbd5e1;cursor:wait}
         <canvas id="cv" width="700" height="260"></canvas>
         <div class="model-cards" id="cards">
           <div class="m-card" id="c-base"><h4>Baseline（普通 seq2seq）</h4><div class="acc" id="a-base">—</div><div class="acc-label">最终准确率</div></div>
-          <div class="m-card" id="c-rev"><h4>+ Reverse（反转输入）</h4><div class="acc" id="a-rev">—</div><div class="acc-label">书2 7.4.1：让最相关字符近邻</div></div>
-          <div class="m-card" id="c-peek"><h4>+ Peeky（窥视）</h4><div class="acc" id="a-peek">—</div><div class="acc-label">书2 7.4.2：解码器偷看编码向量</div></div>
+          <div class="m-card" id="c-rev"><h4>+ Reverse（反转输入）</h4><div class="acc" id="a-rev">—</div><div class="acc-label">让最相关字符近邻</div></div>
+          <div class="m-card" id="c-peek"><h4>+ Peeky（窥视）</h4><div class="acc" id="a-peek">—</div><div class="acc-label">解码器偷看编码向量</div></div>
         </div>
       </div>
     </div>
@@ -81,18 +81,16 @@ button.run:disabled{background:#cbd5e1;cursor:wait}
     </div>
 
     <div class="insight">
-      <h3>📖 书里的结果对比</h3>
-      <p style="font-size:13px;line-height:1.8">书2 P303 图7-23：Baseline 到 100 epoch 仍有不少错误。书2 P308 图7-26：加入 Reverse 后精度显著提升——原因是"和最初输入的数字相关的梯度，距离输出更近"。书2 P311 图7-28：再加入 Peeky，几乎在第30个 epoch 就 100% 正确。Peeky 思想是在解码器的每个时刻都"偷看"编码器输出的固定长度向量 h，让编码器信息反复传递。</p>
+      <h4>💡 核心要点</h4>
+      <p style="font-size:13px;line-height:1.8">Baseline 到 100 epoch 仍有不少错误。加入 Reverse 后精度显著提升——原因是"和最初输入的数字相关的梯度，距离输出更近"。再加入 Peeky，几乎在第30个 epoch 就 100% 正确。Peeky 思想是在解码器的每个时刻都"偷看"编码器输出的固定长度向量 h，让编码器信息反复传递。</p>
     </div>
   </div>
 </main>
 
-<footer class="site-footer"><p>基于《深度学习入门2》ch07 seq2seq 加法实验实现</p></footer>
-
 <script>
 // ========== 简化 seq2seq 训练（char-level，浏览器可运行） ==========
 // 真实的 LSTM seq2seq 在纯 JS 中训练较慢；这里用可学习嵌入 + RNN 解码器的近似实现，
-// 保留 Reverse/Peeky 两个改进的本质差异，以真实复现书2 的收敛速度对比。
+// 保留 Reverse/Peeky 两个改进的本质差异，以真实复现的收敛速度对比。
 
 const CHARS=['0','1','2','3','4','5','6','7','8','9','+','_'];
 const c2i={};CHARS.forEach((c,i)=>c2i[c]=i);
@@ -123,15 +121,14 @@ function makeModel(useReverse,usePeeky,H){
 
 function featurize(q,m){
   let ids=encodeQ(q);
-  if(m.useReverse)ids=ids.slice().reverse(); // 书2 7.4.1
-  // 简单 bag-of-char + 位置编码
+  if(m.useReverse)ids=ids.slice().reverse(); // // 简单 bag-of-char + 位置编码
   const feat=new Array(m.H).fill(0);
   ids.forEach((id,pos)=>{
     for(let k=0;k<m.H;k++){
       feat[k]+=Math.sin((id+1)*(k+1)*0.3+pos*0.5)*0.3;
     }
   });
-  if(m.usePeeky){// 书2 7.4.2：保留每个位置的细节，而不仅仅是聚合
+  if(m.usePeeky){// 保留每个位置的细节，而不仅仅是聚合
     ids.forEach((id,pos)=>{
       for(let k=0;k<m.H;k++){
         feat[k]+=Math.cos(id*k*0.2+pos*1.1)*0.4;
@@ -275,5 +272,6 @@ window.addEventListener('load',()=>{
   document.getElementById('ls').dispatchEvent(new Event('input'));
 });
 </script>
+<script src="js/math.js"></script>
 </body>
 </html>

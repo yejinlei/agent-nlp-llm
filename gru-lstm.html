@@ -51,9 +51,9 @@ canvas{background:#0f172a;border-radius:8px;border:1px solid var(--border);width
 </nav>
 <div class="container" style="max-width:1100px">
 <section class="hero">
-<div class="badge">📖《深度学习进阶：NLP》第6.3–6.4节 · P241–P252</div>
+<div class="badge">📖</div>
 <h1>LSTM vs GRU：<span class="grad-text">同门不同路</span></h1>
-<p style="color:var(--muted)">书2 第6.3节介绍了 LSTM 的 3 个门 + 1 个候选 g̃；第6.4节简要提到 GRU（Cho et al. 2014）用 2 个门完成相同工作，"结构更简单、计算更快、效果相当"。拖动滑块，实时对比两种门控在同一段序列里的状态差异。</p>
+<p style="color:var(--muted)">介绍了 LSTM 的 3 个门 + 1 个候选 g̃；教材中也简要提到 GRU（Cho et al. 2014）用 2 个门完成相同工作，"结构更简单、计算更快、效果相当"。拖动滑块，实时对比两种门控在同一段序列里的状态差异。</p>
 </section>
 
 <div class="compare-grid">
@@ -67,7 +67,7 @@ o<sub>t</sub> = σ(W<sub>o</sub>·[h<sub>t-1</sub>, x<sub>t</sub>] + b<sub>o</su
 c<sub>t</sub> = f<sub>t</sub>⊙c<sub>t-1</sub> + i<sub>t</sub>⊙g̃<sub>t</sub><br>
 h<sub>t</sub> = o<sub>t</sub>⊙tanh(c<sub>t</sub>)
 </div>
-<p style="font-size:13px;color:var(--muted)">书2 P247：<b>记忆单元 c 和隐藏状态 h 分离</b>。c 像传送带，加法更新保证梯度能长距离流动，不会被链式乘性挤压。</p>
+<p style="font-size:13px;color:var(--muted)"><b>记忆单元 c 和隐藏状态 h 分离</b>。c 像传送带，加法更新保证梯度能长距离流动，不会被链式乘性挤压。</p>
 <div id="lstmGates"></div>
 </div>
 
@@ -79,7 +79,7 @@ r<sub>t</sub> = σ(W<sub>r</sub>·[h<sub>t-1</sub>, x<sub>t</sub>]) &nbsp;<span 
 h̃<sub>t</sub> = tanh(W·[r<sub>t</sub>⊙h<sub>t-1</sub>, x<sub>t</sub>])<br>
 h<sub>t</sub> = (1-z<sub>t</sub>)⊙h<sub>t-1</sub> + z<sub>t</sub>⊙h̃<sub>t</sub>
 </div>
-<p style="font-size:13px;color:var(--muted)">书2 P252 原文："GRU 没有 LSTM 中那种 c 和 h 的区别，只用一个 h 同时承担两个角色。参数更少、训练更快。"</p>
+<p style="font-size:13px;color:var(--muted)">"GRU 没有 LSTM 中那种 c 和 h 的区别，只用一个 h 同时承担两个角色。参数更少、训练更快。"</p>
 <div id="gruGates"></div>
 </div>
 </div>
@@ -113,21 +113,19 @@ h<sub>t</sub> = (1-z<sub>t</sub>)⊙h<sub>t-1</sub> + z<sub>t</sub>⊙h̃<sub>t<
 </div>
 
 <div class="demo-box">
-<h3>📊 参数对比（书2 P252 表）</h3>
+<h3>📊 参数对比（）</h3>
 <table style="width:100%;border-collapse:collapse;text-align:center">
 <tr style="background:#ffffff10"><th style="padding:10px;border-bottom:1px solid var(--border)">模型</th><th>门数</th><th>参数量（单层，隐藏维度 d）</th><th>记忆/输出分离</th><th>训练速度</th><th>长依赖能力</th></tr>
 <tr><td style="padding:10px;color:#f472b6;font-weight:700">RNN</td><td>0</td><td>d·(d+x) + d ≈ 2d²</td><td>否</td><td>快</td><td>❌ 弱</td></tr>
 <tr><td style="padding:10px;color:#fbbf24;font-weight:700">GRU</td><td>2（z,r）</td><td>3·[d·(d+x)+d] ≈ 6d²</td><td>否</td><td>较快</td><td>✅ 中</td></tr>
 <tr><td style="padding:10px;color:#a78bfa;font-weight:700">LSTM</td><td>3（f,i,o）</td><td>4·[d·(d+x)+d] ≈ 8d²</td><td>✅ c 与 h 分离</td><td>较慢</td><td>✅✅ 强</td></tr>
 </table>
-<div class="insight"><b>书2 P253 总结：</b>"GRU 和 LSTM 性能差不多时，优先 GRU（参数少、易训）；需要超长距离依赖（如机器翻译、长文档）时 LSTM 更稳。" 不过现在 transformer 时代，两者都主要作为 baseline 出现。</div>
+<div class="insight"><b>总结：</b>"GRU 和 LSTM 性能差不多时，优先 GRU（参数少、易训）；需要超长距离依赖（如机器翻译、长文档）时 LSTM 更稳。" 不过现在 transformer 时代，两者都主要作为 baseline 出现。</div>
 </div>
 </div>
 <footer style="text-align:center;padding:40px 0;color:var(--muted);font-size:13px">
-参考 Sebastian Raschka《Build a Large Language Model (From Scratch)》· 斋藤康毅《深度学习进阶：NLP》
 </footer>
 <script>
-fetch('js/nav.json').then(r=>r.json()).then(d=>{document.getElementById('nav').innerHTML=d.html;init();});
 let state={t:1,lstm_c:0,lstm_h:0,gru_h:0,history:[]};
 function sigmoid(x){return 1/(1+Math.exp(-x));}
 function tanh(x){return Math.tanh(x);}
@@ -234,5 +232,6 @@ function init(){
 }
 </script>
 <script src="js/site.js"></script>
+<script src="js/math.js"></script>
 </body>
 </html>
