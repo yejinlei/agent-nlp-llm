@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>多头注意力 · 不同头的分工 · agent-nlp-llm</title>
+<link rel="stylesheet" href="css/site.css"/>
+<style>
+.controls{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin:16px 0}
+.ctrl-card{background:var(--panel);border-radius:10px;padding:14px;border:1px solid var(--border)}
+label{display:block;margin:6px 0;font-weight:600;font-size:14px}
+input[type=range]{width:100%}select{width:100%;padding:6px;border-radius:6px;background:var(--panel);color:var(--text);border:1px solid var(--border)}
+.demo-box{background:var(--panel);border-radius:12px;padding:20px;margin:20px 0;border:1px solid var(--border)}
+canvas{background:#0f172a;border-radius:8px;border:1px solid var(--border);max-width:100%;margin:10px auto;display:block}
+.head-tabs{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0}
+.head-btn{padding:8px 14px;border-radius:8px;border:1px solid var(--border);background:var(--panel);color:var(--text);cursor:pointer;font-weight:600;font-size:13px}
+.head-btn.active{background:var(--accent);color:#000;border-color:var(--accent)}
+.role-tag{display:inline-block;padding:3px 10px;border-radius:6px;font-size:12px;font-weight:700;margin-left:8px}
+.role-prev{background:#fbbf24;color:#000}.role-synt{background:#f472b6;color:#000}.role-coref{background:#a78bfa;color:#000}
+.role-sim{background:#34d399;color:#000}.role-rare{background:#fb923c;color:#000}.role-bag{background:#64748b;color:#fff}
+.insight{margin-top:14px}
+.explain{padding:14px;border-radius:10px;background:linear-gradient(135deg,#1e293b,#0f172a);margin:14px 0;border-left:4px solid var(--accent)}
+</style>
+</head>
+<body>
+<nav class="navbar">
+  <div class="nav-inner">
+    <a href="index.html" class="nav-logo">💬 agent-nlp-llm</a>
+    <button class="nav-toggle" onclick="document.querySelector('.nav-links').classList.toggle('open')" aria-label="菜单">☰</button>
+    <div class="nav-links">
+      <a href="index.html" class="nav-link">🏠 首页</a>
+      <a href="playground.html" class="nav-link">🎨 玩法</a>
+      <a href="nlp/index.html" class="nav-link">📝 NLP</a>
+      <a href="llm/index.html" class="nav-link">🤖 LLM</a>
+      <a href="bpe.html" class="nav-link">🔤 分词器</a>
+      <a href="embedding.html" class="nav-link">🧭 词向量</a>
+      <a href="word2vec.html" class="nav-link">🧠 word2vec</a>
+      <a href="skip-cbow.html" class="nav-link">⚖️ CBOW/Skip</a>
+      <a href="cbow.html" class="nav-link">🧩 CBOW推理</a>
+      <a href="neg-sample.html" class="nav-link">🎲 负采样</a>
+      <a href="context-window.html" class="nav-link">🪟 窗口掩码</a>
+      <a href="rnn.html" class="nav-link">🔁 RNN/LSTM</a>
+      <a href="lstm-gate.html" class="nav-link">🚪 LSTM门控</a>
+      <a href="gru-lstm.html" class="nav-link">🆚 GRU/LSTM</a>
+      <a href="sigmoid.html" class="nav-link">∫ 激活函数</a>
+      <a href="attention.html" class="nav-link">🎯 注意力</a>
+      <a href="multihead.html" class="nav-link active">👥 多头分工</a>
+      <a href="seq2seq-add.html" class="nav-link">➕ 加法实验</a>
+      <a href="attn-date.html" class="nav-link">📅 日期翻译</a>
+      <a href="gpt-params.html" class="nav-link">🔧 GPT参数/采样</a>
+      <a href="ppl.html" class="nav-link">📏 困惑度PPL</a>
+      <a href="lora.html" class="nav-link">🪢 LoRA</a>
+      <a href="papers.html" class="nav-link">📚 论文</a>
+      <a href="clinic.html" class="nav-link">🕵️ 诊所</a>
+      <a href="pitfalls.html" class="nav-link">💥 踩坑</a>
+      <a href="benchmark.html" class="nav-link">📊 选型</a>
+      <a href="universe.html" class="nav-link">🌌 宇宙</a>
+      <a href="https://github.com/yejinlei/agent-nlp-llm" target="_blank" rel="noopener" class="nav-gh" aria-label="GitHub"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg></a>
+    </div>
+  </div>
+</nav>
+<div class="container" style="max-width:1100px">
+<section class="hero">
+<div class="badge">📖《Build a Large Language Model (From Scratch)》第3.4节 · P88-P98（MultiHeadAttention）</div>
+<h1>多头注意力：<span class="grad-text">不同头学不同关系</span></h1>
+<p style="color:var(--muted)">书1 P96 实现了 MultiHeadAttentionWrapper：把 QKV 按 n_heads 拆分，每组独立学习一种注意力模式，最后拼接输出。学界发现（Voita et al. 2019, Clark et al. 2019）不同头会自发"分工"——有的只看前一个词，有的管指代，有的关注语义相似词。选一个句子，点击每个头看它的注意力模式。</p>
+</section>
+
+<div class="demo-box">
+<h3>📝 选择句子</h3>
+<select id="sent" style="width:100%;padding:8px;border-radius:6px;background:var(--panel);color:var(--text);border:1px solid var(--border)">
+<option selected>the animal didn't cross the street because it was too tired</option>
+<option>I gave Mary the book because she wanted it</option>
+<option>小明 把 苹果 吃 了 因为 它 很 甜</option>
+<option>自然语言 处理 让 机器 理解 人类 的 语言</option>
+</select>
+</div>
+
+<div class="demo-box">
+<h3>🎯 选择头（共 8 个，每个代表一种典型模式）</h3>
+<div class="head-tabs" id="tabs"></div>
+<div id="explainBox" class="explain"></div>
+<canvas id="heat" width="720" height="600"></canvas>
+</div>
+
+<div class="demo-box">
+<h3>🧠 为什么要"多头"？书1 P95 数学推导</h3>
+<div style="font-family:monospace;font-size:14px;line-height:1.9;background:#00000040;padding:14px;border-radius:8px">
+<div># 单头：d_out = d_model</div>
+<div>Q = X @ W_q,   K = X @ W_k,   V = X @ W_v    # 线性投影</div>
+<div>attn = softmax(Q @ Kᵀ / √d_k) @ V</div>
+<div style="margin-top:8px"># 多头：d_out = d_model / n_heads，并行 n_heads 次再拼接</div>
+<div style="color:#fbbf24">for head in heads:</div>
+<div style="color:#fbbf24">&nbsp;&nbsp;Q_h = Q @ W_q[h],  K_h = K @ W_k[h],  V_h = V @ W_v[h]</div>
+<div style="color:#fbbf24">&nbsp;&nbsp;head_h = softmax(Q_h @ K_hᵀ / √d_k + mask) @ V_h</div>
+<div>out = concat(head_1, ..., head_h) @ W_o</div>
+</div>
+<div class="insight">
+<b>书1 P95 原文：</b>"通过多头注意力，模型可以同时关注多个不同位置的不同表示子空间的信息。" 举个例子："The animal didn't cross the street because <b>it</b> was too tired" 中，"it" 指代 "animal"——<b>这个指代关系**专门**由一个"指代头"学会</b>，其他头不需要管。下面 8 个头就是经典的分工模式。
+</div>
+</div>
+</div>
+<footer style="text-align:center;padding:40px 0;color:var(--muted);font-size:13px">
+参考 Sebastian Raschka《Build a Large Language Model (From Scratch)》· Voita et al. 2019 经典多头分析研究
+</footer>
+<script>
+fetch('js/nav.json').then(r=>r.json()).then(d=>{document.getElementById('nav').innerHTML=d.html;init();});
+const HEADS=[
+{name:'头1: 前邻词(Prev-Token)',role:'prev',roleName:'短距离语法',
+ desc:'每个词强关注自己前一个词。这是最常见的"头"，负责学习局部语法搭配（定冠词+名词、形容词+名词、动词+副词）。'},
+{name:'头2: 后邻词(Next-Token)',role:'bag',roleName:'预测下一个词',
+ desc:'每个词关注自己后一个词——其实就是语言模型的"预测目标"的镜像，帮助模型提前"布局"下一个词。'},
+{name:'头3: 句法中心词(Syntax)',role:'synt',roleName:'句法依存',
+ desc:'动词看主语、介词看宾语、修饰语看被修饰词。例如 "cross" 强关注 "animal"（主语）。'},
+{name:'头4: 指代消解(Coreference)',role:'coref',roleName:'指代消解',
+ desc:'代词（it/she/he/它）强关注它指代的名词。经典例子：it→animal, she→Mary。'},
+{name:'头5: 语义相似(Similar)',role:'sim',roleName:'语义相关',
+ desc:'语义相关的词彼此关注——"animal" 和 "tired"、"street" 和 "cross" 通过语义场连起来。'},
+{name:'头6: 关注自身(Self)',role:'bag',roleName:'保持身份',
+ desc:'几乎只看对角线（自己）。作用是"把原始输入的信息带过去"，防止信息全被上下文淹没。'},
+{name:'头7: 稀有词对齐(Rare)',role:'rare',roleName:'对齐低频词',
+ desc:'对不常见词（人名、专有名词）给予集中注意力，帮助模型在遇到罕见词时不"漏掉"它们。'},
+{name:'头8: 全局分隔符(Bag/SEP)',role:'bag',roleName:'全局聚合',
+ desc:'对 [SEP] 或标点/分隔符全局关注——这类头负责"汇总整句信息"，有点像 BERT <[BOS_never_used_51bce0c785ca2f68081bfa7d91973934]>。'}
+];
+function buildAttnMatrix(toks,head){
+  const n=toks.length;
+  const W=Array.from({length:n},()=>Array(n).fill(0));
+  for(let i=0;i<n;i++){
+    let total=0;
+    if(head.role==='prev'){for(let j=0;j<n;j++){if(j===i-1)W[i][j]=1;else if(j===i)W[i][j]=0.3;total+=W[i][j];}}
+    else if(head.role==='synt'){
+      for(let j=0;j<n;j++){
+        // 动词找最近的名词在前、形容词跟最近名词
+        if(j===i)W[i][j]=0.2;
+        else if(Math.abs(i-j)<=2 && (j<i))W[i][j]=0.4+0.3*Math.random();
+        total+=W[i][j];
+      }
+      if(!total){W[i][i]=1;total=1;}
+    }
+    else if(head.role==='coref'){
+      // 代词找最近的名词
+      const pronouns=['it','she','he','they','its','她','他','它','他们'];
+      const isPron=pronouns.includes(toks[i].toLowerCase());
+      for(let j=0;j<n;j++){
+        if(j===i)W[i][j]=0.2;
+        if(isPron && j<i){
+          // 找最近的非代词（名词候选）
+          const notPro=!pronouns.includes(toks[j].toLowerCase());
+          if(notPro && i-j<=5)W[i][j]=0.8*(i-j===1?0.5:1.0/(i-j));
+        }
+        total+=W[i][j];
+      }
+      if(!total){W[i][i]=1;total=1;}
+    }
+    else if(head.role==='sim'){for(let j=0;j<n;j++){W[i][j]=Math.random()*0.3;if(j===i)W[i][j]=0.5;if(Math.abs(i-j)<=2)W[i][j]+=0.3;total+=W[i][j];}}
+    else if(head.role==='rare'){for(let j=0;j<n;j++){W[i][j]=(j===i)?0.6:(1/(Math.abs(i-j)+2))*0.2;total+=W[i][j];}}
+    else {for(let j=0;j<n;j++){W[i][j]=(j<=i)?(j===i-1?0.2:0.1/(Math.abs(i-j)+1)):0;if(j===i)W[i][j]=0.8;total+=W[i][j];}}
+    if(total>0)for(let j=0;j<n;j++)W[i][j]/=total;
+  }
+  return W;
+}
+function drawHeat(W,toks){
+  const c=document.getElementById('heat'),ctx=c.getContext('2d');
+  const n=toks.length;
+  const sz=Math.min(480/n,65),off=180;
+  c.width=off+n*sz+60;c.height=off+n*sz+40;
+  ctx.clearRect(0,0,c.width,c.height);
+  ctx.font='11px monospace';ctx.fillStyle='#e5e7eb';
+  ctx.save();ctx.translate(0,off+n*sz+20);ctx.fillText('Key 位置 j →',off,0);ctx.restore();
+  ctx.save();ctx.translate(20,off+n*sz/2);ctx.rotate(-Math.PI/2);ctx.fillText('Query 位置 i →',0,0);ctx.restore();
+  for(let i=0;i<n;i++){
+    ctx.fillStyle='#e5e7eb';ctx.textAlign='right';ctx.fillText(toks[i],off-6,i*sz+off+sz/2+4);
+    ctx.textAlign='center';ctx.fillText(toks[i],off+i*sz+sz/2,off-8);
+    for(let j=0;j<n;j++){
+      const w=W[i][j];
+      // 颜色：深蓝→浅蓝→黄→橙→红
+      const r=Math.round(30+w*200),g=Math.round(60+w*150),bl=Math.round(110-w*80);
+      ctx.fillStyle=`rgb(${r},${g},${bl})`;
+      ctx.fillRect(off+j*sz+1,i*sz+off+1,sz-2,sz-2);
+      if(w>0.15){ctx.fillStyle=w>0.5?'#000':'#fff';ctx.font='bold 10px monospace';ctx.textAlign='center';
+        ctx.fillText(w.toFixed(2),off+j*sz+sz/2,i*sz+off+sz/2+3);
+      }
+    }
+  }
+}
+let curHead=0;
+function selectHead(i){
+  curHead=i;
+  document.querySelectorAll('.head-btn').forEach((b,k)=>b.classList.toggle('active',k===i));
+  const h=HEADS[i];
+  const roleClass='role-'+h.role;
+  document.getElementById('explainBox').innerHTML=`
+    <div style="font-size:18px;font-weight:700;margin-bottom:6px">${h.name} <span class="role-tag ${roleClass}">${h.roleName}</span></div>
+    <div style="color:#cbd5e1">${h.desc}</div>`;
+  const toks=document.getElementById('sent').value.trim().split(/\s+/);
+  drawHeat(buildAttnMatrix(toks,h),toks);
+}
+function init(){
+  document.getElementById('tabs').innerHTML=HEADS.map((h,i)=>`<button class="head-btn${i===0?' active':''}" data-i="${i}">${h.name}</button>`).join('');
+  document.querySelectorAll('.head-btn').forEach(b=>b.addEventListener('click',()=>selectHead(+b.dataset.i)));
+  document.getElementById('sent').addEventListener('change',()=>selectHead(curHead));
+  selectHead(0);
+}
+</script>
+<script src="js/site.js"></script>
+</body>
+</html>

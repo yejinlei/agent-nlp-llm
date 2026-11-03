@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>GPT 参数量 & 温度 top-k 采样 · agent-nlp-llm</title>
+<link rel="stylesheet" href="css/site.css"/>
+<style>
+.controls{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;margin:16px 0}
+.ctrl-card{background:var(--panel);border-radius:10px;padding:16px;border:1px solid var(--border)}
+label{display:block;margin:6px 0 4px;font-weight:600;font-size:14px}
+input[type=range]{width:100%}
+select{width:100%;padding:6px;border-radius:6px;background:var(--panel);color:var(--text);border:1px solid var(--border)}
+.demo-box{background:var(--panel);border-radius:12px;padding:20px;margin:20px 0;border:1px solid var(--border)}
+.param-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:14px 0}
+.p-card{padding:12px;border-radius:10px;background:linear-gradient(135deg,#1e293b,#0f172a);border:1px solid var(--border);text-align:center}
+.p-card b{font-size:24px;color:var(--accent);display:block;margin:4px 0}
+.p-card small{color:var(--muted);font-size:11px}
+.breakdown{margin:14px 0}
+.bar-row{display:grid;grid-template-columns:180px 1fr 120px;gap:10px;align-items:center;margin:6px 0}
+.bar{height:22px;border-radius:4px;background:#1f2937;overflow:hidden;position:relative}
+.bar-fill{height:100%;border-radius:4px}
+.bar-label{font-size:13px}
+.bar-val{font-family:monospace;font-size:13px;text-align:right}
+.preset-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin:10px 0}
+.preset{padding:10px;border-radius:8px;border:1px solid var(--border);cursor:pointer;text-align:center;background:var(--panel);transition:.2s}
+.preset:hover{border-color:var(--accent);transform:translateY(-2px)}
+.preset b{display:block;color:var(--accent)}
+.gen-box{background:#0f172a;border-radius:10px;padding:16px;margin:14px 0;border:1px solid var(--border);font-size:16px;line-height:1.8;min-height:80px}
+.gen-prompt{color:#94a3b8}
+.gen-new{color:#fbbf24;font-weight:700}
+.token-prob{display:inline-flex;flex-direction:column;align-items:center;margin:2px;padding:4px 6px;border-radius:4px;cursor:pointer;vertical-align:bottom;min-width:40px}
+.next-tokens{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
+.np{padding:6px 12px;border-radius:6px;font-family:monospace;font-size:13px;cursor:pointer;transition:.2s;border:2px solid transparent}
+.np:hover{border-color:#fff}
+.np .p{font-size:10px;display:block;margin-top:2px;opacity:.8}
+.tok-h{color:#ef4444}
+canvas{background:#0f172a;border-radius:8px;border:1px solid var(--border);width:100%;max-width:700px;display:block;margin:10px auto}
+.insight{margin-top:14px}
+button{padding:10px 18px;border-radius:8px;background:var(--accent);color:#000;border:none;font-weight:700;cursor:pointer;margin-right:6px}
+button.sec{background:var(--panel);color:var(--text);border:1px solid var(--border)}
+</style>
+</head>
+<body>
+<nav class="navbar">
+  <div class="nav-inner">
+    <a href="index.html" class="nav-logo">💬 agent-nlp-llm</a>
+    <button class="nav-toggle" onclick="document.querySelector('.nav-links').classList.toggle('open')" aria-label="菜单">☰</button>
+    <div class="nav-links">
+      <a href="index.html" class="nav-link">🏠 首页</a>
+      <a href="playground.html" class="nav-link">🎨 玩法</a>
+      <a href="nlp/index.html" class="nav-link">📝 NLP</a>
+      <a href="llm/index.html" class="nav-link">🤖 LLM</a>
+      <a href="bpe.html" class="nav-link">🔤 分词器</a>
+      <a href="embedding.html" class="nav-link">🧭 词向量</a>
+      <a href="word2vec.html" class="nav-link">🧠 word2vec</a>
+      <a href="skip-cbow.html" class="nav-link">⚖️ CBOW/Skip</a>
+      <a href="cbow.html" class="nav-link">🧩 CBOW推理</a>
+      <a href="neg-sample.html" class="nav-link">🎲 负采样</a>
+      <a href="context-window.html" class="nav-link">🪟 窗口掩码</a>
+      <a href="rnn.html" class="nav-link">🔁 RNN/LSTM</a>
+      <a href="lstm-gate.html" class="nav-link">🚪 LSTM门控</a>
+      <a href="gru-lstm.html" class="nav-link">🆚 GRU/LSTM</a>
+      <a href="sigmoid.html" class="nav-link">∫ 激活函数</a>
+      <a href="attention.html" class="nav-link">🎯 注意力</a>
+      <a href="multihead.html" class="nav-link">👥 多头分工</a>
+      <a href="seq2seq-add.html" class="nav-link">➕ 加法实验</a>
+      <a href="attn-date.html" class="nav-link">📅 日期翻译</a>
+      <a href="gpt-params.html" class="nav-link active">🔧 GPT参数/采样</a>
+      <a href="ppl.html" class="nav-link">📏 困惑度PPL</a>
+      <a href="lora.html" class="nav-link">🪢 LoRA</a>
+      <a href="papers.html" class="nav-link">📚 论文</a>
+      <a href="clinic.html" class="nav-link">🕵️ 诊所</a>
+      <a href="pitfalls.html" class="nav-link">💥 踩坑</a>
+      <a href="benchmark.html" class="nav-link">📊 选型</a>
+      <a href="universe.html" class="nav-link">🌌 宇宙</a>
+      <a href="https://github.com/yejinlei/agent-nlp-llm" target="_blank" rel="noopener" class="nav-gh" aria-label="GitHub"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg></a>
+    </div>
+  </div>
+</nav>
+<div class="container" style="max-width:1100px">
+<section class="hero">
+<div class="badge">📖《Build a Large Language Model (From Scratch)》第4.2节参数构成 · P125-P129 · 第5.3节生成算法 · P171-P181</div>
+<h1>GPT 参数量计算 & <span class="grad-text">温度/top-k 采样</span></h1>
+<p style="color:var(--muted)">书1 第4章从零搭 GPTModel 时给了精确参数公式；第5章实现 generate() 时详细讲解 temperature scaling 和 top-k filtering。拖动超参数看参数量变化；调温度/top-k 感受文本是怎么"采样"出来的。</p>
+</section>
+
+<div class="demo-box">
+<h3>1️⃣ GPT 超参数</h3>
+<div class="controls">
+<div class="ctrl-card"><label>d_model 嵌入维度: <span id="dVal">768</span></label>
+<input type="range" id="dModel" min="128" max="4096" step="128" value="768"/></div>
+<div class="ctrl-card"><label>n_heads 头数: <span id="hVal">12</span></label>
+<input type="range" id="nHeads" min="1" max="32" step="1" value="12"/></div>
+<div class="ctrl-card"><label>n_layers Transformer层数: <span id="lVal">12</span></label>
+<input type="range" id="nLayers" min="1" max="96" step="1" value="12"/></div>
+<div class="ctrl-card"><label>词表大小 vocab_size: <span id="vVal">50257</span></label>
+<input type="range" id="vocab" min="1000" max="100000" step="1000" value="50257"/></div>
+<div class="ctrl-card"><label>上下文长度 context_length: <span id="cVal">1024</span></label>
+<input type="range" id="ctx" min="64" max="8192" step="64" value="1024"/></div>
+<div class="ctrl-card"><label>前馈维度倍数 (通常4×d_model)</label>
+<input type="range" id="ffnMul" min="2" max="8" step="1" value="4"/></div>
+</div>
+<h4 style="margin-top:14px">🎯 预设经典模型</h4>
+<div class="preset-grid" id="presets"></div>
+</div>
+
+<div class="demo-box">
+<h3>2️⃣ 总参数量（精确到每一块）</h3>
+<div class="param-grid">
+<div class="p-card"><small>Token Embedding</small><b id="pTok">-</b></div>
+<div class="p-card"><small>Position Embedding</small><b id="pPos">-</b></div>
+<div class="p-card"><small>每层 Attention</small><b id="pAttn">-</b></div>
+<div class="p-card"><small>每层 FFN(GELU)</small><b id="pFfn">-</b></div>
+<div class="p-card"><small>每层 LayerNorm×2</small><b id="pLn">-</b></div>
+<div class="p-card"><small>输出 LayerNorm</small><b id="pOutLn">-</b></div>
+<div class="p-card"><small>总参数 (含embedding)</small><b id="pTotal" style="color:#fbbf24;font-size:30px">-</b></div>
+<div class="p-card"><small>不含embedding</small><b id="pNoEmb" style="color:#f472b6">-</b></div>
+</div>
+<h4>参数构成分解（单层）</h4>
+<div class="breakdown" id="breakdown"></div>
+<div class="insight"><b>书1 P127 计算验证：</b>在 d=768, n_heads=12, n_layers=12, vocab=50257 配置下，总参数约 163M——即 GPT-2 Small 的官方数字。拖动滑块看你自己配置的 GPT 是几"M"还是几"B"。</div>
+</div>
+
+<div class="demo-box">
+<h3>3️⃣ 温度 temperature & top-k 采样（书1 P174）</h3>
+<div class="controls">
+<div class="ctrl-card"><label>温度 temperature: <span id="tVal2">0.7</span>  <span id="tExplain" style="font-size:12px;color:var(--muted)">平衡创造vs准确</span></label>
+<input type="range" id="temp" min="0.05" max="2" step="0.05" value="0.7"/></div>
+<div class="ctrl-card"><label>top-k: <span id="kVal">40</span>  <span style="font-size:12px;color:var(--muted)">只从前k个候选采样</span></label>
+<input type="range" id="topk" min="1" max="100" step="1" value="40"/></div>
+</div>
+<div class="gen-box" id="genBox"><span class="gen-prompt">自然语言处理是</span><span id="genNew" class="gen-new"></span><span class="tok-h" id="curTok">▌</span></div>
+<div><b>下一个token候选（Top-{k}，已按温度缩放）：</b></div>
+<div class="next-tokens" id="nextToks"></div>
+<button id="genBtn">▶ 生成下一个词</button>
+<button id="genAuto" class="sec">▶ 自动生成 10 词</button>
+<button id="resetGen" class="sec">⟲ 重置</button>
+<canvas id="distCanvas" width="700" height="260"></canvas>
+<div class="insight"><b>书1 P174 公式：</b>温度缩放 <code>logits / temperature</code>。T→0 时等价于贪心 argmax（保守、重复）；T=1 不变；T>1 时分布变平（更有创造力但可能胡说）。top-k 过滤掉概率极低的长尾，避免模型抽到离谱词。Ethan Perez 等人的研究发现：<b>小温度 + top-k=40~50 是实际最常用设置</b>。</div>
+</div>
+</div>
+<footer style="text-align:center;padding:40px 0;color:var(--muted);font-size:13px">参考 Sebastian Raschka《Build a Large Language Model (From Scratch)》</footer>
+<script>
+fetch('js/nav.json').then(r=>r.json()).then(d=>{document.getElementById('nav').innerHTML=d.html;init();});
+const PRESETS=[
+{name:'GPT-2 Small',d:768,h:12,l:12,v:50257,c:1024,tag:'124M'},
+{name:'GPT-2 Medium',d:1024,h:16,l:24,v:50257,c:1024,tag:'355M'},
+{name:'GPT-2 Large',d:1280,h:20,l:36,v:50257,c:1024,tag:'774M'},
+{name:'GPT-2 XL',d:1600,h:25,l:48,v:50257,c:1024,tag:'1.5B'},
+{name:'GPT-3',d:12288,h:96,l:96,v:50257,c:2048,tag:'175B'}
+];
+function fmt(n){if(n>=1e9)return (n/1e9).toFixed(2)+'B';if(n>=1e6)return (n/1e6).toFixed(1)+'M';if(n>=1e3)return (n/1e3).toFixed(1)+'K';return Math.round(n)+'';}
+function calcParams(){
+  const d=+$('dModel').value,h=+$('nHeads').value,L=+$('nLayers').value,V=+$('vocab').value,T=+$('ctx').value,mul=+$('ffnMul').value;
+  $('dVal').textContent=d;$('hVal').textContent=h;$('lVal').textContent=L;$('vVal').textContent=V;$('cVal').textContent=T;
+  const pTok=V*d;
+  const pPos=T*d;
+  const d_k=d/h;
+  // Attention: Q,K,V各d×d + bias×3d + output proj d×d + bias d
+  const pAttn=d*d*3 + 3*d + d*d + d;
+  // FFN: d→4d → 4d→d (with biases)  (GELU无参数)
+  const dff=d*mul;
+  const pFfn=d*dff + dff + dff*d + d;
+  // LayerNorm: 2*(d+d) per layer (gamma,beta)
+  const pLn=4*d;
+  const pOutLn=2*d;
+  const perLayer=pAttn+pFfn+pLn;
+  const total=pTok+pPos+L*perLayer+pOutLn;
+  $('pTok').textContent=fmt(pTok);$('pPos').textContent=fmt(pPos);
+  $('pAttn').textContent=fmt(pAttn);$('pFfn').textContent=fmt(pFfn);
+  $('pLn').textContent=fmt(pLn);$('pOutLn').textContent=fmt(pOutLn);
+  $('pTotal').textContent=fmt(total);$('pNoEmb').textContent=fmt(total-pTok-pPos);
+  const items=[['QKV投影 (3个 d×d)',d*d*3,'#60a5fa'],['QKV bias (3个d)',3*d,'#60a5fa77'],
+    ['输出投影 (d×d)',d*d,'#a78bfa'],['输出 bias (d)',d,'#a78bfa77'],
+    ['FFN W1 (d→4d)',d*dff,'#f472b6'],['FFN b1 (4d)',dff,'#f472b677'],
+    ['FFN W2 (4d→d)',dff*d,'#fbbf24'],['FFN b2 (d)',d,'#fbbf2477'],
+    ['两个LayerNorm',4*d,'#34d399']];
+  const sum=items.reduce((a,b)=>a+b[1],0);
+  $('breakdown').innerHTML=items.map(([k,v,col])=>`<div class="bar-row"><div class="bar-label">${k}</div><div class="bar"><div class="bar-fill" style="width:${v/sum*100}%;background:${col}"></div></div><div class="bar-val">${fmt(v)} (${(v/sum*100).toFixed(1)}%)</div></div>`).join('');
+}
+
+// 简易token分布生成器（模拟一个真实LM的下一词分布）
+const VOCAB_POOL=[
+  ['人工智能',0.18],['机器',0.14],['计算机',0.10],['一门',0.08],['让',0.07],['研究',0.06],
+  ['使得',0.04],['的',0.05],['了',0.03],['能够',0.03],['通过',0.02],['指',0.02],['就是',0.02],
+  ['的关键',0.02],['技术',0.02],['应用',0.015],['学科',0.01],['领域',0.01],['语言',0.01],['核心',0.01],
+  ['和',0.01],['未来',0.008],['最',0.007],['对',0.005],['把',0.004],['苹果',0.0005],['桌子',0.0003],['睡觉',0.0002]
+];
+function softmax(arr,T){const m=Math.max(...arr);const e=arr.map(x=>Math.exp((x-m)/T));const s=e.reduce((a,b)=>a+b);return e.map(x=>x/s);}
+let curText='自然语言处理是';
+function drawDist(){
+  const T=+$('temp').value,k=+$('topk').value;
+  $('tVal2').textContent=T.toFixed(2);$('kVal').textContent=k;
+  $('tExplain').textContent=T<0.3?'（太保守→可能重复）':T<0.8?'（推荐区间）':T<1.3?'（有创造力）':'（太随机→容易胡说）';
+  // 根据当前最后几个字微调概率
+  const logits=VOCAB_POOL.map(([t,p])=>Math.log(p+1e-9)+(curText.endsWith('是')&&['一门','人工智能','机器','计算机','指','研究','让','的','技术'].includes(t)?0.5:0));
+  // top-k
+  let pairs=VOCAB_POOL.map(([t],i)=>({t,i}));
+  const probs=softmax(logits,T);
+  pairs=pairs.map(p=>({...p,p:probs[p.i]})).sort((a,b)=>b.p-a.p);
+  const top=pairs.slice(0,k);
+  // 重新归一化top
+  const s=top.reduce((a,b)=>a+b.p,0);top.forEach(p=>p.p/=s);
+  $('nextToks').innerHTML=top.slice(0,12).map(p=>`<div class="np" style="background:rgba(251,191,36,${0.2+p.p*3})" data-tok="${p.t}">${p.t}<span class="p">${(p.p*100).toFixed(1)}%</span></div>`).join('');
+  document.querySelectorAll('.np').forEach(el=>el.addEventListener('click',()=>{curText+=el.dataset.tok;renderGen();drawDist();}));
+  // chart
+  const c=document.getElementById('distCanvas'),ctx=c.getContext('2d');
+  const W=c.width,H=c.height,pad={l:40,r:10,t:20,b:60};
+  ctx.clearRect(0,0,W,H);
+  const bw=(W-pad.l-pad.r)/Math.min(top.length,20);
+  const maxP=top[0].p;
+  ctx.strokeStyle='#333';ctx.beginPath();ctx.moveTo(pad.l,pad.t);ctx.lineTo(pad.l,H-pad.b);ctx.lineTo(W-pad.r,H-pad.b);ctx.stroke();
+  top.slice(0,20).forEach((p,i)=>{
+    const h=(H-pad.t-pad.b)*p.p/maxP;
+    const x=pad.l+i*bw;
+    ctx.fillStyle=i<k?'#fbbf24':'#475569';
+    ctx.fillRect(x+2,H-pad.b-h,bw-4,h);
+    ctx.fillStyle='#cbd5e1';ctx.font='11px monospace';ctx.textAlign='center';
+    ctx.fillText(p.t,x+bw/2,H-pad.b+14);
+    ctx.save();ctx.translate(x+bw/2,H-pad.b+28);ctx.rotate(-Math.PI/6);ctx.fillText((p.p*100).toFixed(1)+'%',0,0);ctx.restore();
+  });
+  ctx.fillStyle='#94a3b8';ctx.font='12px sans-serif';ctx.textAlign='left';
+  ctx.fillText(`温度 T=${T.toFixed(2)} | top-k=${k} | 候选总数${top.length}个重新归一化`,pad.l,pad.t+10);
+}
+function renderGen(){document.getElementById('genNew').textContent=curText.slice('自然语言处理是'.length);}
+function sampleNext(){
+  const T=+$('temp').value,k=+$('topk').value;
+  const logits=VOCAB_POOL.map(([t,p])=>Math.log(p+1e-9)+(curText.endsWith('是')&&['一门','人工智能','机器','计算机','指','研究','让','的','技术'].includes(t)?0.5:0));
+  const probs=softmax(logits,T);
+  let pairs=VOCAB_POOL.map(([t],i)=>({t,i,p:probs[i]})).sort((a,b)=>b.p-a.p).slice(0,k);
+  const s=pairs.reduce((a,b)=>a+b.p,0);pairs.forEach(p=>p.p/=s);
+  let r=Math.random(),acc=0;
+  for(const p of pairs){acc+=p.p;if(r<=acc)return p.t;}
+  return pairs[0].t;
+}
+function init(){
+  calcParams();
+  Object.entries({dModel:'d',nHeads:'h',nLayers:'l',vocab:'v',ctx:'c'}).forEach(()=>{});
+  ['dModel','nHeads','nLayers','vocab','ctx','ffnMul'].forEach(id=>$(id).addEventListener('input',calcParams));
+  document.getElementById('presets').innerHTML=PRESETS.map(p=>`<div class="preset" data-p="${p.name}"><small>${p.name}</small><b>${p.tag}</b></div>`).join('');
+  document.querySelectorAll('.preset').forEach(el=>el.addEventListener('click',()=>{
+    const p=PRESETS.find(x=>x.name===el.dataset.p);
+    $('dModel').value=p.d;$('nHeads').value=p.h;$('nLayers').value=p.l;$('vocab').value=p.v;$('ctx').value=p.c;calcParams();
+  }));
+  drawDist();renderGen();
+  ['temp','topk'].forEach(id=>$(id).addEventListener('input',drawDist));
+  document.getElementById('genBtn').addEventListener('click',()=>{curText+=sampleNext();renderGen();drawDist();});
+  document.getElementById('genAuto').addEventListener('click',()=>{let i=0;const iv=setInterval(()=>{curText+=sampleNext();renderGen();drawDist();if(++i>=10)clearInterval(iv);},350);});
+  document.getElementById('resetGen').addEventListener('click',()=>{curText='自然语言处理是';renderGen();drawDist();});
+}
+</script>
+<script src="js/site.js"></script>
+</body>
+</html>

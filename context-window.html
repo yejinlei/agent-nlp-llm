@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>滑动窗口采样与因果掩码 · agent-nlp-llm</title>
+<link rel="stylesheet" href="css/site.css"/>
+<style>
+.controls{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:16px 0}
+.ctrl-card{background:var(--panel);border-radius:10px;padding:14px;border:1px solid var(--border)}
+label{display:block;margin:6px 0;font-weight:600;font-size:14px}
+input[type=range]{width:100%}
+.demo-box{background:var(--panel);border-radius:12px;padding:20px;margin:20px 0;border:1px solid var(--border)}
+.token-grid{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0}
+.tok{padding:6px 12px;border-radius:6px;font-family:monospace;font-size:14px;border:1px solid var(--border)}
+.tok-ctx{background:#93c5fd30;border-color:#3b82f6}
+.tok-tgt{background:#ef444440;border-color:#ef4444;color:#fca5a5;font-weight:700}
+.tok-pad{background:#444;color:#888}
+.win-block{display:inline-flex;border-radius:8px;overflow:hidden;margin:4px;border:2px solid var(--accent)}
+.win-block .tok{border-radius:0;border:none}
+.win-row{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0;padding:10px;background:#00000030;border-radius:8px}
+canvas{background:#0f172a;border-radius:8px;border:1px solid var(--border);width:100%;max-width:700px;display:block;margin:10px auto}
+.stat-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:14px 0}
+.stat{padding:12px;border-radius:8px;background:var(--panel);border:1px solid var(--border);text-align:center}
+.stat b{font-size:22px;display:block;color:var(--accent);margin:4px 0}
+.insight{margin-top:14px}
+.mask-legend{display:flex;gap:16px;margin:8px 0;justify-content:center;font-size:13px}
+.mask-legend span{display:flex;align-items:center;gap:6px}
+.sq{width:16px;height:16px;border-radius:3px;display:inline-block}
+</style>
+</head>
+<body>
+<nav class="navbar">
+  <div class="nav-inner">
+    <a href="index.html" class="nav-logo">💬 agent-nlp-llm</a>
+    <button class="nav-toggle" onclick="document.querySelector('.nav-links').classList.toggle('open')" aria-label="菜单">☰</button>
+    <div class="nav-links">
+      <a href="index.html" class="nav-link">🏠 首页</a>
+      <a href="playground.html" class="nav-link">🎨 玩法</a>
+      <a href="nlp/index.html" class="nav-link">📝 NLP</a>
+      <a href="llm/index.html" class="nav-link">🤖 LLM</a>
+      <a href="bpe.html" class="nav-link">🔤 分词器</a>
+      <a href="embedding.html" class="nav-link">🧭 词向量</a>
+      <a href="word2vec.html" class="nav-link">🧠 word2vec</a>
+      <a href="skip-cbow.html" class="nav-link">⚖️ CBOW/Skip</a>
+      <a href="cbow.html" class="nav-link">🧩 CBOW推理</a>
+      <a href="neg-sample.html" class="nav-link">🎲 负采样</a>
+      <a href="context-window.html" class="nav-link active">🪟 窗口掩码</a>
+      <a href="rnn.html" class="nav-link">🔁 RNN/LSTM</a>
+      <a href="lstm-gate.html" class="nav-link">🚪 LSTM门控</a>
+      <a href="gru-lstm.html" class="nav-link">🆚 GRU/LSTM</a>
+      <a href="sigmoid.html" class="nav-link">∫ 激活函数</a>
+      <a href="attention.html" class="nav-link">🎯 注意力</a>
+      <a href="multihead.html" class="nav-link">👥 多头分工</a>
+      <a href="seq2seq-add.html" class="nav-link">➕ 加法实验</a>
+      <a href="attn-date.html" class="nav-link">📅 日期翻译</a>
+      <a href="gpt-params.html" class="nav-link">🔧 GPT参数/采样</a>
+      <a href="ppl.html" class="nav-link">📏 困惑度PPL</a>
+      <a href="lora.html" class="nav-link">🪢 LoRA</a>
+      <a href="papers.html" class="nav-link">📚 论文</a>
+      <a href="clinic.html" class="nav-link">🕵️ 诊所</a>
+      <a href="pitfalls.html" class="nav-link">💥 踩坑</a>
+      <a href="benchmark.html" class="nav-link">📊 选型</a>
+      <a href="universe.html" class="nav-link">🌌 宇宙</a>
+      <a href="https://github.com/yejinlei/agent-nlp-llm" target="_blank" rel="noopener" class="nav-gh" aria-label="GitHub"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg></a>
+    </div>
+  </div>
+</nav>
+<div class="container" style="max-width:1100px">
+<section class="hero">
+<div class="badge">📖《Build a Large Language Model (From Scratch)》第2.5–2.6节 · P41–P62 · 第3.3.2节因果注意力 · P83</div>
+<h1>滑动窗口采样 + <span class="grad-text">因果掩码</span></h1>
+<p style="color:var(--muted)">书1 第2章核心预处理：滑动窗口把长文本切成(input, target)训练对。第3章核心机制：因果掩码让每个位置 i 只能看 ≤ i 的 token，实现"自回归生成"。拖动参数实时观察数据如何被切成训练样本、掩码矩阵如何变化。</p>
+</section>
+
+<div class="demo-box">
+<h3>1️⃣ 输入文本</h3>
+<textarea id="text" style="width:100%;height:70px;padding:10px;border-radius:8px;background:var(--panel);color:var(--text);border:1px solid var(--border);resize:vertical">every effort moves you</textarea>
+<div class="controls">
+<div class="ctrl-card"><label>上下文长度 L: <span id="lVal">4</span></label><input type="range" id="L" min="2" max="8" value="4" step="1"/></div>
+<div class="ctrl-card"><label>步长 stride: <span id="sVal">1</span></label><input type="range" id="stride" min="1" max="4" value="1" step="1"/></div>
+<div class="ctrl-card"><label>分词方式</label>
+<select id="tokMode" style="width:100%;padding:6px;border-radius:6px;background:var(--panel);color:var(--text);border:1px solid var(--border)">
+<option value="word" selected>按空格（书1 P46 例子）</option><option value="char">按字符</option></select></div>
+</div>
+</div>
+
+<div class="demo-box">
+<h3>2️⃣ Token 序列（编码后）</h3>
+<div class="token-grid" id="tokSeq"></div>
+<div class="stat-row">
+<div class="stat">总Token数<b id="nTok">-</b></div>
+<div class="stat">上下文长度 L<b id="statL">-</b></div>
+<div class="stat">窗口总数<b id="nWin">-</b></div>
+<div class="stat">训练样本数<b id="nSample">-</b></div>
+</div>
+</div>
+
+<div class="demo-box">
+<h3>3️⃣ 滑动窗口切出的训练对</h3>
+<p style="font-size:14px;color:var(--muted)">每个窗口：<span class="tok tok-ctx" style="padding:2px 8px;font-size:12px">input</span> → <span class="tok tok-tgt" style="padding:2px 8px;font-size:12px">target（右移一位）</span>。书1 P48 图 2.10：target 就是 input 右移 1。</p>
+<div id="windows"></div>
+</div>
+
+<div class="demo-box">
+<h3>4️⃣ 因果掩码 Causal Mask（书1 P84）</h3>
+<div class="mask-legend">
+<span><span class="sq" style="background:#10b981"></span>可见（权重正常计算）</span>
+<span><span class="sq" style="background:#be123c"></span>被掩码（注意力权重=-∞）</span>
+</div>
+<canvas id="maskCanvas" width="600" height="600"></canvas>
+<div class="insight">
+<b>为什么要掩码？</b>书1 P84：训练 GPT 时，位置 2 的 token 必须通过位置 1、2 预测位置 3，不能让它"偷看"位置 3 以后的未来词。实现方式：softmax 前把上三角（不含对角线）减去一个很大的数（-1e9），softmax 后这些位置变成 0。对角线保留 → 一个 token 可以"看见自己"。
+</div>
+</div>
+
+<div class="demo-box">
+<h3>5️⃣ 一个 (X,Y) 样本到底喂给模型什么？</h3>
+<div id="oneSample" style="font-family:monospace;font-size:14px;line-height:1.8"></div>
+</div>
+</div>
+<footer style="text-align:center;padding:40px 0;color:var(--muted);font-size:13px">
+参考 Sebastian Raschka《Build a Large Language Model (From Scratch)》· 斋藤康毅《深度学习进阶：NLP》
+</footer>
+<script>
+fetch('js/nav.json').then(r=>r.json()).then(d=>{document.getElementById('nav').innerHTML=d.html;render();});
+const $=id=>document.getElementById(id);
+function render(){
+  const L=+$('L').value,stride=+$('stride').value;
+  $('lVal').textContent=L;$('sVal').textContent=stride;
+  const text=$('text').value;
+  const toks=$('tokMode').value==='word'?text.trim().split(/\s+/):[...text];
+  // 建词表
+  const vocab={};toks.forEach(t=>{if(!(t in vocab))vocab[t]=Object.keys(vocab).length});
+  const ids=toks.map(t=>vocab[t]);
+  $('tokSeq').innerHTML=toks.map((t,i)=>`<span class="tok"><b>${i}</b>: ${t} <small style="color:#888">(${ids[i]})</small></span>`).join('');
+  $('nTok').textContent=toks.length;$('statL').textContent=L;
+  const windows=[];
+  for(let i=0;i+L<toks.length;i+=stride){
+    windows.push({input:toks.slice(i,i+L),target:toks.slice(i+1,i+L+1),i_ids:ids.slice(i,i+L),t_ids:ids.slice(i+1,i+L+1)});
+  }
+  $('nWin').textContent=windows.length;$('nSample').textContent=windows.length*L;
+  $('windows').innerHTML=windows.map((w,idx)=>`
+    <div style="margin:14px 0">
+      <div style="font-size:13px;color:var(--muted);margin-bottom:4px">窗口 #${idx+1}（起始位置 ${idx*stride}）</div>
+      <div class="win-block">${w.input.map(t=>`<span class="tok tok-ctx">${t}</span>`).join('')}</div>
+      <span style="margin:0 8px">→</span>
+      <div class="win-block">${w.target.map(t=>`<span class="tok tok-tgt">${t}</span>`).join('')}</div>
+    </div>`).join('');
+  // mask
+  const c=$('maskCanvas'),ctx=c.getContext('2d');
+  const sz=Math.min(560/L,90),N=L;
+  const off=60;
+  c.width=off+N*sz+80;c.height=off+N*sz+40;
+  ctx.clearRect(0,0,c.width,c.height);
+  ctx.fillStyle='#e5e7eb';ctx.font='12px sans-serif';
+  for(let i=0;i<N;i++){
+    ctx.fillStyle='#e5e7eb';ctx.fillText('i='+i,off+i*sz+sz/2-12,off-8);
+    ctx.fillText('j='+i,10,off+i*sz+sz/2+4);
+    for(let j=0;j<N;j++){
+      const visible=j<=i; // 上三角（不含对角线）被mask
+      ctx.fillStyle=visible?'#10b981':'#be123c';
+      ctx.fillRect(off+j*sz+1,i*sz+off+1,sz-2,sz-2);
+      ctx.fillStyle='#fff';ctx.font='bold 11px monospace';
+      ctx.textAlign='center';
+      ctx.fillText(visible?'1':'-∞',off+j*sz+sz/2,i*sz+off+sz/2+4);
+      ctx.textAlign='left';
+    }
+  }
+  // one sample
+  if(windows[0]){
+    const w=windows[0];
+    $('oneSample').innerHTML=`
+    <div>输入 X  = [<span style="color:#60a5fa">${w.i_ids.join(', ')}</span>]  →  token: ${w.input.join(' ')}</div>
+    <div>目标 Y = [<span style="color:#f87171">${w.t_ids.join(', ')}</span>]  →  token: ${w.target.join(' ')}</div>
+    <div style="color:var(--muted);margin-top:8px;font-size:13px">
+    即：模型输入第 [${w.i_ids.join(',')}] 个token，要在每个位置 i 预测下一个 token 是第 [${w.t_ids.join(',')}] 个。
+    </div>`;
+  }
+}
+['L','stride','tokMode'].forEach(id=>$(id).addEventListener('input',render));
+$('text').addEventListener('input',render);
+</script>
+<script src="js/site.js"></script>
+</body>
+</html>

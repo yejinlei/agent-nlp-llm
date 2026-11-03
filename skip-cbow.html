@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>CBOW vs Skip-gram 对比 · agent-nlp-llm</title>
+<link rel="stylesheet" href="css/site.css"/>
+<style>
+.compare-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin:20px 0}
+.cbow-col,.skip-col{padding:20px;border-radius:12px;border:1px solid var(--border)}
+.cbow-col{background:linear-gradient(135deg,#e0f2fe10,#7dd3fc10);border-color:#7dd3fc55}
+.skip-col{background:linear-gradient(135deg,#fef3c710,#fde04710);border-color:#fde04755}
+.sent-box{background:var(--panel);border-radius:8px;padding:12px;margin:10px 0;font-size:18px;text-align:center}
+.token{display:inline-block;padding:4px 10px;margin:2px;border-radius:6px;font-weight:600}
+.cbow-ctx{background:#7dd3fc40;color:#0c4a6e}
+.cbow-tgt{background:#0ea5e9;color:#fff}
+.skip-tgt{background:#fbbf24;color:#fff}
+.skip-ctx{background:#fde04740;color:#78350f}
+.arrow-row{display:flex;align-items:center;justify-content:center;margin:12px 0;gap:8px;flex-wrap:wrap}
+.layer-box{padding:8px 14px;border-radius:6px;font-size:14px;font-weight:600}
+.demo-box{background:var(--panel);border-radius:12px;padding:20px;margin:20px 0;border:1px solid var(--border)}
+.slider-row{margin:14px 0}
+label{display:block;margin:8px 0 4px;font-weight:600}
+input[type=range]{width:100%}
+.ctrl{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.pair-list{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
+.pair-tag{padding:6px 10px;border-radius:6px;font-size:13px;font-family:monospace;background:var(--panel);border:1px solid var(--border)}
+.stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:14px 0}
+.stat{padding:10px;border-radius:8px;text-align:center;background:var(--panel)}
+.stat b{font-size:22px;display:block;margin:4px 0;color:var(--accent)}
+canvas{background:var(--panel);border-radius:8px;margin:10px 0;border:1px solid var(--border);width:100%}
+.vs-badge{text-align:center;font-size:28px;font-weight:900;color:var(--accent);margin:10px 0}
+</style>
+</head>
+<body>
+<nav class="navbar">
+  <div class="nav-inner">
+    <a href="index.html" class="nav-logo">💬 agent-nlp-llm</a>
+    <button class="nav-toggle" onclick="document.querySelector('.nav-links').classList.toggle('open')" aria-label="菜单">☰</button>
+    <div class="nav-links">
+      <a href="index.html" class="nav-link">🏠 首页</a>
+      <a href="playground.html" class="nav-link">🎨 玩法</a>
+      <a href="nlp/index.html" class="nav-link">📝 NLP</a>
+      <a href="llm/index.html" class="nav-link">🤖 LLM</a>
+      <a href="bpe.html" class="nav-link">🔤 分词器</a>
+      <a href="embedding.html" class="nav-link">🧭 词向量</a>
+      <a href="word2vec.html" class="nav-link">🧠 word2vec</a>
+      <a href="skip-cbow.html" class="nav-link active">⚖️ CBOW/Skip</a>
+      <a href="cbow.html" class="nav-link">🧩 CBOW推理</a>
+      <a href="neg-sample.html" class="nav-link">🎲 负采样</a>
+      <a href="context-window.html" class="nav-link">🪟 窗口掩码</a>
+      <a href="rnn.html" class="nav-link">🔁 RNN/LSTM</a>
+      <a href="lstm-gate.html" class="nav-link">🚪 LSTM门控</a>
+      <a href="gru-lstm.html" class="nav-link">🆚 GRU/LSTM</a>
+      <a href="sigmoid.html" class="nav-link">∫ 激活函数</a>
+      <a href="attention.html" class="nav-link">🎯 注意力</a>
+      <a href="multihead.html" class="nav-link">👥 多头分工</a>
+      <a href="seq2seq-add.html" class="nav-link">➕ 加法实验</a>
+      <a href="attn-date.html" class="nav-link">📅 日期翻译</a>
+      <a href="gpt-params.html" class="nav-link">🔧 GPT参数/采样</a>
+      <a href="ppl.html" class="nav-link">📏 困惑度PPL</a>
+      <a href="lora.html" class="nav-link">🪢 LoRA</a>
+      <a href="papers.html" class="nav-link">📚 论文</a>
+      <a href="clinic.html" class="nav-link">🕵️ 诊所</a>
+      <a href="pitfalls.html" class="nav-link">💥 踩坑</a>
+      <a href="benchmark.html" class="nav-link">📊 选型</a>
+      <a href="universe.html" class="nav-link">🌌 宇宙</a>
+      <a href="https://github.com/yejinlei/agent-nlp-llm" target="_blank" rel="noopener" class="nav-gh" aria-label="GitHub"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg></a>
+    </div>
+  </div>
+</nav>
+<div class="container" style="max-width:1100px">
+<section class="hero">
+  <div class="badge">📖《深度学习进阶：NLP》第3.3–3.5节 · P113–P131</div>
+  <h1>CBOW vs Skip-gram：<span class="grad-text">两种 word2vec 架构</span></h1>
+  <p style="color:var(--muted)">书2第3章指出：CBOW 用多个上下文预测一个目标词，Skip-gram 反过来用一个目标词预测每个上下文词。对小规模/低频词 Skip-gram 更优，CBOW 训练更快。拖动参数实时生成训练样本。</p>
+</section>
+
+<div class="demo-box">
+<h3>📝 输入句子</h3>
+<div class="ctrl">
+  <div><label>窗口大小 window: <span id="winVal">2</span></label>
+    <input type="range" id="win" min="1" max="4" value="2" step="1"/></div>
+  <div><label>例句选择</label>
+    <select id="sent" style="width:100%;padding:8px;border-radius:6px;background:var(--panel);color:var(--text);border:1px solid var(--border)">
+      <option>the cat sat on the mat</option>
+      <option selected>我 喜欢 自然语言 处理 因为 它 有趣</option>
+      <option>you say goodbye and i say hello</option>
+      <option>深度学习 让 机器 理解 人类 语言</option>
+    </select></div>
+</div>
+</div>
+
+<div class="vs-badge">↓ 两种模型如何看待同一句话 ↓</div>
+
+<div class="compare-grid">
+<div class="cbow-col">
+<h3>🟦 CBOW（Continuous Bag-of-Words）</h3>
+<div class="sent-box" id="cbowSent"></div>
+<p style="font-size:14px;color:var(--muted)">思路：用<span class="cbow-ctx token" style="padding:2px 6px;font-size:13px">上下文词</span>预测<span class="cbow-tgt token" style="padding:2px 6px;font-size:13px">中心词</span>。中间层对上下文嵌入求平均。</p>
+<div class="arrow-row">
+<div class="layer-box" style="background:#7dd3fc40">输入层: C×V one-hot</div>→<div class="layer-box" style="background:#7dd3fc60">W_in（共享）</div>→<div class="layer-box" style="background:#7dd3fc80">平均 h</div>→<div class="layer-box" style="background:#7dd3fc99">W_out</div>→<div class="layer-box" style="background:#0ea5e9;color:#fff">softmax→1词</div>
+</div>
+<p style="font-size:13px;color:var(--muted)">书2 P123：CBOW 一个样本产生 <b>1</b> 个损失，窗口大小 C 时 Skip-gram 产生 <b>2C</b> 个损失。</p>
+<div id="cbowPairs" class="pair-list"></div>
+<div class="stat-grid" id="cbowStats"></div>
+</div>
+
+<div class="skip-col">
+<h3>🟨 Skip-gram</h3>
+<div class="sent-box" id="skipSent"></div>
+<p style="font-size:14px;color:var(--muted)">思路：用<span class="skip-tgt token" style="padding:2px 6px;font-size:13px">中心词</span>预测<span class="skip-ctx token" style="padding:2px 6px;font-size:13px">每个上下文词</span>。书2 P131 末尾："Skip-gram 低频词性能更好"。</p>
+<div class="arrow-row">
+<div class="layer-box" style="background:#fde04740">输入层: 1个 one-hot</div>→<div class="layer-box" style="background:#fde04760">W_in</div>→<div class="layer-box" style="background:#fde04780">h（就是该词嵌入）</div>→<div class="layer-box" style="background:#fde04799">W_out</div>→<div class="layer-box" style="background:#fbbf24;color:#000">softmax→2C词</div>
+</div>
+<p style="font-size:13px;color:var(--muted)">书2 P129：损失为所有上下文位置的交叉熵之和，等价于训练 <b>2C</b> 个二分类。</p>
+<div id="skipPairs" class="pair-list"></div>
+<div class="stat-grid" id="skipStats"></div>
+</div>
+</div>
+
+<div class="demo-box">
+<h3>📊 样本数 vs 窗口大小</h3>
+<p style="font-size:14px;color:var(--muted)">句子长 N=7 时，CBOW 样本数=N-2C，Skip-gram 样本数=2C(N-2C)。</p>
+<canvas id="sampleChart" width="900" height="320"></canvas>
+<div class="insight">
+<b>书2 P131 原话总结：</b>“Skip-gram 比 CBOW 对低频词更准确，但训练时间更长（因为样本数多 2C 倍）。” Mikolov 原论文推荐：小语料/重精度用 Skip-gram，大语料/重速度用 CBOW。
+</div>
+</div>
+
+<div class="demo-box">
+<h3>🧪 真实句子样本数对比（基于你选的句子）</h3>
+<div id="sampleTable" style="overflow-x:auto"></div>
+</div>
+</div>
+<footer style="text-align:center;padding:40px 0;color:var(--muted);font-size:13px">
+  参考 Sebastian Raschka《Build a Large Language Model (From Scratch)》· 斋藤康毅《深度学习进阶：NLP》
+</footer>
+<script>
+fetch('js/nav.json').then(r=>r.json()).then(d=>{document.getElementById('nav').innerHTML=d.html.replace(/active/gm,k=>k==='skip-cbow'?'active':'');render();});
+const $=id=>document.getElementById(id);
+function render(){
+  const win=+$('win').value;$('winVal').textContent=win;
+  const toks=$('sent').value.trim().split(/\s+/);
+  // cbow render
+  const cs=toks.map(t=>`<span class="token" style="background:#0ea5e920;color:var(--text)">${t}</span>`).join(' ');
+  $('cbowSent').innerHTML=cs;
+  $('skipSent').innerHTML=cs;
+  const cbowPairs=[],skipPairs=[];
+  for(let i=win;i<toks.length-win;i++){
+    const ctx=[];
+    for(let k=-win;k<=win;k++) if(k) ctx.push(toks[i+k]);
+    cbowPairs.push({ctx,target:toks[i]});
+    ctx.forEach(c=>skipPairs.push({target:toks[i],ctx:c}));
+  }
+  $('cbowPairs').innerHTML=cbowPairs.slice(0,8).map(p=>
+    `<span class="pair-tag">[${p.ctx.join(', ')}] → <b>${p.target}</b></span>`).join('')+(cbowPairs.length>8?`<span class="pair-tag">…+${cbowPairs.length-8}</span>`:'');
+  $('skipPairs').innerHTML=skipPairs.slice(0,10).map(p=>
+    `<span class="pair-tag">${p.target} → <b>${p.ctx}</b></span>`).join('')+(skipPairs.length>10?`<span class="pair-tag">…+${skipPairs.length-10}</span>`:'');
+  $('cbowStats').innerHTML=[['CBOW样本数',cbowPairs.length],['每个样本输出',1+'词'],['每次预测损失数',1],['对比Skip-gram','快'+win*2+'倍']].map(([k,v])=>`<div class="stat">${k}<b>${v}</b></div>`).join('');
+  $('skipStats').innerHTML=[['Skip-gram样本数',skipPairs.length],['每个样本输出',win*2+'词'],['每次预测损失数',win*2],['对比CBOW','慢'+win*2+'倍']].map(([k,v])=>`<div class="stat">${k}<b>${v}</b></div>`).join('');
+  // chart
+  const c=document.getElementById('sampleChart'),ctx=c.getContext('2d');
+  const W=c.width,H=c.height;ctx.clearRect(0,0,W,H);
+  const pad={l:60,r:20,t:30,b:50};
+  const xs=4;
+  ctx.strokeStyle='#888';ctx.fillStyle='#ccc';ctx.font='12px sans-serif';
+  ctx.beginPath();ctx.moveTo(pad.l,pad.t);ctx.lineTo(pad.l,H-pad.b);ctx.lineTo(W-pad.r,H-pad.b);ctx.stroke();
+  const maxY=Math.max(...[1,2,3,4].map(w=>2*w*(toks.length-2*w)))*1.1;
+  // axes labels
+  ctx.fillText('样本数',10,pad.t+10);
+  for(let y=0;y<=4;y++){
+    const yy=pad.t+(H-pad.t-pad.b)*y/4;
+    ctx.beginPath();ctx.moveTo(pad.l,yy);ctx.lineTo(W-pad.r,yy);ctx.strokeStyle='#222';ctx.stroke();
+    ctx.fillText(Math.round(maxY*(1-y/4)),10,yy+4);
+  }
+  // bars
+  const bw=(W-pad.l-pad.r)/(xs*3+1);
+  for(let w=1;w<=xs;w++){
+    const cbowN=Math.max(0,toks.length-2*w);
+    const skipN=2*w*cbowN;
+    const x=pad.l+(w-1)*3*bw+bw;
+    const hc=(H-pad.t-pad.b)*cbowN/maxY;
+    ctx.fillStyle='#0ea5e9';ctx.fillRect(x,H-pad.b-hc,bw,hc);
+    ctx.fillStyle='#fff';ctx.fillText('CBOW'+cbowN,x+4,H-pad.b-hc-6);
+    const hs=(H-pad.t-pad.b)*skipN/maxY;
+    ctx.fillStyle='#fbbf24';ctx.fillRect(x+bw+4,H-pad.b-hs,bw,hs);
+    ctx.fillStyle='#000';ctx.fillText('Skip'+skipN,x+bw+8,H-pad.b-hs-6);
+    ctx.fillStyle='#ccc';ctx.textAlign='center';ctx.fillText('window='+w,x+bw+2,H-pad.b+20);ctx.textAlign='left';
+  }
+  // table
+  $('sampleTable').innerHTML=`<table style="width:100%;border-collapse:collapse">
+  <tr style="background:var(--panel)"><th style="padding:8px;border-bottom:1px solid var(--border)">窗口</th>
+  <th>CBOW 样本数</th><th>Skip-gram 样本数</th><th>倍数</th></tr>
+  ${[1,2,3,4].map(w=>{const c=Math.max(0,toks.length-2*w);const s=2*w*c;return `<tr><td style="padding:8px;text-align:center">${w}</td><td style="text-align:center;color:#0ea5e9">${c}</td><td style="text-align:center;color:#d97706">${s}</td><td style="text-align:center">${s/c||0}x</td></tr>`}).join('')}
+  </table>`;
+}
+$('win').addEventListener('input',render);
+$('sent').addEventListener('change',render);
+</script>
+<script src="js/site.js"></script>
+</body>
+</html>

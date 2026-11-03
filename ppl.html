@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>困惑度 PPL 互动 · agent-nlp-llm</title>
+<link rel="stylesheet" href="css/site.css"/>
+<style>
+.controls{display:grid;grid-template-columns:1fr;gap:12px;margin:16px 0}
+.ctrl-card{background:var(--panel);border-radius:10px;padding:16px;border:1px solid var(--border)}
+.demo-box{background:var(--panel);border-radius:12px;padding:20px;margin:20px 0;border:1px solid var(--border)}
+label{display:block;margin:6px 0 4px;font-weight:600;font-size:14px}
+textarea{width:100%;min-height:60px;padding:10px;border-radius:8px;background:#00000040;color:var(--text);border:1px solid var(--border);resize:vertical;font-size:15px;line-height:1.6}
+.token-seq{display:flex;flex-wrap:wrap;gap:6px;margin:14px 0}
+.token-box{padding:10px 14px;border-radius:8px;font-family:monospace;font-size:15px;cursor:pointer;border:2px solid transparent;position:relative;min-width:50px;text-align:center;transition:.2s}
+.token-box:hover{transform:translateY(-2px)}
+.token-box .prob{display:block;font-size:10px;margin-top:3px;opacity:.9}
+.token-box .surp{position:absolute;top:-8px;right:-8px;background:#ef4444;color:#fff;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700}
+.ppl-big{font-size:64px;font-weight:900;text-align:center;background:linear-gradient(135deg,var(--accent),#f472b6);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:14px 0}
+.stat{padding:12px;border-radius:8px;background:var(--panel);border:1px solid var(--border);text-align:center}
+.stat b{font-size:20px;display:block;color:var(--accent);margin:4px 0}
+canvas{background:#0f172a;border-radius:8px;border:1px solid var(--border);width:100%;max-width:800px;margin:10px auto;display:block}
+.insight{margin-top:14px}
+.formula{font-family:monospace;background:#00000040;padding:12px;border-radius:8px;margin:10px 0;font-size:14px;line-height:1.8}
+.preset-btns{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
+.preset-btn{padding:6px 12px;border-radius:6px;border:1px solid var(--border);background:var(--panel);color:var(--text);cursor:pointer;font-size:13px}
+.preset-btn:hover{border-color:var(--accent)}
+.compare-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:14px 0}
+.c-card{padding:14px;border-radius:10px;text-align:center;border:1px solid var(--border)}
+.c-card h4{margin:4px 0}
+.c-card .v{font-size:36px;font-weight:900;margin:6px 0}
+</style>
+</head>
+<body>
+<nav class="navbar">
+  <div class="nav-inner">
+    <a href="index.html" class="nav-logo">💬 agent-nlp-llm</a>
+    <button class="nav-toggle" onclick="document.querySelector('.nav-links').classList.toggle('open')" aria-label="菜单">☰</button>
+    <div class="nav-links">
+      <a href="index.html" class="nav-link">🏠 首页</a>
+      <a href="playground.html" class="nav-link">🎨 玩法</a>
+      <a href="nlp/index.html" class="nav-link">📝 NLP</a>
+      <a href="llm/index.html" class="nav-link">🤖 LLM</a>
+      <a href="bpe.html" class="nav-link">🔤 分词器</a>
+      <a href="embedding.html" class="nav-link">🧭 词向量</a>
+      <a href="word2vec.html" class="nav-link">🧠 word2vec</a>
+      <a href="skip-cbow.html" class="nav-link">⚖️ CBOW/Skip</a>
+      <a href="cbow.html" class="nav-link">🧩 CBOW推理</a>
+      <a href="neg-sample.html" class="nav-link">🎲 负采样</a>
+      <a href="context-window.html" class="nav-link">🪟 窗口掩码</a>
+      <a href="rnn.html" class="nav-link">🔁 RNN/LSTM</a>
+      <a href="lstm-gate.html" class="nav-link">🚪 LSTM门控</a>
+      <a href="gru-lstm.html" class="nav-link">🆚 GRU/LSTM</a>
+      <a href="sigmoid.html" class="nav-link">∫ 激活函数</a>
+      <a href="attention.html" class="nav-link">🎯 注意力</a>
+      <a href="multihead.html" class="nav-link">👥 多头分工</a>
+      <a href="seq2seq-add.html" class="nav-link">➕ 加法实验</a>
+      <a href="attn-date.html" class="nav-link">📅 日期翻译</a>
+      <a href="gpt-params.html" class="nav-link">🔧 GPT参数/采样</a>
+      <a href="ppl.html" class="nav-link active">📏 困惑度PPL</a>
+      <a href="lora.html" class="nav-link">🪢 LoRA</a>
+      <a href="papers.html" class="nav-link">📚 论文</a>
+      <a href="clinic.html" class="nav-link">🕵️ 诊所</a>
+      <a href="pitfalls.html" class="nav-link">💥 踩坑</a>
+      <a href="benchmark.html" class="nav-link">📊 选型</a>
+      <a href="universe.html" class="nav-link">🌌 宇宙</a>
+      <a href="https://github.com/yejinlei/agent-nlp-llm" target="_blank" rel="noopener" class="nav-gh" aria-label="GitHub"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg></a>
+    </div>
+  </div>
+</nav>
+<div class="container" style="max-width:1100px">
+<section class="hero">
+<div class="badge">📖《Build a Large Language Model (From Scratch)》第5.4节 · P181-P186</div>
+<h1>困惑度 Perplexity：<span class="grad-text">衡量模型"惊讶程度"</span></h1>
+<p style="color:var(--muted)">书1 P182 定义 <b>PPL = exp(Loss)</b>，Loss 是平均每 token 的交叉熵。直觉理解：模型在每个位置平均"在多少个候选词里犹豫"。PPL=1 是完美（每步100%确定），PPL=100 表示每步平均在 100 个词里选，PPL=词表大小等于瞎猜。输入一句话，调节每个词的概率看 PPL 如何变化。</p>
+</section>
+
+<div class="demo-box">
+<h3>1️⃣ 数学定义（书1 P182）</h3>
+<div class="formula">
+交叉熵损失：Loss = -1/N · Σ<sub>i</sub> log P(x<sub>i</sub> | x<sub>&lt;i</sub>)<br>
+困惑度：<b style="color:#fbbf24">PPL = exp(Loss) = ( Π<sub>i</sub> 1/P(x<sub>i</sub>|x<sub>&lt;i</sub>) )<sup>1/N</sup></b><br>
+信息论解释：PPL = 2<sup>H</sup>，H 是平均信息量（惊讶度，单位nat或bit）。
+</div>
+<div class="insight">
+<b>直观例子：</b>如果模型对每个词的正确预测概率都是 1/10（10%），那么 PPL = (1/(1/10)) = 10——相当于"平均在10个词里猜"。如果某一个词概率是 1/1000（0.1%），它会让整体 PPL 大幅飙升——这就是为什么"一个罕见错误词"能让整句看起来怪怪的。
+</div>
+</div>
+
+<div class="demo-box">
+<h3>2️⃣ 输入句子，逐词看"模型的惊讶"</h3>
+<div class="preset-btns">
+<button class="preset-btn" data-p="自然语言处理 让 机器 理解 人类 语言">通顺中文</button>
+<button class="preset-btn" data-p="the cat sat on the mat">通顺英文</button>
+<button class="preset-btn" data-p="我 爱 吃 苹果 因为 它 很 甜">带指代</button>
+<button class="preset-btn" data-p="我 爱 吃 石头 因为 它 很 甜">语义异常</button>
+<button class="preset-btn" data-p="机器学习 是 一门 人工智能 技术">学术句</button>
+</div>
+<textarea id="sent">自然语言处理 让 机器 理解 人类 语言</textarea>
+<p style="font-size:13px;color:var(--muted)">💡 提示：空格分词；点击每个token可以手动调整该位置的"模型预测概率"，实时观察 PPL 变化。</p>
+</div>
+
+<div class="demo-box">
+<h3>3️⃣ 逐词概率（P(词|上文)）</h3>
+<div class="token-seq" id="tokBoxes"></div>
+<div style="font-size:13px;color:var(--muted);text-align:center">红色角标数字 = 惊讶度 -log(P)，越大表示模型越"没想到"这个词</div>
+</div>
+
+<div class="demo-box">
+<h3>4️⃣ 总困惑度 PPL</h3>
+<div class="ppl-big" id="pplBig">-</div>
+<div class="stat-grid">
+<div class="stat">平均交叉熵 Loss<b id="lossVal">-</b></div>
+<div class="stat">总token数<b id="nVal">-</b></div>
+<div class="stat">几何平均概率<b id="gMean">-</b></div>
+<div class="stat">总惊讶度Σ(-logP)<b id="sumSurp">-</b></div>
+</div>
+</div>
+
+<div class="demo-box">
+<h3>5️⃣ 三句话对比（好/中/差）</h3>
+<p style="font-size:14px;color:var(--muted)">手动选三个句子，点击对比看"通顺度"如何体现在PPL上。</p>
+<canvas id="cmpCanvas" width="800" height="280"></canvas>
+<div class="compare-grid">
+<div class="c-card" style="border-color:#34d399;background:#34d39915"><h4>✅ 通顺句</h4><div class="v" id="pplG" style="color:#34d399">-</div><div id="txtG" style="font-size:13px;color:var(--muted)">自然语言处理让机器理解人类语言</div></div>
+<div class="c-card" style="border-color:#fbbf24;background:#fbbf2415"><h4>⚠️ 一般句</h4><div class="v" id="pplY" style="color:#fbbf24">-</div><div id="txtY" style="font-size:13px;color:var(--muted)">机器学习让石头学会睡觉</div></div>
+<div class="c-card" style="border-color:#ef4444;background:#ef444415"><h4>❌ 乱序句</h4><div class="v" id="pplR" style="color:#ef4444">-</div><div id="txtR" style="font-size:13px;color:var(--muted)">的的的了了是是不我你他</div></div>
+</div>
+<button id="cmpBtn" style="padding:10px 20px;border-radius:8px;background:var(--accent);color:#000;border:none;font-weight:700;cursor:pointer">🎲 重新随机抽样三句话对比</button>
+</div>
+
+<div class="demo-box">
+<h3>6️⃣ 训练过程中 Loss/PPL 变化（书1 P201 图5.15）</h3>
+<canvas id="trainCanvas" width="800" height="280"></canvas>
+<div class="insight">
+<b>书1 P186 原文：</b>"PPL 是评估 LLM 最常用的指标之一。训练时 PPL 单调下降（Loss 下降），验证集 PPL 开始上升时说明过拟合。" GPT-3 在 WebText 上的 PPL 约 20-25，Llama-2 在 1T tokens 上约 10-15。
+</div>
+</div>
+</div>
+<footer style="text-align:center;padding:40px 0;color:var(--muted);font-size:13px">参考 Sebastian Raschka《Build a Large Language Model (From Scratch)》第5.4节</footer>
+<script>
+fetch('js/nav.json').then(r=>r.json()).then(d=>{document.getElementById('nav').innerHTML=d.html;init();});
+
+// 简化的n-gram "语言模型"：根据词频和二元转移给每个位置一个合理的初始P
+const CORPUS_BIGRAM={};
+const CORPUS_UNI={};
+const SAMPLE_CORPUS=[
+'自然语言处理 让 机器 理解 人类 语言',
+'我 爱 吃 苹果 因为 它 很 甜',
+'机器 学习 是 一门 人工智能 技术',
+'深度 学习 推动 了 自然语言 处理 的 发展',
+'the cat sat on the mat',
+'i love you because you are kind',
+'语言 模型 可以 生成 自然 流畅 的 文本',
+'注意力 机制 让 模型 关注 重要 的 词',
+'我 喜欢 自然语言 处理 因为 它 有趣',
+'人工智能 改变 了 世界',
+'我 爱 机器学习 是 人工智能 领域',
+'GPT 是 一种 基于 Transformer 的 语言 模型'
+];
+function buildCorpus(){
+  SAMPLE_CORPUS.forEach(s=>{
+    const toks=s.split(/\s+/);
+    toks.forEach(t=>{CORPUS_UNI[t]=(CORPUS_UNI[t]||0)+1;});
+    for(let i=0;i<toks.length;i++){
+      const prev=i?toks[i-1]:'<s>';
+      const key=prev+'→'+toks[i];
+      CORPUS_BIGRAM[key]=(CORPUS_BIGRAM[key]||0)+1;
+    }
+  });
+}
+function probFor(tok,prev){
+  const key=prev+'→'+tok;
+  const bc=CORPUS_BIGRAM[key]||0;
+  const uc=CORPUS_UNI[tok]||0;
+  const totalU=Object.values(CORPUS_UNI).reduce((a,b)=>a+b,0);
+  // 用 bigram 概率 + 平滑
+  const prevCount=prev==='<s>'?SAMPLE_CORPUS.length:Object.entries(CORPUS_BIGRAM).filter(([k])=>k.startsWith(prev+'→')).reduce((a,[,v])=>a+v,0);
+  const pBi=prevCount?(bc+0.1)/(prevCount+0.1*Object.keys(CORPUS_UNI).length):0;
+  const pUni=(uc+0.5)/(totalU+0.5*Object.keys(CORPUS_UNI).length);
+  // 插值
+  return 0.7*pBi+0.3*pUni;
+}
+let probs=[];
+function colorFromP(p){
+  if(p>0.3)return'#10b981';if(p>0.1)return'#34d399';if(p>0.03)return'#fbbf24';if(p>0.01)return'#fb923c';return'#ef4444';
+}
+function calcPPL(){
+  const toks=$('sent').value.trim().split(/\s+/).filter(Boolean);
+  if(!toks.length){document.getElementById('tokBoxes').innerHTML='';$('pplBig').textContent='-';return;}
+  // probs 自动初始化
+  if(probs.length!==toks.length)probs=toks.map((t,i)=>probFor(t,i?toks[i-1]:'<s>'));
+  document.getElementById('tokBoxes').innerHTML=toks.map((t,i)=>{
+    const p=probs[i];const surp=-Math.log(p);
+    return `<div class="token-box" data-i="${i}" style="background:${colorFromP(p)}30;border-color:${colorFromP(p)}">
+      ${t}<span class="prob">P=${(p*100).toFixed(2)}%</span>
+      <span class="surp" title="惊讶度 -log(P)=${surp.toFixed(2)}">${surp.toFixed(1)}</span>
+      </div>`;
+  }).join('');
+  document.querySelectorAll('.token-box').forEach(el=>el.addEventListener('click',()=>{
+    const i=+el.dataset.i;
+    // 点击循环：高→中→低概率
+    const p=probs[i];
+    if(p>0.3)probs[i]=0.1;
+    else if(p>0.05)probs[i]=0.01;
+    else if(p>0.005)probs[i]=0.001;
+    else probs[i]=probFor(toks[i],i?toks[i-1]:'<s>');
+    calcPPL();
+  }));
+  const logSum=probs.reduce((a,p)=>a+(-Math.log(p)),0);
+  const loss=logSum/toks.length;
+  const ppl=Math.exp(loss);
+  const gMean=1/ppl;
+  $('pplBig').textContent=ppl.toFixed(2);
+  $('pplBig').style.color=ppl<20?'#34d399':ppl<100?'#fbbf24':'#ef4444';
+  $('lossVal').textContent=loss.toFixed(3);
+  $('nVal').textContent=toks.length;
+  $('gMean').textContent=(gMean*100).toFixed(2)+'%';
+  $('sumSurp').textContent=logSum.toFixed(2);
+}
+function drawCompare(){
+  const good='自然语言处理 让 机器 理解 人类 语言';
+  const mid='机器学习 让 石头 学会 睡觉';
+  const bad='的 的 了 了 是 是 不 我 你 他';
+  function calc(s){
+    const t=s.split(/\s+/);
+    let logSum=0;const probsT=t.map((w,i)=>probFor(w,i?t[i-1]:'<s>'));
+    // mid和bad要扰动
+    const probsA=t.map((w,i)=>{
+      let p=probFor(w,i?t[i-1]:'<s>');
+      if(s===mid && (w==='石头'||w==='睡觉'))p*=0.1;
+      if(s===bad)p=Math.max(0.001,p*0.02);
+      return p;
+    });
+    probsA.forEach(p=>logSum+=-Math.log(p));
+    return{ppl:Math.exp(logSum/t.length),probs:probsA,toks:t};
+  }
+  const a=calc(good),b=calc(mid),c=calc(bad);
+  $('pplG').textContent=a.ppl.toFixed(1);$('pplY').textContent=b.ppl.toFixed(1);$('pplR').textContent=c.ppl.toFixed(1);
+  const cv=document.getElementById('cmpCanvas'),cx=cv.getContext('2d');
+  const W=cv.width,H=cv.height,pad={l:50,r:20,t:30,b:50};
+  cx.clearRect(0,0,W,H);cx.strokeStyle='#333';cx.beginPath();cx.moveTo(pad.l,pad.t);cx.lineTo(pad.l,H-pad.b);cx.lineTo(W-pad.r,H-pad.b);cx.stroke();
+  const series=[{d:a,c:'#34d399',n:'通顺'},{d:b,c:'#fbbf24',n:'异常'},{d:c,c:'#ef4444',n:'乱序'}];
+  const maxN=Math.max(a.toks.length,b.toks.length,c.toks.length);
+  const bw=(W-pad.l-pad.r)/(maxN*3+2);
+  series.forEach((s,si)=>{
+    s.d.toks.forEach((t,i)=>{
+      const x=pad.l+(i*3+si)*bw+bw;
+      const surp=-Math.log(s.d.probs[i]);
+      const maxH=6;const h=(H-pad.t-pad.b)*Math.min(surp,maxH)/maxH;
+      cx.fillStyle=s.c;cx.fillRect(x,H-pad.b-h,bw-2,h);
+    });
+  });
+  cx.fillStyle='#cbd5e1';cx.font='12px sans-serif';cx.textAlign='center';
+  for(let i=0;i<maxN;i++)cx.fillText('位置'+(i+1),pad.l+(i*3+1)*bw+bw,H-pad.b+18);
+  cx.textAlign='left';
+  series.forEach((s,i)=>{cx.fillStyle=s.c;cx.fillRect(pad.l+180*i,H-pad.b+30,14,14);cx.fillStyle='#cbd5e1';cx.fillText(s.n+' PPL='+s.d.ppl.toFixed(1),pad.l+180*i+20,H-pad.b+42);});
+}
+function drawTrain(){
+  const cv=document.getElementById('trainCanvas'),cx=cv.getContext('2d');
+  const W=cv.width,H=cv.height,pad={l:50,r:20,t:30,b:50};
+  cx.clearRect(0,0,W,H);cx.strokeStyle='#333';cx.beginPath();cx.moveTo(pad.l,pad.t);cx.lineTo(pad.l,H-pad.b);cx.lineTo(W-pad.r,H-pad.b);cx.stroke();
+  cx.fillStyle='#94a3b8';cx.font='12px sans-serif';cx.fillText('PPL',10,pad.t+10);cx.fillText('Epoch',W-pad.r-40,H-pad.b+20);
+  function train(init,final,epochs,noise){
+    const pts=[];
+    for(let e=0;e<=epochs;e++){
+      const decay=Math.exp(-e/8);
+      const p=final+(init-final)*decay+(Math.random()-0.5)*noise;
+      pts.push(p);
+    }
+    return pts;
+  }
+  const trainP=train(500,15,30,3);
+  const valP=train(500,30,30,5).map((p,i)=>i>12?p+(i-12)*0.8:p); // overfit after epoch 12
+  const epochs=30;
+  function plot(arr,c){
+    cx.strokeStyle=c;cx.lineWidth=2.5;cx.beginPath();
+    arr.forEach((p,i)=>{const x=pad.l+i/(epochs)*(W-pad.l-pad.r);const y=H-pad.b-(H-pad.t-pad.b)*(1-Math.log(p)/Math.log(600));i?cx.lineTo(x,y):cx.moveTo(x,y);});cx.stroke();
+  }
+  plot(trainP,'#60a5fa');plot(valP,'#f472b6');
+  cx.fillStyle='#60a5fa';cx.fillRect(pad.l+200,pad.t+10,14,14);cx.fillStyle='#cbd5e1';cx.fillText('训练集 PPL',pad.l+220,pad.t+22);
+  cx.fillStyle='#f472b6';cx.fillRect(pad.l+340,pad.t+10,14,14);cx.fillStyle='#cbd5e1';cx.fillText('验证集 PPL（过拟合开始↑）',pad.l+360,pad.t+22);
+  // 过拟合标记
+  const ox=pad.l+12/epochs*(W-pad.l-pad.r);
+  cx.strokeStyle='#fbbf24';cx.setLineDash([5,4]);cx.beginPath();cx.moveTo(ox,pad.t);cx.lineTo(ox,H-pad.b);cx.stroke();cx.setLineDash([]);
+  cx.fillStyle='#fbbf24';cx.fillText('过拟合起点',ox-30,pad.t+50);
+}
+function init(){
+  buildCorpus();
+  calcPPL();
+  $('sent').addEventListener('input',()=>{probs=[];calcPPL();});
+  document.querySelectorAll('.preset-btn').forEach(b=>b.addEventListener('click',()=>{$('sent').value=b.dataset.p;probs=[];calcPPL();}));
+  drawCompare();drawTrain();
+  document.getElementById('cmpBtn').addEventListener('click',drawCompare);
+}
+</script>
+<script src="js/site.js"></script>
+</body>
+</html>
