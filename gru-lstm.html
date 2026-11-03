@@ -113,7 +113,7 @@ h<sub>t</sub> = (1-z<sub>t</sub>)⊙h<sub>t-1</sub> + z<sub>t</sub>⊙h̃<sub>t<
 </div>
 
 <div class="demo-box">
-<h3>📊 参数对比（）</h3>
+<h3>📊 参数对比</h3>
 <table style="width:100%;border-collapse:collapse;text-align:center">
 <tr style="background:#ffffff10"><th style="padding:10px;border-bottom:1px solid var(--border)">模型</th><th>门数</th><th>参数量（单层，隐藏维度 d）</th><th>记忆/输出分离</th><th>训练速度</th><th>长依赖能力</th></tr>
 <tr><td style="padding:10px;color:#f472b6;font-weight:700">RNN</td><td>0</td><td>d·(d+x) + d ≈ 2d²</td><td>否</td><td>快</td><td>❌ 弱</td></tr>
@@ -148,7 +148,7 @@ function stepGRU(h_prev,x){
   const h=(1-z)*h_prev + z*h_tilde;
   return{z,r,h_tilde,h};
 }
-function drawGates(){
+function drawGates{
   const l=state.lstm_g||{f:1,i:0,g:0,o:0};
   document.getElementById('lstmGates').innerHTML=`
     <div class="gate-row"><div class="gate-name" style="color:#f472b6">遗忘 f</div><div class="gate-bar"><div class="gate-fill" style="width:${l.f*100}%;background:#f472b6"></div></div><div class="gate-val">${l.f.toFixed(2)}</div></div>
@@ -161,7 +161,7 @@ function drawGates(){
     <div class="gate-row"><div class="gate-name" style="color:#f472b6">重置 r</div><div class="gate-bar"><div class="gate-fill" style="width:${g.r*100}%;background:#f472b6"></div></div><div class="gate-val">${g.r.toFixed(2)}</div></div>
     <div class="gate-row"><div class="gate-name" style="color:#60a5fa">候选 h̃</div><div class="gate-bar"><div class="gate-fill" style="width:${Math.abs(g.h_tilde||0)*100}%;background:#60a5fa"></div></div><div class="gate-val">${(g.h_tilde||0).toFixed(2)}</div></div>`;
 }
-function drawCells(){
+function drawCells{
   const hist=state.history;
   document.getElementById('lstmCells').innerHTML=hist.map((h,i)=>`<div class="step-cell" style="background:${colorFor((h.lc+1)/2)}" title="c${i+1}=${h.lc.toFixed(2)}">${i+1}</div>`).join('')
     +Array.from({length:Math.max(0,10-hist.length)},(_,i)=>`<div class="step-cell" style="background:#1f2937;color:#444">${hist.length+i+1}</div>`).join('');
@@ -170,20 +170,20 @@ function drawCells(){
   document.getElementById('gruHs').innerHTML=hist.map((h,i)=>`<div class="step-cell" style="background:${colorFor(h.gh)}" title="h${i+1}=${h.gh.toFixed(2)}">${i+1}</div>`).join('')
     +Array.from({length:Math.max(0,10-hist.length)},(_,i)=>`<div class="step-cell" style="background:#1f2937;color:#444">${hist.length+i+1}</div>`).join('');
 }
-function drawCompare(){
+function drawCompare{
   const c=document.getElementById('compareCanvas'),ctx=c.getContext('2d');
   const W=c.width,H=c.height,pad={l:40,r:20,t:20,b:40};
   ctx.clearRect(0,0,W,H);
-  ctx.strokeStyle='#333';ctx.beginPath();ctx.moveTo(pad.l,pad.t);ctx.lineTo(pad.l,H-pad.b);ctx.lineTo(W-pad.r,H-pad.b);ctx.stroke();
+  ctx.strokeStyle='#333';ctx.beginPath;ctx.moveTo(pad.l,pad.t);ctx.lineTo(pad.l,H-pad.b);ctx.lineTo(W-pad.r,H-pad.b);ctx.stroke;
   ctx.fillStyle='#888';ctx.font='11px sans-serif';ctx.fillText('记忆值',5,pad.t+10);
   // grid
-  for(let y=0;y<=4;y++){const yy=pad.t+(H-pad.t-pad.b)*y/4;ctx.strokeStyle='#222';ctx.beginPath();ctx.moveTo(pad.l,yy);ctx.lineTo(W-pad.r,yy);ctx.stroke();
+  for(let y=0;y<=4;y++){const yy=pad.t+(H-pad.t-pad.b)*y/4;ctx.strokeStyle='#222';ctx.beginPath;ctx.moveTo(pad.l,yy);ctx.lineTo(W-pad.r,yy);ctx.stroke;
     ctx.fillStyle='#888';ctx.fillText((1-y/4).toFixed(1),5,yy+4);}
   const n=state.history.length;
   function plot(arr,color,scale=v=>v){
-    if(!arr.length)return;ctx.strokeStyle=color;ctx.lineWidth=2.5;ctx.beginPath();
-    arr.forEach((v,i)=>{const x=pad.l+(i/(9))*(W-pad.l-pad.r);const y=pad.t+(H-pad.t-pad.b)*(1-scale(v));i?ctx.lineTo(x,y):ctx.moveTo(x,y);});ctx.stroke();
-    arr.forEach((v,i)=>{const x=pad.l+(i/9)*(W-pad.l-pad.r);const y=pad.t+(H-pad.t-pad.b)*(1-scale(v));ctx.fillStyle=color;ctx.beginPath();ctx.arc(x,y,4,0,Math.PI*2);ctx.fill();});
+    if(!arr.length)return;ctx.strokeStyle=color;ctx.lineWidth=2.5;ctx.beginPath;
+    arr.forEach((v,i)=>{const x=pad.l+(i/(9))*(W-pad.l-pad.r);const y=pad.t+(H-pad.t-pad.b)*(1-scale(v));i?ctx.lineTo(x,y):ctx.moveTo(x,y);});ctx.stroke;
+    arr.forEach((v,i)=>{const x=pad.l+(i/9)*(W-pad.l-pad.r);const y=pad.t+(H-pad.t-pad.b)*(1-scale(v));ctx.fillStyle=color;ctx.beginPath;ctx.arc(x,y,4,0,Math.PI*2);ctx.fill;});
   }
   plot(state.history.map(h=>h.lc),'#f472b6',v=>(v+1)/2); // c can be -1..1
   plot(state.history.map(h=>h.lh),'#a78bfa');
@@ -192,7 +192,7 @@ function drawCompare(){
   const items=[['LSTM c（记忆）','#f472b6'],['LSTM h（输出）','#a78bfa'],['GRU h','#60a5fa']];
   items.forEach((it,i)=>{ctx.fillStyle=it[1];ctx.fillRect(pad.l+150*i,H-pad.b+18,12,12);ctx.fillStyle='#ccc';ctx.fillText(it[0],pad.l+150*i+18,H-pad.b+28);});
 }
-function stepForward(){
+function stepForward{
   if(state.t>10)return;
   const x=+$('xInput').value;
   const scenario=$('scenario').value;
@@ -201,7 +201,7 @@ function stepForward(){
   else if(scenario==='long' && state.t>1)effX=0.1;
   else if(scenario==='mid' && state.t===1)effX=0.8;
   else if(scenario==='mid' && state.t===5)effX=0.7;
-  else if(scenario==='mid')effX=0.05+Math.random()*0.1;
+  else if(scenario==='mid')effX=0.05+Math.random*0.1;
   const l=stepLSTM(state.lstm_c,state.lstm_h,effX);
   const g=stepGRU(state.gru_h,effX);
   state.lstm_g=l;state.gru_g=g;
@@ -210,7 +210,7 @@ function stepForward(){
   state.t++;
   $('tVal').textContent=Math.min(state.t,10);
   $('xVal').textContent=x.toFixed(2);
-  drawGates();drawCells();drawCompare();
+  drawGates;drawCells;drawCompare;
   let info='';
   if(state.t<=11){const n=state.history.length-1;const h=state.history[n];
     info=`第${n+1}步：输入信号 x=${h.x.toFixed(2)}。LSTM 遗忘门 f=${l.f.toFixed(2)}（${l.f>0.7?'保持旧记忆':l.f<0.3?'遗忘旧记忆':'部分保持'}），输入门 i=${l.i.toFixed(2)}，c 变为 ${h.lc.toFixed(2)}，h=${h.lh.toFixed(2)}；GRU 更新门 z=${g.z.toFixed(2)}，h=${h.gh.toFixed(2)}。`;
@@ -219,16 +219,16 @@ function stepForward(){
   }else info='✅ 10步完成。看图：LSTM 的 c（粉线）长距离更平稳；GRU 的 h（蓝线）响应更快但遗忘也快。';
   document.getElementById('stepInfo').innerHTML=info;
 }
-function reset(){state={t:1,lstm_c:0,lstm_h:0,gru_h:0,history:[]};drawGates();drawCells();drawCompare();document.getElementById('stepInfo').textContent='';$('tVal').textContent=1;}
-function init(){
-  drawGates();drawCells();drawCompare();
-  $('xInput').addEventListener('input',()=>{$('xVal').textContent=(+$('xInput').value).toFixed(2);});
+function reset{state={t:1,lstm_c:0,lstm_h:0,gru_h:0,history:[]};drawGates;drawCells;drawCompare;document.getElementById('stepInfo').textContent='';$('tVal').textContent=1;}
+function init{
+  drawGates;drawCells;drawCompare;
+  $('xInput').addEventListener('input',=>{$('xVal').textContent=(+$('xInput').value).toFixed(2);});
   $('scenario').addEventListener('change',reset);
-  document.getElementById('playBtn').addEventListener('click',()=>{
-    reset();let i=0;const iv=setInterval(()=>{stepForward();if(++i>=10)clearInterval(iv);},600);
+  document.getElementById('playBtn').addEventListener('click',=>{
+    reset;let i=0;const iv=setInterval(=>{stepForward;if(++i>=10)clearInterval(iv);},600);
   });
   document.getElementById('resetBtn').addEventListener('click',reset);
-  $('xInput').addEventListener('change',()=>{if(state.t<=10)stepForward();});
+  $('xInput').addEventListener('change',=>{if(state.t<=10)stepForward;});
 }
 </script>
 <script src="js/site.js"></script>

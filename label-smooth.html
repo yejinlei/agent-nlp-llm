@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>标签平滑实验 · agent-nlp-llm</title>
+<link rel="stylesheet" href="css/site.css">
+<style>
+canvas { display:block; max-width:100%; background:#fff; border:1px solid var(--border); border-radius:10px; }
+.label-vis { display:flex; gap:6px; flex-wrap:wrap; margin:10px 0; }
+.label-cell { padding:8px 14px; border-radius:10px; font-weight:600; font-size:.88rem; text-align:center; min-width:60px; transition:all .2s; }
+.loss-curve-hint { font-size:.85rem; color:var(--text-3); margin-top:6px; }
+</style>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function{
+  function r{try{renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false});}catch(e){}}
+  if(document.readyState==='complete')r;else window.addEventListener('load',r);
+  setTimeout(r,300);setTimeout(r,1000);
+});
+</script>
+</head>
+<body>
+<nav class="navbar">
+<div class="nav-inner">
+<a href="index.html" class="nav-logo">💬 agent-nlp-llm</a>
+<button class="nav-toggle" aria-label="菜单" onclick="document.querySelector('.nav-links').classList.toggle('open')">☰</button>
+<div class="nav-links">
+<a href="index.html" class="nav-link">🏠&nbsp;首页</a>
+<a href="nlp/index.html" class="nav-link">📝&nbsp;NLP</a>
+<a href="llm/index.html" class="nav-link">🤖&nbsp;LLM</a>
+<a href="lab.html" class="nav-link active">🧪&nbsp;实验室</a>
+<a href="papers.html" class="nav-link">📚&nbsp;论文</a>
+<a href="clinic.html" class="nav-link">🕵️&nbsp;诊所</a>
+<a href="pitfalls.html" class="nav-link">💥&nbsp;踩坑</a>
+<a href="benchmark.html" class="nav-link">📊&nbsp;选型</a>
+<a href="universe.html" class="nav-link">🌌&nbsp;宇宙</a>
+<a href="https://github.com/yejinlei/agent-nlp-llm" target="_blank" rel="noopener" class="nav-gh" aria-label="GitHub"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg></a>
+</div>
+</div>
+</nav>
+
+<div class="wrap page">
+<section class="hero reveal">
+<h1>🏷️ 标签平滑实验</h1>
+<p class="sub">one-hot 标签逼模型把正确类概率推到 1，其他推到 0——这会导致过度自信和过拟合。标签平滑把一点概率质量均匀分给错误类，让模型"留有余地"，泛化能力反而更好。</p>
+</section>
+
+<section class="blk reveal">
+<h2 class="blk-title"><span class="num">📐</span>原理</h2>
+<div class="math">
+\[ y_i^{LS} = y_i(1-\varepsilon) + \frac{\varepsilon}{K} \]
+</div>
+<p style="color:var(--text-2)">K 是类别数，ε 是平滑系数。正确类的目标概率从 1 变成 \(1-\varepsilon\)，每个错误类分到 ε/K 的概率。</p>
+<div class="grid g3">
+<div class="card" style="border-top:3px solid #ef4444">
+<h4>ε = 0（无平滑）</h4>
+<p style="font-size:.9rem;color:var(--text-2)">标准交叉熵。模型追求正确类概率→1，logit→∞，容易过拟合，对分布外样本极度自信。</p>
+</div>
+<div class="card" style="border-top:3px solid #10a37f">
+<h4>ε = 0.1（常用）</h4>
+<p style="font-size:.9rem;color:var(--text-2)">正确类目标 0.9，错误类共享 0.1。模型不会过度自信，泛化更好，是训练 Transformer 的标配。</p>
+</div>
+<div class="card" style="border-top:3px solid #f59e0b">
+<h4>ε = 0.5（太强）</h4>
+<p style="font-size:.9rem;color:var(--text-2)">正确类只分到 0.5，信号太弱，模型学不到正确标签。ε 太大会损害性能，一般不超过 0.2。</p>
+</div>
+</div>
+</section>
+
+<section class="blk reveal" id="play">
+<h2 class="blk-title"><span class="num">🎮</span>互动实验</h2>
+
+<div class="demo-box">
+<div class="ctrl">
+<label style="flex-direction:column">平滑系数 ε
+<input type="range" id="epsSlider" min="0" max="0.5" step="0.01" value="0.1">
+<span id="epsVal" style="font-weight:700;color:var(--blue)">0.10</span>
+</label>
+<label style="flex-direction:column">类别数 K
+<input type="range" id="kSlider" min="3" max="20" step="1" value="10">
+<span id="kVal" style="font-weight:700;color:var(--blue)">10</span>
+</label>
+<label>正确类位置
+<select id="correctIdx">
+<option value="2" selected>类别 2</option>
+</select>
+</label>
+</div>
+
+<h3 style="font-size:1.05rem;margin:16px 0 8px">平滑后标签分布</h3>
+<div class="label-vis" id="labelVis"></div>
+
+<h3 style="font-size:1.05rem;margin:20px 0 8px">交叉熵损失随模型输出概率变化</h3>
+<canvas id="lossCanvas" width="800" height="340"></canvas>
+<p class="loss-curve-hint">横轴：模型给正确类的概率，纵轴：交叉熵损失。不同 ε 下最优解不同——ε>0 时模型不需要把正确类概率推到 1。</p>
+
+<div style="margin-top:18px">
+<h3 style="font-size:1.05rem;margin-bottom:10px">关键数值</h3>
+<div class="kv"><span>正确类目标概率</span><span id="targetCorrect" style="color:#10a37f">-</span></div>
+<div class="kv"><span>每个错误类目标概率</span><span id="targetWrong" style="color:#f59e0b">-</span></div>
+<div class="kv"><span>若模型输出正确类概率=0.999（过度自信）的损失</span><span id="overconfidentLoss" style="color:#ef4444">-</span></div>
+<div class="kv"><span>最小可达到的损失（理论下界）</span><span id="minLoss" style="color:#3b6fe0">-</span></div>
+</div>
+
+<div class="hint" id="lsHint"></div>
+</div>
+
+<div class="insight" style="margin-top:24px">
+<b>为什么有效？</b> 没有标签平滑时，模型要让正确类 logit 趋向无穷大才能把交叉熵降到 0——这会让权重变得极端，泛化差。标签平滑相当于告诉模型"不要太确信"，鼓励权重保持较小值，起到类似正则化的作用。它还有一个副作用：让模型学到的表示更有聚类效果，不同类的表征更紧密。
+</div>
+</section>
+</div>
+
+<footer class="site"><p>💬 agent-nlp-llm · 自然语言技术本体论研究站</p></footer>
+<script src="js/site.js"></script>
+<script>
+(function{
+  var epsSlider=document.getElementById('epsSlider');
+  var kSlider=document.getElementById('kSlider');
+  var correctSel=document.getElementById('correctIdx');
+  var canvas=document.getElementById('lossCanvas');
+  var ctx=canvas.getContext('2d');
+
+  function updateCorrectOptions(K){
+    var cur=parseInt(correctSel.value)||2;
+    correctSel.innerHTML='';
+    for(var i=0;i<K;i++){
+      var opt=document.createElement('option');
+      opt.value=i;opt.textContent='类别 '+i;
+      if(i===cur||(i===2&&cur>=K))opt.selected=true;
+      correctSel.appendChild(opt);
+    }
+  }
+
+  function softmaxToProbs(correctProb, K, correctIdx, eps){
+    // return the cross entropy for given correct class prob when wrong classes are uniform
+    var targetCorrect = 1-eps;
+    var targetWrong = eps/K;
+    // loss = -targetCorrect*log(p_correct) - (K-1)*targetWrong*log(p_wrong)
+    // with p_wrong = (1-p_correct)/(K-1)
+    var pC = correctProb;
+    var pW = (1-pC)/(K-1);
+    if(pW<=0) return Infinity;
+    return -targetCorrect*Math.log(pC) - (K-1)*targetWrong*Math.log(pW);
+  }
+
+  function drawLossCurve(eps,K){
+    var W=canvas.width,H=canvas.height;
+    ctx.clearRect(0,0,W,H);
+    var pad={l:60,r:20,t:30,b:50},cw=W-pad.l-pad.r,ch=H-pad.t-pad.b;
+
+    // axes
+    ctx.strokeStyle='#e2e8f0';ctx.lineWidth=1;
+    ctx.beginPath;ctx.moveTo(pad.l,pad.t);ctx.lineTo(pad.l,pad.t+ch);ctx.lineTo(pad.l+cw,pad.t+ch);ctx.stroke;
+
+    // find min/max loss
+    var minL=Infinity,maxL=-Infinity;
+    var data=[];
+    for(var p=1;p<=999;p++){
+      var prob=p/1000;
+      var l=softmaxToProbs(prob,K,0,eps);
+      if(isFinite(l)){data.push({p:prob,l:l});if(l<minL)minL=l;if(l>maxL)maxL=l;}
+    }
+    var margin=(maxL-minL)*0.1;
+    minL-=margin;maxL+=margin;
+
+    // grid
+    ctx.strokeStyle='#f1f5f9';ctx.fillStyle='#94a3b8';ctx.font='11px sans-serif';ctx.textAlign='right';
+    for(var g=0;g<=5;g++){
+      var gy=pad.t+ch-ch*g/5;
+      ctx.beginPath;ctx.moveTo(pad.l,gy);ctx.lineTo(pad.l+cw,gy);ctx.stroke;
+      ctx.fillText((minL+(maxL-minL)*(1-g/5)).toFixed(2),pad.l-6,gy+4);
+    }
+    ctx.textAlign='center';
+    for(var gx=0;gx<=10;gx++){
+      var gxp=pad.l+cw*gx/10;
+      ctx.beginPath;ctx.moveTo(gxp,pad.t);ctx.lineTo(gxp,pad.t+ch);ctx.stroke;
+      ctx.fillText((gx/10).toFixed(1),gxp,pad.t+ch+18);
+    }
+
+    // loss curve
+    ctx.strokeStyle='#3b6fe0';ctx.lineWidth=2.5;ctx.beginPath;
+    data.forEach(function(d,i){
+      var x=pad.l+cw*(d.p);
+      var y=pad.t+ch*(1-(d.l-minL)/(maxL-minL));
+      if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);
+    });
+    ctx.stroke;
+
+    // minimum point
+    var minIdx=0,minV=data[0].l;
+    data.forEach(function(d,i){if(d.l<minV){minV=d.l;minIdx=i;}});
+    var mpx=pad.l+cw*data[minIdx].p;
+    var mpy=pad.t+ch*(1-(minV-minL)/(maxL-minL));
+    ctx.fillStyle='#10a37f';ctx.beginPath;ctx.arc(mpx,mpy,7,0,Math.PI*2);ctx.fill;
+    ctx.fillStyle='#10a37f';ctx.font='bold 12px sans-serif';ctx.textAlign='left';
+    ctx.fillText('最优p='+data[minIdx].p.toFixed(3),mpx+12,mpy-8);
+
+    // ε=0 reference line
+    if(eps>0){
+      ctx.strokeStyle='#ef4444';ctx.lineWidth=1.5;ctx.setLineDash([4,4]);ctx.beginPath;
+      var first=true;
+      data.forEach(function(d){
+        var l0=softmaxToProbs(d.p,K,0,0);
+        if(isFinite(l0)){
+          var x=pad.l+cw*d.p;
+          var y=pad.t+ch*(1-(l0-minL)/(maxL-minL));
+          if(first){ctx.moveTo(x,y);first=false;}else ctx.lineTo(x,y);
+        }
+      });
+      ctx.stroke;ctx.setLineDash([]);
+    }
+
+    ctx.fillStyle='#1e293b';ctx.font='bold 13px sans-serif';ctx.textAlign='left';
+    ctx.fillText('交叉熵损失 vs 正确类概率 (ε='+eps.toFixed(2)+', K='+K+')',pad.l,20);
+    ctx.fillStyle='#3b6fe0';ctx.fillRect(pad.l,pad.t+ch+34,14,3);ctx.fillStyle='#475569';ctx.font='11px sans-serif';ctx.fillText('ε='+eps.toFixed(2),pad.l+18,pad.t+ch+39);
+    if(eps>0){ctx.fillStyle='#ef4444';ctx.fillRect(pad.l+100,pad.t+ch+34,14,3);ctx.fillText('ε=0 (无平滑)',pad.l+118,pad.t+ch+39);}
+    ctx.fillStyle='#10a37f';ctx.beginPath;ctx.arc(pad.l+220,pad.t+ch+36,4,0,Math.PI*2);ctx.fill;ctx.fillStyle='#475569';ctx.fillText('最小值点',pad.l+228,pad.t+ch+39);
+
+    ctx.fillStyle='#64748b';ctx.font='12px sans-serif';ctx.textAlign='center';
+    ctx.fillText('模型给正确类的概率 p →',pad.l+cw/2,pad.t+ch+48);
+  }
+
+  function showLabels(eps,K,correctIdx){
+    var host=document.getElementById('labelVis');
+    var targetC=1-eps;
+    var targetW=eps/K;
+    var html='';
+    for(var i=0;i<K;i++){
+      var isCorrect = (i===correctIdx);
+      var t = isCorrect?targetC:targetW;
+      var alpha = Math.min(1, t*2+0.1);
+      var bg = isCorrect?'rgba(16,163,127,'+alpha+')':'rgba(59,111,224,'+(t*K*1.5+0.08)+')';
+      var color = isCorrect&&t>0.3?'#fff':(t>0.2?'#fff':'#334155');
+      html+='<div class="label-cell" style="background:'+bg+';color:'+color+'"><div>类别 '+i+'</div><div style="font-family:var(--mono);font-size:.82rem;margin-top:2px">'+t.toFixed(3)+'</div>'+(isCorrect?'<div style="font-size:.7rem;opacity:.8">✓正确</div>':'')+'</div>';
+    }
+    host.innerHTML=html;
+
+    document.getElementById('targetCorrect').textContent=targetC.toFixed(3);
+    document.getElementById('targetWrong').textContent=targetW.toFixed(4)+' (共'+(K-1)+'个错误类，合计'+(targetW*(K-1)).toFixed(3)+')';
+    var overConf = softmaxToProbs(0.999,K,correctIdx,eps);
+    document.getElementById('overconfidentLoss').textContent=overConf.toFixed(4);
+    // find minimum loss
+    var minL=Infinity;
+    for(var p=1;p<=999;p++){var l=softmaxToProbs(p/1000,K,correctIdx,eps);if(l<minL)minL=l;}
+    document.getElementById('minLoss').textContent=minL.toFixed(4);
+
+    var hint=document.getElementById('lsHint');
+    if(eps===0){
+      hint.className='hint warn';
+      hint.innerHTML='⚠️ <b>ε=0，无标签平滑</b>：最小损失=0，在 p=1 时取到。模型会拼命把正确类概率推向 1，logit 越大越好，导致过度自信和过拟合。';
+    }else if(eps<0.15){
+      hint.className='hint good';
+      hint.innerHTML='✅ <b>ε='+eps.toFixed(2)+'，温和平滑</b>：最优概率不是 1，而是约 '+(1-eps).toFixed(2)+'。模型不用把所有概率质量压到正确类，错误类也得到少量概率，泛化更好。';
+    }else if(eps<0.3){
+      hint.className='hint';
+      hint.innerHTML='💡 <b>ε='+eps.toFixed(2)+'，中等平滑</b>：正确类目标概率降到 '+(1-eps).toFixed(2)+'。正则化效果更强，但可能损失一点训练准确率。';
+    }else{
+      hint.className='hint warn';
+      hint.innerHTML='⚠️ <b>ε='+eps.toFixed(2)+'，平滑过强</b>：正确类只占 '+(1-eps).toFixed(2)+' 的概率质量，监督信号太弱，模型可能学不好。实践中 ε 一般不超过 0.2。';
+    }
+  }
+
+  function update{
+    var eps=parseFloat(epsSlider.value);
+    var K=parseInt(kSlider.value);
+    document.getElementById('epsVal').textContent=eps.toFixed(2);
+    document.getElementById('kVal').textContent=K;
+    updateCorrectOptions(K);
+    var correctIdx=parseInt(correctSel.value);
+    showLabels(eps,K,correctIdx);
+    drawLossCurve(eps,K);
+  }
+
+  epsSlider.oninput=update;
+  kSlider.oninput=update;
+  correctSel.onchange=update;
+  update;
+});
+</script>
+</body>
+</html>

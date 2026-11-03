@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>句子自注意力可视化 · agent-nlp-llm</title>
+<link rel="stylesheet" href="css/site.css">
+<style>
+canvas { display:block; max-width:100%; background:#fff; border:1px solid var(--border); border-radius:10px; }
+.attn-tok { display:inline-block; padding:8px 16px; margin:4px; border-radius:10px; font-weight:600; font-size:.95rem; cursor:pointer; transition:all .2s; border:2px solid transparent; }
+.attn-tok:hover { transform:translateY(-2px); box-shadow:0 4px 12px rgba(0,0,0,.1); }
+.attn-tok.selected { border-color:#ec4899; box-shadow:0 4px 16px rgba(236,72,153,.3); }
+.head-btn { padding:6px 14px; border-radius:8px; border:1px solid var(--border-2); background:#fff; cursor:pointer; font-size:.82rem; font-weight:600; color:var(--text-2); transition:all .15s; }
+.head-btn:hover { border-color:var(--blue); color:var(--blue); }
+.head-btn.active { background:linear-gradient(120deg,#3b6fe0,#a855f7); color:#fff; border-color:transparent; }
+.attn-explain { padding:14px 18px; border-radius:10px; margin:12px 0; background:linear-gradient(135deg,#fdf2f8,#f5f3ff); border-left:4px solid #ec4899; }
+</style>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function{
+  function r{try{renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false});}catch(e){}}
+  if(document.readyState==='complete')r;else window.addEventListener('load',r);
+  setTimeout(r,300);setTimeout(r,1000);
+});
+</script>
+</head>
+<body>
+<nav class="navbar">
+<div class="nav-inner">
+<a href="index.html" class="nav-logo">💬 agent-nlp-llm</a>
+<button class="nav-toggle" aria-label="菜单" onclick="document.querySelector('.nav-links').classList.toggle('open')">☰</button>
+<div class="nav-links">
+<a href="index.html" class="nav-link">🏠&nbsp;首页</a>
+<a href="nlp/index.html" class="nav-link">📝&nbsp;NLP</a>
+<a href="llm/index.html" class="nav-link">🤖&nbsp;LLM</a>
+<a href="lab.html" class="nav-link active">🧪&nbsp;实验室</a>
+<a href="papers.html" class="nav-link">📚&nbsp;论文</a>
+<a href="clinic.html" class="nav-link">🕵️&nbsp;诊所</a>
+<a href="pitfalls.html" class="nav-link">💥&nbsp;踩坑</a>
+<a href="benchmark.html" class="nav-link">📊&nbsp;选型</a>
+<a href="universe.html" class="nav-link">🌌&nbsp;宇宙</a>
+<a href="https://github.com/yejinlei/agent-nlp-llm" target="_blank" rel="noopener" class="nav-gh" aria-label="GitHub"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg></a>
+</div>
+</div>
+</nav>
+
+<div class="wrap page">
+<section class="hero reveal">
+<h1>👁️ 句子自注意力可视化</h1>
+<p class="sub">自注意力让每个词在理解自己时，"看"句子中其他所有词，并根据任务学出不同的关注权重。输入一句中文，点击任意词看它关注谁；切换不同注意力头，看不同头学到的模式差异。</p>
+</section>
+
+<section class="blk reveal" id="play">
+<h2 class="blk-title"><span class="num">🎮</span>互动实验</h2>
+
+<div class="demo-box">
+<div class="ctrl">
+<label style="flex:1;min-width:300px;flex-direction:column">输入中文句子（词之间用空格分隔，或直接输入整句）
+<input type="text" id="sentenceInput" value="小猫 追 老鼠 因为 它 饿了" style="width:100%;padding:10px 14px">
+</label>
+<button class="btn btn-primary" id="computeBtn" style="padding:10px 20px">🔍 计算注意力</button>
+</div>
+
+<div class="ctrl" style="margin:8px 0 4px">
+<span style="font-weight:600;font-size:.88rem;color:var(--text-2)">注意力头：</span>
+<div style="display:flex;gap:6px;flex-wrap:wrap" id="headBtns">
+<button class="head-btn active" data-head="0">头1: 指代消解</button>
+<button class="head-btn" data-head="1">头2: 动宾关系</button>
+<button class="head-btn" data-head="2">头3: 修饰关系</button>
+<button class="head-btn" data-head="3">头4: 邻近关注</button>
+</div>
+</div>
+
+<h3 style="font-size:1.05rem;margin:18px 0 8px">点击词查看它的注意力分布</h3>
+<div id="tokenBar" style="text-align:center;padding:12px;background:#fafbff;border-radius:10px;border:1px solid var(--border)"></div>
+
+<h3 style="font-size:1.05rem;margin:20px 0 8px">注意力权重热力图</h3>
+<p style="color:var(--text-2);font-size:.88rem;margin-bottom:8px">行=当前词，列=被关注的词。颜色越深表示注意力权重越高。点击任意格子查看详情。</p>
+<canvas id="heatCanvas" width="720" height="560" style="max-width:100%"></canvas>
+
+<div class="attn-explain" id="attnExplain">👆 点击上方的词或热力图中的格子，查看注意力模式解读。</div>
+</div>
+
+<div class="insight" style="margin-top:24px">
+<b>多头注意力的分工：</b> 不同注意力头在训练中会自发学到不同的语言学模式——有的头专做指代消解（"它"指向"小猫"），有的头关注动宾搭配（"追"→"老鼠"），有的头偏向相邻词（类似局部卷积），还有的头学习句法依存关系。这就是为什么Transformer需要多头而不是单头：一个头只能学一种关注模式，多头并行才能覆盖多种语言关系。
+</div>
+</section>
+</div>
+
+<footer class="site"><p>💬 agent-nlp-llm · 自然语言技术本体论研究站</p></footer>
+<script src="js/site.js"></script>
+<script>
+(function{
+  var toks=[];
+  var currentHead=0;
+  var selectedTok=0;
+  var attnMatrices=[];
+
+  // Simulate different attention heads with hand-crafted heuristics
+  // In real models these would be learned from data
+  var heads = [
+    // Head 0: Coreference / anaphora (it->antecedent)
+    function(i,j,toks){
+      var a=toks[i], b=toks[j];
+      var s=0.3;
+      // Pronouns attend to their likely antecedents
+      var pronouns = {'它':['小猫','老鼠','狗','鸟'],'他':['小明','男孩','爸爸'],'她':['小红','女孩','妈妈'],'它们':['小猫','老鼠']};
+      if(pronouns[a]&&pronouns[a].indexOf(b)>=0)s+=3.5;
+      if(a===b)s+=0.5;
+      if(Math.abs(i-j)<=1)s+=0.3;
+      return s;
+    },
+    // Head 1: Verb-object relations
+    function(i,j,toks){
+      var a=toks[i], b=toks[j];
+      var s=0.2;
+      var verbs = {
+        '追':['老鼠','猫','球','兔子'],'吃':['鱼','饭','肉','老鼠'],'看':['书','电影','电视'],
+        '是':['小猫','老鼠','它','这','那'],'有':['猫','老鼠','东西'],'打':['球','电话'],
+        '喜欢':['小猫','老鼠','吃','它'],'饿':['吃','饭','东西'],'写':['字','代码','书']
+      };
+      if(verbs[a]&&verbs[a].indexOf(b)>=0)s+=3.2;
+      if(a==='因为'&&(b==='饿'||b==='追'))s+=2.0;
+      if(a===b)s+=0.3;
+      if(Math.abs(i-j)===1)s+=0.4;
+      return s;
+    },
+    // Head 2: Modifier-head relations (adjective->noun, adverb->verb)
+    function(i,j,toks){
+      var a=toks[i], b=toks[j];
+      var s=0.25;
+      var modifiers = {'小':['猫','老鼠','狗','鸟'],'大':['猫','老鼠','狗'],'很':['好','大','小','香','饿'],'真':['好','香','美'],'非':['常'],'常':['好'],'太':['好','大','香','美']};
+      if(modifiers[a]&&modifiers[a].indexOf(b)>=0)s+=3.0;
+      // '的' -> following noun
+      if(a==='的'&&j>i)s+=1.5;
+      if(a===b)s+=0.4;
+      if(j===i-1)s+=0.8; // modifier usually before head
+      return s;
+    },
+    // Head 3: Local / positional (attend to nearby tokens)
+    function(i,j,toks){
+      var d=Math.abs(i-j);
+      var s=0.2;
+      if(d===0)s+=1.5;
+      else if(d===1)s+=2.5;
+      else if(d===2)s+=1.2;
+      else if(d===3)s+=0.6;
+      else s+=0.1;
+      // slight positional bias to previous tokens
+      if(j<i)s+=0.3;
+      return s;
+    }
+  ];
+
+  function softmax(arr){
+    var mx=Math.max.apply(null,arr);
+    var ex=arr.map(function(x){return Math.exp(x-mx);});
+    var sum=ex.reduce(function(a,b){return a+b;},0);
+    return ex.map(function(x){return x/sum;});
+  }
+
+  function buildMatrix(toks, headIdx){
+    var n=toks.length;
+    var mat=[];
+    for(var i=0;i<n;i++){
+      var row=[];
+      for(var j=0;j<n;j++){
+        row.push(heads[headIdx](i,j,toks));
+      }
+      mat.push(softmax(row));
+    }
+    return mat;
+  }
+
+  function buildAllMatrices(toks){
+    attnMatrices=[];
+    for(var h=0;h<heads.length;h++){
+      attnMatrices.push(buildMatrix(toks,h));
+    }
+  }
+
+  function drawHeatmap{
+    var canvas=document.getElementById('heatCanvas');
+    var ctx=canvas.getContext('2d');
+    var mat=attnMatrices[currentHead];
+    var n=toks.length;
+    var cellSize = Math.min(60, Math.floor(680/(n+1)));
+    var labelW = Math.max(50, cellSize);
+    var labelH = Math.max(30, cellSize*0.6);
+    var W=labelW+n*cellSize+20;
+    var H=labelH+n*cellSize+20;
+    canvas.width=W;canvas.height=H;
+    ctx.clearRect(0,0,W,H);
+
+    // Draw column labels
+    ctx.font='12px sans-serif';ctx.textAlign='center';ctx.fillStyle='#475569';
+    for(var j=0;j<n;j++){
+      ctx.save;
+      ctx.translate(labelW+j*cellSize+cellSize/2, labelH-6);
+      ctx.rotate(-Math.PI/6);
+      ctx.fillText(toks[j],0,0);
+      ctx.restore;
+    }
+    // Draw row labels
+    ctx.textAlign='right';
+    for(var i=0;i<n;i++){
+      ctx.fillText(toks[i], labelW-6, labelH+i*cellSize+cellSize/2+4);
+    }
+
+    // Draw cells
+    for(var i=0;i<n;i++){
+      for(var j=0;j<n;j++){
+        var v=mat[i][j];
+        var isSel = (i===selectedTok);
+        var alpha = Math.min(1, v*2.2+0.05);
+        var x=labelW+j*cellSize, y=labelH+i*cellSize;
+        ctx.fillStyle='rgba(59,111,224,'+alpha.toFixed(2)+')';
+        ctx.fillRect(x,y,cellSize-2,cellSize-2);
+        if(isSel){
+          ctx.strokeStyle='#ec4899';ctx.lineWidth=3;
+          ctx.strokeRect(x-1,y-1,cellSize,cellSize);
+        }
+        // text
+        if(cellSize>=28){
+          ctx.fillStyle=alpha>0.5?'#fff':'#1e293b';
+          ctx.textAlign='center';ctx.font='bold 11px var(--mono)';
+          ctx.fillText(v.toFixed(2), x+cellSize/2-1, y+cellSize/2+4);
+        }
+        // clickable
+        // (we'll use overlay)
+      }
+    }
+
+    // Highlight selected row label
+    ctx.fillStyle='#ec4899';ctx.font='bold 12px sans-serif';ctx.textAlign='right';
+    ctx.fillText(toks[selectedTok], labelW-6, labelH+selectedTok*cellSize+cellSize/2+4);
+
+    // Click handling
+    canvas.onclick=function(e){
+      var rect=canvas.getBoundingClientRect;
+      var mx=(e.clientX-rect.left)*(canvas.width/rect.width);
+      var my=(e.clientY-rect.top)*(canvas.height/rect.height);
+      var j=Math.floor((mx-labelW)/cellSize);
+      var i=Math.floor((my-labelH)/cellSize);
+      if(i>=0&&i<n&&j>=0&&j<n){
+        selectedTok=i;
+        drawHeatmap;
+        drawTokens;
+        explain(i,j);
+      }
+    };
+  }
+
+  function drawTokens{
+    var host=document.getElementById('tokenBar');
+    var mat=attnMatrices[currentHead];
+    var html='';
+    toks.forEach(function(t,i){
+      var v=mat[selectedTok][i];
+      var alpha=Math.min(1,v*2.5+0.1);
+      var bg='rgba(59,111,224,'+alpha.toFixed(2)+')';
+      var color=alpha>0.45?'#fff':'#1e293b';
+      var selected = i===selectedTok?'selected':'';
+      html+='<span class="attn-tok '+selected+'" style="background:'+bg+';color:'+color+'" data-idx="'+i+'">'+t+'<br><small style="font-weight:400;font-size:.72rem;opacity:.8">'+v.toFixed(3)+'</small></span>';
+    });
+    host.innerHTML=html;
+    Array.prototype.forEach.call(host.querySelectorAll('.attn-tok'),function(el){
+      el.onclick=function{
+        selectedTok=parseInt(el.dataset.idx);
+        drawHeatmap;drawTokens;
+        explain(selectedTok, -1);
+      };
+    });
+  }
+
+  function explain(i,j){
+    var mat=attnMatrices[currentHead];
+    var host=document.getElementById('attnExplain');
+    var headNames=['指代消解头','动宾关系头','修饰关系头','邻近关注头'];
+    var headDesc=[
+      '这个头关注代词和它所指代的名词之间的关系。代词（如"它""他""她"）会把主要注意力分配给前面的先行词。',
+      '这个头关注动词和它的宾语之间的关系。动词会"看"它所作用的对象名词，帮助理解动作的语义。',
+      '这个头关注修饰语和中心词的关系。形容词、副词通常出现在被修饰词前面，注意力从前向后流动。',
+      '这个头主要关注邻近位置的词，类似卷积的局部感受野。每个词主要看前后1-2个词，捕捉局部词组结构。'
+    ];
+    var top = mat[i].map(function(v,k){return {v:v,k:k};}).sort(function(a,b){return b.v-a.v;});
+    var msg = '<b>'+headNames[currentHead]+'</b>：'+headDesc[currentHead]+'<br><br>';
+    if(j>=0){
+      msg += '「<b>'+toks[i]+'</b>」→「<b>'+toks[j]+'</b>」的注意力权重 = <b>'+mat[i][j].toFixed(3)+'</b>。';
+      var rank = top.findIndex(function(x){return x.k===j;})+1;
+      msg += ' 这是「'+toks[i]+'」第 <b>'+rank+'</b> 关注的词。';
+    }else{
+      msg += '当前选中词「<b>'+toks[i]+'</b>」的注意力分布：<br>';
+      msg += '<ul style="margin:6px 0 0 18px;font-size:.9rem">';
+      top.slice(0,3).forEach(function(item){
+        msg += '<li>最关注「<b>'+toks[item.k]+'</b>」，权重 = '+item.v.toFixed(3)+'</li>';
+      });
+      msg += '</ul>';
+    }
+    host.innerHTML=msg;
+  }
+
+  function run{
+    var raw=document.getElementById('sentenceInput').value.trim;
+    toks = raw.split(/[\s,，。、！？!?]+/).filter(function(x){return x.length>0;});
+    if(toks.length<2)toks=['小猫','追','老鼠','因为','它','饿了'];
+    if(toks.length>16){toks=toks.slice(0,16);}
+    selectedTok=0;
+    buildAllMatrices(toks);
+    drawHeatmap;
+    drawTokens;
+    explain(0,-1);
+  }
+
+  document.getElementById('computeBtn').onclick=run;
+  document.getElementById('sentenceInput').onkeydown=function(e){if(e.key==='Enter')run;};
+  document.querySelectorAll('.head-btn').forEach(function(b){
+    b.onclick=function{
+      document.querySelectorAll('.head-btn').forEach(function(x){x.classList.remove('active');});
+      b.classList.add('active');
+      currentHead=parseInt(b.dataset.head);
+      drawHeatmap;drawTokens;
+      explain(selectedTok,-1);
+    };
+  });
+
+  run;
+});
+</script>
+</body>
+</html>

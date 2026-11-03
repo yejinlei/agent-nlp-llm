@@ -64,7 +64,7 @@ button.sec{background:var(--panel);color:var(--text);border:1px solid var(--bord
 <section class="hero">
 
 <h1>GPT 参数量计算 & <span class="grad-text">温度/top-k 采样</span></h1>
-<p style="color:var(--muted)">第4章从零搭 GPTModel 时给了精确参数公式；第5章实现 generate() 时详细讲解 temperature scaling 和 top-k filtering。拖动超参数看参数量变化；调温度/top-k 感受文本是怎么"采样"出来的。</p>
+<p style="color:var(--muted)">；。拖动超参数看参数量变化；调温度/top-k 感受文本是怎么"采样"出来的。</p>
 </section>
 
 <div class="demo-box">
@@ -101,25 +101,25 @@ button.sec{background:var(--panel);color:var(--text);border:1px solid var(--bord
 </div>
 <h4>参数构成分解（单层）</h4>
 <div class="breakdown" id="breakdown"></div>
-<div class="insight"><b>P127 计算验证：</b>在 d=768, n_heads=12, n_layers=12, vocab=50257 配置下，总参数约 163M——即 GPT-2 Small 的官方数字。拖动滑块看你自己配置的 GPT 是几"M"还是几"B"。</div>
+<div class="insight"><b></b>在 d=768, n_heads=12, n_layers=12, vocab=50257 配置下，总参数约 163M——即 GPT-2 Small 的官方数字。拖动滑块看你自己配置的 GPT 是几"M"还是几"B"。</div>
 </div>
 
 <div class="demo-box">
-<h3>3️⃣ 温度 temperature & top-k 采样（P174）</h3>
+<h3>3️⃣ 温度 temperature & top-k 采样（</h3>
 <div class="controls">
 <div class="ctrl-card"><label>温度 temperature: <span id="tVal2">0.7</span>  <span id="tExplain" style="font-size:12px;color:var(--muted)">平衡创造vs准确</span></label>
 <input type="range" id="temp" min="0.05" max="2" step="0.05" value="0.7"/></div>
 <div class="ctrl-card"><label>top-k: <span id="kVal">40</span>  <span style="font-size:12px;color:var(--muted)">只从前k个候选采样</span></label>
 <input type="range" id="topk" min="1" max="100" step="1" value="40"/></div>
 </div>
-<div class="gen-box" id="genBox"><span class="gen-prompt">自然语言处理是</span><span id="genNew" class="gen-new"></span><span class="tok-h" id="curTok">▌</span></div>
+<div class="gen-box" id="genBox"><span class="gen-prompt">自然语言处理是</span><span class="tok-h" id="curTok">▌</span></div>
 <div><b>下一个token候选（Top-{k}，已按温度缩放）：</b></div>
 <div class="next-tokens" id="nextToks"></div>
 <button id="genBtn">▶ 生成下一个词</button>
 <button id="genAuto" class="sec">▶ 自动生成 10 词</button>
 <button id="resetGen" class="sec">⟲ 重置</button>
 <canvas id="distCanvas" width="700" height="260"></canvas>
-<div class="insight"><b>P174 公式：</b>温度缩放 <code>logits / temperature</code>。T→0 时等价于贪心 argmax（保守、重复）；T=1 不变；T>1 时分布变平（更有创造力但可能胡说）。top-k 过滤掉概率极低的长尾，避免模型抽到离谱词。Ethan Perez 等人的研究发现：<b>小温度 + top-k=40~50 是实际最常用设置</b>。</div>
+<div class="insight"><b></b>温度缩放 <code>logits / temperature</code>。T→0 时等价于贪心 argmax（保守、重复）；T=1 不变；T>1 时分布变平（更有创造力但可能胡说）。top-k 过滤掉概率极低的长尾，避免模型抽到离谱词。Ethan Perez 等人的研究发现：<b>小温度 + top-k=40~50 是实际最常用设置</b>。</div>
 </div>
 </div>
 <footer style="text-align:center;padding:40px 0;color:var(--muted);font-size:13px"></footer>
@@ -132,7 +132,7 @@ const PRESETS=[
 {name:'GPT-3',d:12288,h:96,l:96,v:50257,c:2048,tag:'175B'}
 ];
 function fmt(n){if(n>=1e9)return (n/1e9).toFixed(2)+'B';if(n>=1e6)return (n/1e6).toFixed(1)+'M';if(n>=1e3)return (n/1e3).toFixed(1)+'K';return Math.round(n)+'';}
-function calcParams(){
+function calcParams{
   const d=+$('dModel').value,h=+$('nHeads').value,L=+$('nLayers').value,V=+$('vocab').value,T=+$('ctx').value,mul=+$('ffnMul').value;
   $('dVal').textContent=d;$('hVal').textContent=h;$('lVal').textContent=L;$('vVal').textContent=V;$('cVal').textContent=T;
   const pTok=V*d;
@@ -170,7 +170,7 @@ const VOCAB_POOL=[
 ];
 function softmax(arr,T){const m=Math.max(...arr);const e=arr.map(x=>Math.exp((x-m)/T));const s=e.reduce((a,b)=>a+b);return e.map(x=>x/s);}
 let curText='自然语言处理是';
-function drawDist(){
+function drawDist{
   const T=+$('temp').value,k=+$('topk').value;
   $('tVal2').textContent=T.toFixed(2);$('kVal').textContent=k;
   $('tExplain').textContent=T<0.3?'（太保守→可能重复）':T<0.8?'（推荐区间）':T<1.3?'（有创造力）':'（太随机→容易胡说）';
@@ -184,14 +184,14 @@ function drawDist(){
   // 重新归一化top
   const s=top.reduce((a,b)=>a+b.p,0);top.forEach(p=>p.p/=s);
   $('nextToks').innerHTML=top.slice(0,12).map(p=>`<div class="np" style="background:rgba(251,191,36,${0.2+p.p*3})" data-tok="${p.t}">${p.t}<span class="p">${(p.p*100).toFixed(1)}%</span></div>`).join('');
-  document.querySelectorAll('.np').forEach(el=>el.addEventListener('click',()=>{curText+=el.dataset.tok;renderGen();drawDist();}));
+  document.querySelectorAll('.np').forEach(el=>el.addEventListener('click',=>{curText+=el.dataset.tok;renderGen;drawDist;}));
   // chart
   const c=document.getElementById('distCanvas'),ctx=c.getContext('2d');
   const W=c.width,H=c.height,pad={l:40,r:10,t:20,b:60};
   ctx.clearRect(0,0,W,H);
   const bw=(W-pad.l-pad.r)/Math.min(top.length,20);
   const maxP=top[0].p;
-  ctx.strokeStyle='#333';ctx.beginPath();ctx.moveTo(pad.l,pad.t);ctx.lineTo(pad.l,H-pad.b);ctx.lineTo(W-pad.r,H-pad.b);ctx.stroke();
+  ctx.strokeStyle='#333';ctx.beginPath;ctx.moveTo(pad.l,pad.t);ctx.lineTo(pad.l,H-pad.b);ctx.lineTo(W-pad.r,H-pad.b);ctx.stroke;
   top.slice(0,20).forEach((p,i)=>{
     const h=(H-pad.t-pad.b)*p.p/maxP;
     const x=pad.l+i*bw;
@@ -199,36 +199,36 @@ function drawDist(){
     ctx.fillRect(x+2,H-pad.b-h,bw-4,h);
     ctx.fillStyle='#cbd5e1';ctx.font='11px monospace';ctx.textAlign='center';
     ctx.fillText(p.t,x+bw/2,H-pad.b+14);
-    ctx.save();ctx.translate(x+bw/2,H-pad.b+28);ctx.rotate(-Math.PI/6);ctx.fillText((p.p*100).toFixed(1)+'%',0,0);ctx.restore();
+    ctx.save;ctx.translate(x+bw/2,H-pad.b+28);ctx.rotate(-Math.PI/6);ctx.fillText((p.p*100).toFixed(1)+'%',0,0);ctx.restore;
   });
   ctx.fillStyle='#94a3b8';ctx.font='12px sans-serif';ctx.textAlign='left';
   ctx.fillText(`温度 T=${T.toFixed(2)} | top-k=${k} | 候选总数${top.length}个重新归一化`,pad.l,pad.t+10);
 }
-function renderGen(){document.getElementById('genNew').textContent=curText.slice('自然语言处理是'.length);}
-function sampleNext(){
+function renderGen{document.getElementById('genNew').textContent=curText.slice('自然语言处理是'.length);}
+function sampleNext{
   const T=+$('temp').value,k=+$('topk').value;
   const logits=VOCAB_POOL.map(([t,p])=>Math.log(p+1e-9)+(curText.endsWith('是')&&['一门','人工智能','机器','计算机','指','研究','让','的','技术'].includes(t)?0.5:0));
   const probs=softmax(logits,T);
   let pairs=VOCAB_POOL.map(([t],i)=>({t,i,p:probs[i]})).sort((a,b)=>b.p-a.p).slice(0,k);
   const s=pairs.reduce((a,b)=>a+b.p,0);pairs.forEach(p=>p.p/=s);
-  let r=Math.random(),acc=0;
+  let r=Math.random,acc=0;
   for(const p of pairs){acc+=p.p;if(r<=acc)return p.t;}
   return pairs[0].t;
 }
-function init(){
-  calcParams();
-  Object.entries({dModel:'d',nHeads:'h',nLayers:'l',vocab:'v',ctx:'c'}).forEach(()=>{});
+function init{
+  calcParams;
+  Object.entries({dModel:'d',nHeads:'h',nLayers:'l',vocab:'v',ctx:'c'}).forEach(=>{});
   ['dModel','nHeads','nLayers','vocab','ctx','ffnMul'].forEach(id=>$(id).addEventListener('input',calcParams));
   document.getElementById('presets').innerHTML=PRESETS.map(p=>`<div class="preset" data-p="${p.name}"><small>${p.name}</small><b>${p.tag}</b></div>`).join('');
-  document.querySelectorAll('.preset').forEach(el=>el.addEventListener('click',()=>{
+  document.querySelectorAll('.preset').forEach(el=>el.addEventListener('click',=>{
     const p=PRESETS.find(x=>x.name===el.dataset.p);
-    $('dModel').value=p.d;$('nHeads').value=p.h;$('nLayers').value=p.l;$('vocab').value=p.v;$('ctx').value=p.c;calcParams();
+    $('dModel').value=p.d;$('nHeads').value=p.h;$('nLayers').value=p.l;$('vocab').value=p.v;$('ctx').value=p.c;calcParams;
   }));
-  drawDist();renderGen();
+  drawDist;renderGen;
   ['temp','topk'].forEach(id=>$(id).addEventListener('input',drawDist));
-  document.getElementById('genBtn').addEventListener('click',()=>{curText+=sampleNext();renderGen();drawDist();});
-  document.getElementById('genAuto').addEventListener('click',()=>{let i=0;const iv=setInterval(()=>{curText+=sampleNext();renderGen();drawDist();if(++i>=10)clearInterval(iv);},350);});
-  document.getElementById('resetGen').addEventListener('click',()=>{curText='自然语言处理是';renderGen();drawDist();});
+  document.getElementById('genBtn').addEventListener('click',=>{curText+=sampleNext;renderGen;drawDist;});
+  document.getElementById('genAuto').addEventListener('click',=>{let i=0;const iv=setInterval(=>{curText+=sampleNext;renderGen;drawDist;if(++i>=10)clearInterval(iv);},350);});
+  document.getElementById('resetGen').addEventListener('click',=>{curText='自然语言处理是';renderGen;drawDist;});
 }
 </script>
 <script src="js/site.js"></script>

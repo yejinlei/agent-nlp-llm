@@ -24,12 +24,25 @@
     background: #eef2ff; color: #4f46e5; padding: 6px 14px; border-radius: 999px;
     font-size: 13px; font-weight: 600;
   }
-  .lab-group { max-width: 1180px; margin: 40px auto; padding: 0 24px; }
+  .search-box {
+    max-width: 480px; margin: 24px auto 0; position: relative;
+  }
+  .search-box input {
+    width: 100%; padding: 14px 20px 14px 48px; border-radius: 14px;
+    border: 2px solid #e2e8f0; background: #fff; font-size: 15px;
+    outline: none; transition: border-color .2s;
+  }
+  .search-box input:focus { border-color: #818cf8; }
+  .search-box::before {
+    content: '🔍'; position: absolute; left: 16px; top: 50%; transform: translateY(-50%);
+    font-size: 18px;
+  }
+  .lab-group { max-width: 1180px; margin: 48px auto; padding: 0 24px; }
   .lab-group h2 {
     font-size: 22px; font-weight: 700; color: #1e293b; margin: 0 0 20px;
     padding-left: 14px; border-left: 4px solid #6366f1;
   }
-  .lab-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 18px; }
+  .lab-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 18px; }
   .lab-card {
     display: flex; gap: 16px; padding: 22px 20px;
     background: #fff; border: 1px solid #e2e8f0; border-radius: 16px;
@@ -40,6 +53,7 @@
     transform: translateY(-4px); box-shadow: 0 12px 32px rgba(99,102,241,.15);
     border-color: #c7d2fe;
   }
+  .lab-card.hidden { display: none; }
   .lab-card .lab-icon {
     flex-shrink: 0; width: 52px; height: 52px; border-radius: 14px;
     background: linear-gradient(135deg, #eef2ff, #f3e8ff);
@@ -48,6 +62,16 @@
   }
   .lab-card h3 { margin: 0 0 6px; font-size: 17px; font-weight: 700; color: #0f172a; }
   .lab-card p { margin: 0; font-size: 13.5px; line-height: 1.6; color: #64748b; }
+  .lab-tag {
+    display: inline-block; margin-top: 8px; padding: 2px 8px; border-radius: 6px;
+    font-size: 11px; font-weight: 600;
+  }
+  .tag-basic { background: #dbeafe; color: #1d4ed8; }
+  .tag-word2vec { background: #dcfce7; color: #15803d; }
+  .tag-rnn { background: #fef3c7; color: #b45309; }
+  .tag-attn { background: #fce7f3; color: #be185d; }
+  .tag-gpt { background: #e9d5ff; color: #7e22ce; }
+  .tag-train { background: #ffe4e6; color: #be123c; }
   @media (max-width: 720px) {
     .lab-hero h1 { font-size: 34px; }
     .lab-grid { grid-template-columns: 1fr; }
@@ -75,169 +99,298 @@
 </nav>
 <div class="lab-hero">
   <h1>🧪 互动实验室</h1>
-  <p>经典教材中的全部经典案例，按学习路径分组。每个实验室都是一个可点击、可拖动、可训练的真实互动演示——不是动画假效果，是真正在你浏览器里跑的算法。</p>
+  <p>从基础分词到大模型微调，27 个可点击、可拖动、可训练的真实互动演示——不是动画假效果，是真正在你浏览器里跑的算法。</p>
   <div class="meta">
-    
-    <span>📗 </span>
-    <span>🧮 17 个可交互 demo</span>
+    <span>🧮 27 个可交互 demo</span>
     <span>⚡ 全部浏览器端运行</span>
+    <span>📦 无需安装任何依赖</span>
+  </div>
+  <div class="search-box">
+    <input type="text" id="searchInput" placeholder="搜索实验名称，比如 注意力、分词、LSTM、LoRA...">
   </div>
 </div>
 
-    <section class="lab-group">
-      <h2>① 基础：分词与表示（第2章 + ）</h2>
-      <div class="lab-grid">
-        <a href="bpe.html" class="lab-card">
-          <div class="lab-icon">🔤</div>
-          <div class="lab-body">
-            <h3>BPE 分词器</h3>
-            <p>拖动合并次数，看词表从小到大生长；亲手拆'hello'成5个token</p>
-          </div>
-        </a>
-        <a href="embedding.html" class="lab-card">
-          <div class="lab-icon">🧭</div>
-          <div class="lab-body">
-            <h3>词向量空间</h3>
-            <p>余弦相似度、king-man+woman≈queen 的真实二维投影</p>
-          </div>
-        </a>
-        <a href="sigmoid.html" class="lab-card">
-          <div class="lab-icon">∫</div>
-          <div class="lab-body">
-            <h3>激活函数曲线</h3>
-            <p>sigmoid/tanh/ReLU/GELU 导数对比，拖动 x 看红色切线（附录A）</p>
-          </div>
-        </a>
+<section class="lab-group">
+  <h2>① 基础：分词、表示与基础组件</h2>
+  <div class="lab-grid">
+    <a href="bpe.html" class="lab-card" data-name="bpe 分词 字节对编码 token">
+      <div class="lab-icon">🔤</div>
+      <div class="lab-body">
+        <h3>BPE 分词器</h3>
+        <p>拖动合并次数，看词表从小到大生长；亲手拆'hello'成5个token</p>
+        <span class="lab-tag tag-basic">分词基础</span>
       </div>
-    </section>
-    <section class="lab-group">
-      <h2>② Word2Vec（–4章）</h2>
-      <div class="lab-grid">
-        <a href="word2vec.html" class="lab-card">
-          <div class="lab-icon">🧠</div>
-          <div class="lab-body">
-            <h3>Word2Vec 从零</h3>
-            <p>共现矩阵 → PMI → SVD → CBOW → 负采样，全链路互动</p>
-          </div>
-        </a>
-        <a href="skip-cbow.html" class="lab-card">
-          <div class="lab-icon">⚖️</div>
-          <div class="lab-body">
-            <h3>CBOW vs Skip-gram</h3>
-            <p>并排对比：窗口大小 → 样本数 → 适用场景</p>
-          </div>
-        </a>
-        <a href="cbow.html" class="lab-card">
-          <div class="lab-icon">🧩</div>
-          <div class="lab-body">
-            <h3>CBOW 推理</h3>
-            <p>在你输入的句子上真实训练 300 轮 SGD，看一层一层推理过程</p>
-          </div>
-        </a>
-        <a href="neg-sample.html" class="lab-card">
-          <div class="lab-icon">🎲</div>
-          <div class="lab-body">
-            <h3>负采样</h3>
-            <p>拖动 V/K/H，实时看 FLOPs 对比和加速倍数；0.75 次方分布抽样</p>
-          </div>
-        </a>
+    </a>
+    <a href="tokenizer-compare.html" class="lab-card" data-name="分词器对比 bpe wordpiece unigram 子词">
+      <div class="lab-icon">🔀</div>
+      <div class="lab-body">
+        <h3>分词器对比</h3>
+        <p>BPE / WordPiece / Unigram 三种分词算法实时切分，对比词元数/OOV率/平均长度</p>
+        <span class="lab-tag tag-basic">分词基础</span>
       </div>
-    </section>
-    <section class="lab-group">
-      <h2>③ 序列模型：RNN/LSTM/GRU（–6章）</h2>
-      <div class="lab-grid">
-        <a href="rnn.html" class="lab-card">
-          <div class="lab-icon">🔁</div>
-          <div class="lab-body">
-            <h3>RNN/LSTM/Attention</h3>
-            <p>BPTT、LSTM四门、seq2seq→Attention，后半部总览</p>
-          </div>
-        </a>
-        <a href="lstm-gate.html" class="lab-card">
-          <div class="lab-icon">🚪</div>
-          <div class="lab-body">
-            <h3>LSTM 门控</h3>
-            <p>拖 f/i/g̃/o 四个滑块，实时看记忆单元颜色变化；10 步播放</p>
-          </div>
-        </a>
-        <a href="gru-lstm.html" class="lab-card">
-          <div class="lab-icon">🆚</div>
-          <div class="lab-body">
-            <h3>GRU vs LSTM</h3>
-            <p>三个场景对比：长距离/扰动/持续写入；公式并排+参数量对比</p>
-          </div>
-        </a>
+    </a>
+    <a href="oov-handle.html" class="lab-card" class="lab-card" data-name="oov 未登录词 unk 字符级 bpe 处理">
+      <div class="lab-icon">❓</div>
+      <div class="lab-body">
+        <h3>未登录词处理</h3>
+        <p>输入任意文本含生僻词/新词，同时展示UNK/字符级/BPE三种处理结果，对比OOV率</p>
+        <span class="lab-tag tag-basic">分词基础</span>
       </div>
-    </section>
-    <section class="lab-group">
-      <h2>④ 注意力 & 序列到序列（–8章 + 第3章）</h2>
-      <div class="lab-grid">
-        <a href="seq2seq-add.html" class="lab-card">
-          <div class="lab-icon">➕</div>
-          <div class="lab-body">
-            <h3>Seq2Seq 加法</h3>
-            <p>真实训练 Baseline/+Reverse/+Peeky 三个模型，对比复现</p>
-          </div>
-        </a>
-        <a href="attn-date.html" class="lab-card">
-          <div class="lab-icon">📅</div>
-          <div class="lab-body">
-            <h3>Attention 日期翻译</h3>
-            <p>输入'September 25, 2024'，实时画注意力热力图（）</p>
-          </div>
-        </a>
-        <a href="attention.html" class="lab-card">
-          <div class="lab-icon">🎯</div>
-          <div class="lab-body">
-            <h3>注意力沙盒</h3>
-            <p>随机 Q/K/V 实时算注意力权重热力图</p>
-          </div>
-        </a>
-        <a href="multihead.html" class="lab-card">
-          <div class="lab-icon">👥</div>
-          <div class="lab-body">
-            <h3>多头分工</h3>
-            <p>8个头：指代消解头(it→animal)/句法头/语义头 切换展示</p>
-          </div>
-        </a>
+    </a>
+    <a href="embedding.html" class="lab-card" data-name="词向量 余弦相似度 词嵌入 word embedding">
+      <div class="lab-icon">🧭</div>
+      <div class="lab-body">
+        <h3>词向量空间</h3>
+        <p>余弦相似度、king-man+woman≈queen 的真实二维投影</p>
+        <span class="lab-tag tag-basic">词表示</span>
       </div>
-    </section>
-    <section class="lab-group">
-      <h2>⑤ GPT 与大模型（第2/3/4/5章 + 附录E）</h2>
-      <div class="lab-grid">
-        <a href="context-window.html" class="lab-card">
-          <div class="lab-icon">🪟</div>
-          <div class="lab-body">
-            <h3>滑动窗口 & 因果掩码</h3>
-            <p>自定义 L/stride，实时切 (input,target) 对和 N×N 掩码矩阵</p>
-          </div>
-        </a>
-        <a href="gpt-params.html" class="lab-card">
-          <div class="lab-icon">🔧</div>
-          <div class="lab-body">
-            <h3>GPT 参数量 & 采样</h3>
-            <p>拖动 d_model/heads/layers，实时算 GPT-2 124M；调温度/top-k 采样</p>
-          </div>
-        </a>
-        <a href="ppl.html" class="lab-card">
-          <div class="lab-icon">📏</div>
-          <div class="lab-body">
-            <h3>困惑度 PPL</h3>
-            <p>PPL=e^Loss 推导；调任意 token 概率，看 PPL 飙升；过拟合曲线</p>
-          </div>
-        </a>
-        <a href="lora.html" class="lab-card">
-          <div class="lab-icon">🪢</div>
-          <div class="lab-body">
-            <h3>LoRA 低秩适配</h3>
-            <p>拖 r/α，实时看 ΔW 与 BA·α/r 矩阵对比和近似误差（附录E）</p>
-          </div>
-        </a>
+    </a>
+    <a href="sigmoid.html" class="lab-card" data-name="激活函数 sigmoid tanh relu gelu 导数">
+      <div class="lab-icon">∫</div>
+      <div class="lab-body">
+        <h3>激活函数曲线</h3>
+        <p>sigmoid/tanh/ReLU/GELU 导数对比，拖动 x 看红色切线变化</p>
+        <span class="lab-tag tag-basic">基础组件</span>
       </div>
-    </section>
+    </a>
+    <a href="pos-encoding.html" class="lab-card" data-name="位置编码 正弦 余弦 位置嵌入 transformer">
+      <div class="lab-icon">📍</div>
+      <div class="lab-body">
+        <h3>正弦位置编码</h3>
+        <p>拖动d_model和位置pos，实时画出正弦/余弦编码曲线，对比不同位置编码相似度</p>
+        <span class="lab-tag tag-basic">基础组件</span>
+      </div>
+    </a>
+  </div>
+</section>
+
+<section class="lab-group">
+  <h2>② Word2Vec 词向量系列</h2>
+  <div class="lab-grid">
+    <a href="word2vec.html" class="lab-card" data-name="word2vec 共现矩阵 pmi svd cbow 负采样">
+      <div class="lab-icon">🧠</div>
+      <div class="lab-body">
+        <h3>Word2Vec 从零</h3>
+        <p>共现矩阵 → PMI → SVD → CBOW → 负采样，全链路互动</p>
+        <span class="lab-tag tag-word2vec">全链路</span>
+      </div>
+    </a>
+    <a href="skip-cbow.html" class="lab-card" data-name="cbow skip-gram 对比 窗口大小 样本数">
+      <div class="lab-icon">⚖️</div>
+      <div class="lab-body">
+        <h3>CBOW vs Skip-gram</h3>
+        <p>并排对比：窗口大小 → 样本数 → 适用场景差异</p>
+        <span class="lab-tag tag-word2vec">模型对比</span>
+      </div>
+    </a>
+    <a href="cbow.html" class="lab-card" data-name="cbow 推理 one-hot softmax 训练 sgd">
+      <div class="lab-icon">🧩</div>
+      <div class="lab-body">
+        <h3>CBOW 推理</h3>
+        <p>在你输入的句子上真实训练 300 轮 SGD，看一层一层完整推理过程</p>
+        <span class="lab-tag tag-word2vec">模型推理</span>
+      </div>
+    </a>
+    <a href="neg-sample.html" class="lab-card" data-name="负采样 negative sampling 二分类 加速 flops 0.75">
+      <div class="lab-icon">🎲</div>
+      <div class="lab-body">
+        <h3>负采样加速</h3>
+        <p>拖动 V/K/H，实时看 FLOPs 对比和加速倍数；0.75 次方分布抽样</p>
+        <span class="lab-tag tag-word2vec">训练加速</span>
+      </div>
+    </a>
+  </div>
+</section>
+
+<section class="lab-group">
+  <h2>③ 序列模型：RNN / LSTM / GRU</h2>
+  <div class="lab-grid">
+    <a href="rnn.html" class="lab-card" data-name="rnn lstm attention bptt 梯度消失 序列模型">
+      <div class="lab-icon">🔁</div>
+      <div class="lab-body">
+        <h3>RNN/LSTM/Attention 总览</h3>
+        <p>BPTT、LSTM结构、seq2seq→Attention，后半部完整演进路径</p>
+        <span class="lab-tag tag-rnn">演进总览</span>
+      </div>
+    </a>
+    <a href="lstm-gate.html" class="lab-card" data-name="lstm 门控 遗忘门 输入门 输出门 记忆单元">
+      <div class="lab-icon">🚪</div>
+      <div class="lab-body">
+        <h3>LSTM 门控实验</h3>
+        <p>拖 f/i/g̃/o 四个滑块，实时看记忆单元颜色变化；10步序列播放</p>
+        <span class="lab-tag tag-rnn">门控机制</span>
+      </div>
+    </a>
+    <a href="gru-lstm.html" class="lab-card" data-name="gru lstm 对比 参数量 长距离依赖 扰动">
+      <div class="lab-icon">🆚</div>
+      <div class="lab-body">
+        <h3>GRU vs LSTM 对比</h3>
+        <p>三个场景对比：长距离/扰动/持续写入；公式并排+参数量对比</p>
+        <span class="lab-tag tag-rnn">模型对比</span>
+      </div>
+    </a>
+  </div>
+</section>
+
+<section class="lab-group">
+  <h2>④ 注意力 & 序列到序列</h2>
+  <div class="lab-grid">
+    <a href="seq2seq-add.html" class="lab-card" class="lab-card" data-name="seq2seq 加法 reverse peeky 训练 准确率">
+      <div class="lab-icon">➕</div>
+      <div class="lab-body">
+        <h3>Seq2Seq 加法实验</h3>
+        <p>真实训练 Baseline/+Reverse/+Peeky 三个模型，对比准确率曲线</p>
+        <span class="lab-tag tag-attn">Seq2Seq</span>
+      </div>
+    </a>
+    <a href="attn-date.html" class="lab-card" data-name="attention 日期翻译 热力图 对齐 格式转换">
+      <div class="lab-icon">📅</div>
+      <div class="lab-body">
+        <h3>Attention 日期翻译</h3>
+        <p>输入任意英文日期，实时画注意力热力图看字符对齐</p>
+        <span class="lab-tag tag-attn">注意力对齐</span>
+      </div>
+    </a>
+    <a href="attention.html" class="lab-card" data-name="注意力 沙盒 q k v 权重 热力图 self-attention">
+      <div class="lab-icon">🎯</div>
+      <div class="lab-body">
+        <h3>注意力沙盒</h3>
+        <p>随机 Q/K/V 实时计算注意力权重热力图</p>
+        <span class="lab-tag tag-attn">注意力基础</span>
+      </div>
+    </a>
+    <a href="multihead.html" class="lab-card" data-name="多头注意力 分工 头 指代消解 句法 语义">
+      <div class="lab-icon">👥</div>
+      <div class="lab-body">
+        <h3>多头注意力分工</h3>
+        <p>8个头：指代消解头(it→animal)/句法头/语义头 切换展示</p>
+        <span class="lab-tag tag-attn">多头机制</span>
+      </div>
+    </a>
+    <a href="attn-sentence.html" class="lab-card" data-name="句子自注意力 中文 分词 热力图 句法关系">
+      <div class="lab-icon">📝</div>
+      <div class="lab-body">
+        <h3>句子自注意力可视化</h3>
+        <p>输入任意中文句子，分词后计算词间注意力权重，看句法关系</p>
+        <span class="lab-tag tag-attn">真实句子</span>
+      </div>
+    </a>
+  </div>
+</section>
+
+<section class="lab-group">
+  <h2>⑤ GPT 与大模型原理</h2>
+  <div class="lab-grid">
+    <a href="context-window.html" class="lab-card" data-name="滑动窗口 因果掩码 context window causal mask transformer">
+      <div class="lab-icon">🪟</div>
+      <div class="lab-body">
+        <h3>滑动窗口 & 因果掩码</h3>
+        <p>自定义上下文长度和步长，实时切训练对和N×N因果掩码矩阵</p>
+        <span class="lab-tag tag-gpt">Transformer基础</span>
+      </div>
+    </a>
+    <a href="gpt-params.html" class="lab-card" data-name="gpt 参数量 计算 温度 top-k 采样 gpt2 gpt3">
+      <div class="lab-icon">🔧</div>
+      <div class="lab-body">
+        <h3>GPT 参数量 & 采样</h3>
+        <p>拖动d_model/heads/layers，实时算出GPT-2 124M参数；调温度/top-k采样token</p>
+        <span class="lab-tag tag-gpt">模型架构</span>
+      </div>
+    </a>
+    <a href="ppl.html" class="lab-card" data-name="困惑度 ppl 交叉熵 loss 过拟合 评估">
+      <div class="lab-icon">📏</div>
+      <div class="lab-body">
+        <h3>困惑度 PPL</h3>
+        <p>PPL=e^Loss 推导；调任意token概率，看PPL实时变化；过拟合曲线演示</p>
+        <span class="lab-tag tag-gpt">模型评估</span>
+      </div>
+    </a>
+    <a href="lora.html" class="lab-card" data-name="lora 低秩适配 微调 参数高效 矩阵近似">
+      <div class="lab-icon">🪢</div>
+      <div class="lab-body">
+        <h3>LoRA 低秩适配</h3>
+        <p>拖 r/α，实时看 ΔW 与 BA·α/r 矩阵对比和近似误差</p>
+        <span class="lab-tag tag-gpt">高效微调</span>
+      </div>
+    </a>
+    <a href="softmax-temp.html" class="lab-card" data-name="softmax 温度 采样 确定性 创造性 分布">
+      <div class="lab-icon">🌡️</div>
+      <div class="lab-body">
+        <h3>Softmax 温度实验</h3>
+        <p>拖动温度τ，看分布从one-hot到均匀分布变化，理解创造性vs确定性权衡</p>
+        <span class="lab-tag tag-gpt">解码采样</span>
+      </div>
+    </a>
+    <a href="beam-search.html" class="lab-card" data-name="集束搜索 beam search 贪心搜索 局部最优 生成">
+      <div class="lab-icon">🔍</div>
+      <div class="lab-body">
+        <h3>集束搜索演示</h3>
+        <p>调整beam宽度，看搜索树展开过程，对比贪心搜索为什么容易陷入局部最优</p>
+        <span class="lab-tag tag-gpt">解码搜索</span>
+      </div>
+    </a>
+  </div>
+</section>
+
+<section class="lab-group">
+  <h2>⑥ 训练技巧与优化</h2>
+  <div class="lab-grid">
+    <a href="grad-clip.html" class="lab-card" data-name="梯度裁剪 gradient clip 梯度爆炸 范数 阈值">
+      <div class="lab-icon">✂️</div>
+      <div class="lab-body">
+        <h3>梯度裁剪演示</h3>
+        <p>拖动裁剪阈值，实时计算裁剪前后梯度范数，看梯度向量在单位球外被缩放的2D示意图</p>
+        <span class="lab-tag tag-train">训练稳定</span>
+      </div>
+    </a>
+    <a href="label-smooth.html" class="lab-card" data-name="标签平滑 label smoothing 交叉熵 过拟合 过度自信">
+      <div class="lab-icon">🏷️</div>
+      <div class="lab-body">
+        <h3>标签平滑实验</h3>
+        <p>拖动平滑系数ε，看one-hot标签变成软标签，为什么能防止过拟合和过度自信</p>
+        <span class="lab-tag tag-train">正则化</span>
+      </div>
+    </a>
+    <a href="dropout.html" class="lab-card" data-name="dropout 随机失活 过拟合 正则化 训练 推理">
+      <div class="lab-icon">🎲</div>
+      <div class="lab-body">
+        <h3>Dropout 随机失活</h3>
+        <p>调整Dropout概率，点击重新采样随机mask神经元，canvas绘制神经网络失活过程</p>
+        <span class="lab-tag tag-train">正则化</span>
+      </div>
+    </a>
+    <a href="weight-init.html" class="lab-card" data-name="权重初始化 xavier he 零初始化 随机正态 激活分布 梯度消失爆炸">
+      <div class="lab-icon">⚖️</div>
+      <div class="lab-body">
+        <h3>权重初始化对比</h3>
+        <p>选择零初始化/随机正态/Xavier/He，模拟10层前向传播，看每一层激活值分布直方图</p>
+        <span class="lab-tag tag-train">初始化</span>
+      </div>
+    </a>
+  </div>
+</section>
 
 <div style="height:80px"></div>
 <script src="js/site.js"></script>
 <script src="js/math.js"></script>
+<script>
+// 搜索功能
+const searchInput = document.getElementById('searchInput');
+const cards = document.querySelectorAll('.lab-card');
+
+searchInput.addEventListener('input', (e) => {
+  const keyword = e.target.value.trim.toLowerCase;
+  cards.forEach(card => {
+    const name = (card.dataset.name || '').toLowerCase;
+    const title = card.querySelector('h3')?.textContent.toLowerCase || '';
+    const desc = card.querySelector('p')?.textContent.toLowerCase || '';
+    if (!keyword || name.includes(keyword) || title.includes(keyword) || desc.includes(keyword)) {
+      card.classList.remove('hidden');
+    } else {
+      card.classList.add('hidden');
+    }
+  });
+});
+</script>
 </body>
 </html>

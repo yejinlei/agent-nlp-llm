@@ -55,11 +55,11 @@ canvas{background:#0f172a;border-radius:8px;border:1px solid var(--border);width
 <section class="hero">
 
 <h1>困惑度 Perplexity：<span class="grad-text">衡量模型"惊讶程度"</span></h1>
-<p style="color:var(--muted)">P182 定义 <b>PPL = exp(Loss)</b>，Loss 是平均每 token 的交叉熵。直觉理解：模型在每个位置平均"在多少个候选词里犹豫"。PPL=1 是完美（每步100%确定），PPL=100 表示每步平均在 100 个词里选，PPL=词表大小等于瞎猜。输入一句话，调节每个词的概率看 PPL 如何变化。</p>
+<p style="color:var(--muted)"><b>PPL = exp(Loss)</b>，Loss 是平均每 token 的交叉熵。直觉理解：模型在每个位置平均"在多少个候选词里犹豫"。PPL=1 是完美（每步100%确定），PPL=100 表示每步平均在 100 个词里选，PPL=词表大小等于瞎猜。输入一句话，调节每个词的概率看 PPL 如何变化。</p>
 </section>
 
 <div class="demo-box">
-<h3>1️⃣ 数学定义（P182）</h3>
+<h3>1️⃣ 数学定义（</h3>
 <div class="formula">
 交叉熵损失：Loss = -1/N · Σ<sub>i</sub> log P(x<sub>i</sub> | x<sub>&lt;i</sub>)<br>
 困惑度：<b style="color:#fbbf24">PPL = exp(Loss) = ( Π<sub>i</sub> 1/P(x<sub>i</sub>|x<sub>&lt;i</sub>) )<sup>1/N</sup></b><br>
@@ -113,10 +113,10 @@ canvas{background:#0f172a;border-radius:8px;border:1px solid var(--border);width
 </div>
 
 <div class="demo-box">
-<h3>6️⃣ 训练过程中 Loss/PPL 变化（P201 图5.15）</h3>
+<h3>6️⃣ 训练过程中 Loss/PPL 变化（</h3>
 <canvas id="trainCanvas" width="800" height="280"></canvas>
 <div class="insight">
-<b>P186 原文：</b>"PPL 是评估 LLM 最常用的指标之一。训练时 PPL 单调下降（Loss 下降），验证集 PPL 开始上升时说明过拟合。" GPT-3 在 WebText 上的 PPL 约 20-25，Llama-2 在 1T tokens 上约 10-15。
+<b></b>"PPL 是评估 LLM 最常用的指标之一。训练时 PPL 单调下降（Loss 下降），验证集 PPL 开始上升时说明过拟合。" GPT-3 在 WebText 上的 PPL 约 20-25，Llama-2 在 1T tokens 上约 10-15。
 </div>
 </div>
 </div>
@@ -140,7 +140,7 @@ const SAMPLE_CORPUS=[
 '我 爱 机器学习 是 人工智能 领域',
 'GPT 是 一种 基于 Transformer 的 语言 模型'
 ];
-function buildCorpus(){
+function buildCorpus{
   SAMPLE_CORPUS.forEach(s=>{
     const toks=s.split(/\s+/);
     toks.forEach(t=>{CORPUS_UNI[t]=(CORPUS_UNI[t]||0)+1;});
@@ -167,8 +167,8 @@ let probs=[];
 function colorFromP(p){
   if(p>0.3)return'#10b981';if(p>0.1)return'#34d399';if(p>0.03)return'#fbbf24';if(p>0.01)return'#fb923c';return'#ef4444';
 }
-function calcPPL(){
-  const toks=$('sent').value.trim().split(/\s+/).filter(Boolean);
+function calcPPL{
+  const toks=$('sent').value.trim.split(/\s+/).filter(Boolean);
   if(!toks.length){document.getElementById('tokBoxes').innerHTML='';$('pplBig').textContent='-';return;}
   // probs 自动初始化
   if(probs.length!==toks.length)probs=toks.map((t,i)=>probFor(t,i?toks[i-1]:'<s>'));
@@ -179,7 +179,7 @@ function calcPPL(){
       <span class="surp" title="惊讶度 -log(P)=${surp.toFixed(2)}">${surp.toFixed(1)}</span>
       </div>`;
   }).join('');
-  document.querySelectorAll('.token-box').forEach(el=>el.addEventListener('click',()=>{
+  document.querySelectorAll('.token-box').forEach(el=>el.addEventListener('click',=>{
     const i=+el.dataset.i;
     // 点击循环：高→中→低概率
     const p=probs[i];
@@ -187,7 +187,7 @@ function calcPPL(){
     else if(p>0.05)probs[i]=0.01;
     else if(p>0.005)probs[i]=0.001;
     else probs[i]=probFor(toks[i],i?toks[i-1]:'<s>');
-    calcPPL();
+    calcPPL;
   }));
   const logSum=probs.reduce((a,p)=>a+(-Math.log(p)),0);
   const loss=logSum/toks.length;
@@ -200,7 +200,7 @@ function calcPPL(){
   $('gMean').textContent=(gMean*100).toFixed(2)+'%';
   $('sumSurp').textContent=logSum.toFixed(2);
 }
-function drawCompare(){
+function drawCompare{
   const good='自然语言处理 让 机器 理解 人类 语言';
   const mid='机器学习 让 石头 学会 睡觉';
   const bad='的 的 了 了 是 是 不 我 你 他';
@@ -221,7 +221,7 @@ function drawCompare(){
   $('pplG').textContent=a.ppl.toFixed(1);$('pplY').textContent=b.ppl.toFixed(1);$('pplR').textContent=c.ppl.toFixed(1);
   const cv=document.getElementById('cmpCanvas'),cx=cv.getContext('2d');
   const W=cv.width,H=cv.height,pad={l:50,r:20,t:30,b:50};
-  cx.clearRect(0,0,W,H);cx.strokeStyle='#333';cx.beginPath();cx.moveTo(pad.l,pad.t);cx.lineTo(pad.l,H-pad.b);cx.lineTo(W-pad.r,H-pad.b);cx.stroke();
+  cx.clearRect(0,0,W,H);cx.strokeStyle='#333';cx.beginPath;cx.moveTo(pad.l,pad.t);cx.lineTo(pad.l,H-pad.b);cx.lineTo(W-pad.r,H-pad.b);cx.stroke;
   const series=[{d:a,c:'#34d399',n:'通顺'},{d:b,c:'#fbbf24',n:'异常'},{d:c,c:'#ef4444',n:'乱序'}];
   const maxN=Math.max(a.toks.length,b.toks.length,c.toks.length);
   const bw=(W-pad.l-pad.r)/(maxN*3+2);
@@ -238,16 +238,16 @@ function drawCompare(){
   cx.textAlign='left';
   series.forEach((s,i)=>{cx.fillStyle=s.c;cx.fillRect(pad.l+180*i,H-pad.b+30,14,14);cx.fillStyle='#cbd5e1';cx.fillText(s.n+' PPL='+s.d.ppl.toFixed(1),pad.l+180*i+20,H-pad.b+42);});
 }
-function drawTrain(){
+function drawTrain{
   const cv=document.getElementById('trainCanvas'),cx=cv.getContext('2d');
   const W=cv.width,H=cv.height,pad={l:50,r:20,t:30,b:50};
-  cx.clearRect(0,0,W,H);cx.strokeStyle='#333';cx.beginPath();cx.moveTo(pad.l,pad.t);cx.lineTo(pad.l,H-pad.b);cx.lineTo(W-pad.r,H-pad.b);cx.stroke();
+  cx.clearRect(0,0,W,H);cx.strokeStyle='#333';cx.beginPath;cx.moveTo(pad.l,pad.t);cx.lineTo(pad.l,H-pad.b);cx.lineTo(W-pad.r,H-pad.b);cx.stroke;
   cx.fillStyle='#94a3b8';cx.font='12px sans-serif';cx.fillText('PPL',10,pad.t+10);cx.fillText('Epoch',W-pad.r-40,H-pad.b+20);
   function train(init,final,epochs,noise){
     const pts=[];
     for(let e=0;e<=epochs;e++){
       const decay=Math.exp(-e/8);
-      const p=final+(init-final)*decay+(Math.random()-0.5)*noise;
+      const p=final+(init-final)*decay+(Math.random-0.5)*noise;
       pts.push(p);
     }
     return pts;
@@ -256,23 +256,23 @@ function drawTrain(){
   const valP=train(500,30,30,5).map((p,i)=>i>12?p+(i-12)*0.8:p); // overfit after epoch 12
   const epochs=30;
   function plot(arr,c){
-    cx.strokeStyle=c;cx.lineWidth=2.5;cx.beginPath();
-    arr.forEach((p,i)=>{const x=pad.l+i/(epochs)*(W-pad.l-pad.r);const y=H-pad.b-(H-pad.t-pad.b)*(1-Math.log(p)/Math.log(600));i?cx.lineTo(x,y):cx.moveTo(x,y);});cx.stroke();
+    cx.strokeStyle=c;cx.lineWidth=2.5;cx.beginPath;
+    arr.forEach((p,i)=>{const x=pad.l+i/(epochs)*(W-pad.l-pad.r);const y=H-pad.b-(H-pad.t-pad.b)*(1-Math.log(p)/Math.log(600));i?cx.lineTo(x,y):cx.moveTo(x,y);});cx.stroke;
   }
   plot(trainP,'#60a5fa');plot(valP,'#f472b6');
   cx.fillStyle='#60a5fa';cx.fillRect(pad.l+200,pad.t+10,14,14);cx.fillStyle='#cbd5e1';cx.fillText('训练集 PPL',pad.l+220,pad.t+22);
   cx.fillStyle='#f472b6';cx.fillRect(pad.l+340,pad.t+10,14,14);cx.fillStyle='#cbd5e1';cx.fillText('验证集 PPL（过拟合开始↑）',pad.l+360,pad.t+22);
   // 过拟合标记
   const ox=pad.l+12/epochs*(W-pad.l-pad.r);
-  cx.strokeStyle='#fbbf24';cx.setLineDash([5,4]);cx.beginPath();cx.moveTo(ox,pad.t);cx.lineTo(ox,H-pad.b);cx.stroke();cx.setLineDash([]);
+  cx.strokeStyle='#fbbf24';cx.setLineDash([5,4]);cx.beginPath;cx.moveTo(ox,pad.t);cx.lineTo(ox,H-pad.b);cx.stroke;cx.setLineDash([]);
   cx.fillStyle='#fbbf24';cx.fillText('过拟合起点',ox-30,pad.t+50);
 }
-function init(){
-  buildCorpus();
-  calcPPL();
-  $('sent').addEventListener('input',()=>{probs=[];calcPPL();});
-  document.querySelectorAll('.preset-btn').forEach(b=>b.addEventListener('click',()=>{$('sent').value=b.dataset.p;probs=[];calcPPL();}));
-  drawCompare();drawTrain();
+function init{
+  buildCorpus;
+  calcPPL;
+  $('sent').addEventListener('input',=>{probs=[];calcPPL;});
+  document.querySelectorAll('.preset-btn').forEach(b=>b.addEventListener('click',=>{$('sent').value=b.dataset.p;probs=[];calcPPL;}));
+  drawCompare;drawTrain;
   document.getElementById('cmpBtn').addEventListener('click',drawCompare);
 }
 </script>

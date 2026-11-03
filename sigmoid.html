@@ -89,9 +89,9 @@ canvas{width:100%;border-radius:8px;background:#fafbfc}
     <h4>💡 核心要点</h4>
     <ul>
       <li><b>Sigmoid</b>：y=1/(1+e⁻ˣ)，导数 y'=y(1-y)，输出 0~1 但两端梯度消失（附录A 式A.3）。</li>
-      <li><b>Tanh</b>：零中心，输出 -1~1，仍有两端饱和问题（）。</li>
+      <li><b>Tanh</b>：零中心，输出 -1~1，仍有两端饱和问题。</li>
       <li><b>ReLU</b>：y=max(0,x)，导数值硬 0/1，死神经元问题；计算极快。</li>
-      <li><b>GELU</b>：大模型标配（P4），用高斯分布的 CDF 做加权，有非单调性，tanh 近似：GELU(x) ≈ 0.5x·(1+tanh(√(2/π)(x+0.044715x³))) ，拖动 k 看近似效果。</li>
+      <li><b>GELU</b>：大模型标配（，用高斯分布的 CDF 做加权，有非单调性，tanh 近似：GELU(x) ≈ 0.5x·(1+tanh(√(2/π)(x+0.044715x³)))，拖动 k 看近似效果。</li>
     </ul>
   </section>
 </main>
@@ -116,37 +116,37 @@ const F={
 };
 let cur='sigmoid',x0=0,kGelu=1.0,showDer=true;
 
-function draw(){
+function draw{
   ctx.clearRect(0,0,W,H);
   // 网格
   ctx.strokeStyle='#e2e8f0';ctx.lineWidth=1;
-  for(let x=Math.ceil(xMin);x<=xMax;x++){ctx.beginPath();ctx.moveTo(X2c(x),0);ctx.lineTo(X2c(x),H);ctx.stroke();}
-  for(let y=Math.ceil(yMin*2)/2;y<=yMax;y+=0.5){ctx.beginPath();ctx.moveTo(0,Y2c(y));ctx.lineTo(W,Y2c(y));ctx.stroke();}
+  for(let x=Math.ceil(xMin);x<=xMax;x++){ctx.beginPath;ctx.moveTo(X2c(x),0);ctx.lineTo(X2c(x),H);ctx.stroke;}
+  for(let y=Math.ceil(yMin*2)/2;y<=yMax;y+=0.5){ctx.beginPath;ctx.moveTo(0,Y2c(y));ctx.lineTo(W,Y2c(y));ctx.stroke;}
   // 坐标轴
   ctx.strokeStyle='#64748b';ctx.lineWidth=1.5;
-  ctx.beginPath();ctx.moveTo(0,Y2c(0));ctx.lineTo(W,Y2c(0));ctx.moveTo(X2c(0),0);ctx.lineTo(X2c(0),H);ctx.stroke();
+  ctx.beginPath;ctx.moveTo(0,Y2c(0));ctx.lineTo(W,Y2c(0));ctx.moveTo(X2c(0),0);ctx.lineTo(X2c(0),H);ctx.stroke;
   // f(x)
   const fn=F[cur];
-  ctx.strokeStyle=fn.color;ctx.lineWidth=3;ctx.beginPath();
+  ctx.strokeStyle=fn.color;ctx.lineWidth=3;ctx.beginPath;
   for(let i=0;i<=W;i++){const x=xMin+(xMax-xMin)*i/W;const y=fn.f(x);if(i===0)ctx.moveTo(i,Y2c(y));else ctx.lineTo(i,Y2c(y));}
-  ctx.stroke();
+  ctx.stroke;
   // f'(x)
   if(showDer){
-    ctx.strokeStyle='#f59e0b';ctx.lineWidth=2;ctx.setLineDash([6,4]);ctx.beginPath();
+    ctx.strokeStyle='#f59e0b';ctx.lineWidth=2;ctx.setLineDash([6,4]);ctx.beginPath;
     for(let i=0;i<=W;i++){const x=xMin+(xMax-xMin)*i/W;const y=fn.df(x);if(i===0)ctx.moveTo(i,Y2c(y));else ctx.lineTo(i,Y2c(y));}
-    ctx.stroke();ctx.setLineDash([]);
+    ctx.stroke;ctx.setLineDash([]);
   }
   // 当前点
   const y0=fn.f(x0),d0=fn.df(x0);
   ctx.strokeStyle='#ef4444';ctx.lineWidth=2;
-  ctx.beginPath();ctx.moveTo(X2c(x0-1.2),Y2c(y0-d0*1.2));ctx.lineTo(X2c(x0+1.2),Y2c(y0+d0*1.2));ctx.stroke();
-  ctx.fillStyle='#ef4444';ctx.beginPath();ctx.arc(X2c(x0),Y2c(y0),6,0,Math.PI*2);ctx.fill();
+  ctx.beginPath;ctx.moveTo(X2c(x0-1.2),Y2c(y0-d0*1.2));ctx.lineTo(X2c(x0+1.2),Y2c(y0+d0*1.2));ctx.stroke;
+  ctx.fillStyle='#ef4444';ctx.beginPath;ctx.arc(X2c(x0),Y2c(y0),6,0,Math.PI*2);ctx.fill;
   // 标注
   ctx.fillStyle='#334155';ctx.font='13px monospace';
   ctx.fillText(`f(${x0.toFixed(2)}) = ${y0.toFixed(4)}`,X2c(x0)+10,Y2c(y0)-10);
   ctx.fillText(`f'(${x0.toFixed(2)}) = ${d0.toFixed(4)}`,X2c(x0)+10,Y2c(y0)+10);
   document.getElementById('valBox').innerHTML=`
-    <b style="color:${fn.color}">${cur.toUpperCase()}</b> 在 x=${x0.toFixed(2)} 处：<br>
+    <b style="color:${fn.color}">${cur.toUpperCase}</b> 在 x=${x0.toFixed(2)} 处：<br>
     &nbsp;&nbsp;函数值 f(x) = <b>${y0.toFixed(4)}</b><br>
     &nbsp;&nbsp;导数值 f'(x) = <b>${d0.toFixed(4)}</b><br>
     &nbsp;&nbsp;<span style="color:#94a3b8;font-size:12px">红线是该点切线，斜率就是 f'(x)</span>`;
@@ -154,12 +154,12 @@ function draw(){
 }
 
 document.querySelectorAll('.func-btns button').forEach(b=>{
-  b.onclick=()=>{document.querySelectorAll('.func-btns button').forEach(x=>x.classList.remove('active'));b.classList.add('active');cur=b.dataset.f;draw();};
+  b.onclick==>{document.querySelectorAll('.func-btns button').forEach(x=>x.classList.remove('active'));b.classList.add('active');cur=b.dataset.f;draw;};
 });
-document.getElementById('xs').oninput=e=>{x0=+e.target.value;document.getElementById('xv').textContent=x0.toFixed(2);draw();};
-document.getElementById('showDer').onchange=e=>{showDer=e.target.checked;draw();};
-document.getElementById('ks').oninput=e=>{kGelu=+e.target.value;document.getElementById('kv').textContent=kGelu.toFixed(3);draw();};
-draw();
+document.getElementById('xs').oninput=e=>{x0=+e.target.value;document.getElementById('xv').textContent=x0.toFixed(2);draw;};
+document.getElementById('showDer').onchange=e=>{showDer=e.target.checked;draw;};
+document.getElementById('ks').oninput=e=>{kGelu=+e.target.value;document.getElementById('kv').textContent=kGelu.toFixed(3);draw;};
+draw;
 </script>
 <script src="js/math.js"></script>
 </body>

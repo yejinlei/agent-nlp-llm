@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>分词器对比 · agent-nlp-llm</title>
+<link rel="stylesheet" href="css/site.css">
+<style>
+.tok { display:inline-block; padding:6px 12px; margin:3px; border-radius:8px; font-weight:600; font-size:.88rem; transition:all .15s; position:relative; }
+.tok:hover { transform:translateY(-2px); box-shadow:0 4px 12px rgba(0,0,0,.1); }
+.tok-1 { background:#dbeafe; color:#1e40af; border:1px solid #93c5fd; }
+.tok-2 { background:#e9d5ff; color:#6b21a8; border:1px solid #c4b5fd; }
+.tok-3 { background:#d1fae5; color:#065f46; border:1px solid #6ee7b7; }
+.tok-unk { background:#fef2f2; color:#b91c1c; border:2px dashed #ef4444; }
+.tok-single { background:#fef3c7; color:#92400e; border:1px solid #fcd34d; }
+.algo-card { padding:18px; border-radius:14px; border:1px solid var(--border); background:#fff; }
+.algo-card h3 { font-size:1.1rem; display:flex; align-items:center; gap:8px; margin-bottom:6px; }
+.algo-card .desc { font-size:.86rem; color:var(--text-2); margin-bottom:12px; line-height:1.6; }
+.tokens-area { min-height:100px; padding:14px; background:#fafbff; border-radius:10px; border:1px dashed var(--border-2); line-height:2.4; }
+.stat-row { display:flex; justify-content:space-between; padding:7px 0; border-bottom:1px dashed var(--border); font-size:.88rem; }
+.stat-row:last-child { border-bottom:none; }
+.stat-row span:last-child { font-family:var(--mono); font-weight:700; }
+.legend { display:flex; gap:14px; flex-wrap:wrap; margin:10px 0; font-size:.82rem; }
+.legend-item { display:flex; align-items:center; gap:6px; }
+.legend-box { width:16px; height:16px; border-radius:4px; }
+</style>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function{
+  function r{try{renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false});}catch(e){}}
+  if(document.readyState==='complete')r;else window.addEventListener('load',r);
+  setTimeout(r,300);setTimeout(r,1000);
+});
+</script>
+</head>
+<body>
+<nav class="navbar">
+<div class="nav-inner">
+<a href="index.html" class="nav-logo">💬 agent-nlp-llm</a>
+<button class="nav-toggle" aria-label="菜单" onclick="document.querySelector('.nav-links').classList.toggle('open')">☰</button>
+<div class="nav-links">
+<a href="index.html" class="nav-link">🏠&nbsp;首页</a>
+<a href="nlp/index.html" class="nav-link">📝&nbsp;NLP</a>
+<a href="llm/index.html" class="nav-link">🤖&nbsp;LLM</a>
+<a href="lab.html" class="nav-link active">🧪&nbsp;实验室</a>
+<a href="papers.html" class="nav-link">📚&nbsp;论文</a>
+<a href="clinic.html" class="nav-link">🕵️&nbsp;诊所</a>
+<a href="pitfalls.html" class="nav-link">💥&nbsp;踩坑</a>
+<a href="benchmark.html" class="nav-link">📊&nbsp;选型</a>
+<a href="universe.html" class="nav-link">🌌&nbsp;宇宙</a>
+<a href="https://github.com/yejinlei/agent-nlp-llm" target="_blank" rel="noopener" class="nav-gh" aria-label="GitHub"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg></a>
+</div>
+</div>
+</nav>
+
+<div class="wrap page">
+<section class="hero reveal">
+<h1>🔀 分词器对比：BPE vs WordPiece vs Unigram</h1>
+<p class="sub">同样的文本，不同的子词分词算法会切出不同的结果。BPE 合并最频繁的字节对，WordPiece 用最大似然选择合并，Unigram 从大词表迭代删除低效token。输入任意文本，三种算法并排对比。</p>
+</section>
+
+<section class="blk reveal">
+<h2 class="blk-title"><span class="num">📚</span>三种算法原理</h2>
+<div class="grid g3">
+<div class="card" style="border-top:4px solid #3b6fe0">
+<h4 style="color:#3b6fe0">🔵 BPE (Byte-Pair Encoding)</h4>
+<p style="font-size:.88rem;color:var(--text-2);margin:8px 0"><b>策略：</b>贪心合并频率最高的相邻token对</p>
+<p style="font-size:.88rem;color:var(--text-2)"><b>代表模型：</b>GPT-2/3/4, LLaMA, RoBERTa</p>
+<p style="font-size:.88rem;color:var(--text-2)"><b>特点：</b>确定性算法，实现简单，从字符开始迭代合并直到达到目标词表大小。合并规则是"频率最高"的对，不考虑语言模型似然。</p>
+</div>
+<div class="card" style="border-top:4px solid #7c3aed">
+<h4 style="color:#7c3aed">🟣 WordPiece</h4>
+<p style="font-size:.88rem;color:var(--text-2);margin:8px 0"><b>策略：</b>选择使训练数据似然提升最大的合并</p>
+<p style="font-size:.88rem;color:var(--text-2)"><b>代表模型：</b>BERT, DistilBERT, Electra</p>
+<p style="font-size:.88rem;color:var(--text-2)"><b>特点：</b>和BPE类似但合并标准不同——不是频率最高，而是最大化语言模型概率。用"##"前缀标记非词首token。</p>
+</div>
+<div class="card" style="border-top:4px solid #10a37f">
+<h4 style="color:#10a37f">🟢 Unigram (SentencePiece)</h4>
+<p style="font-size:.88rem;color:var(--text-2);margin:8px 0"><b>策略：</b>从大词表出发，迭代删除"损失最小"的token</p>
+<p style="font-size:.88rem;color:var(--text-2)"><b>代表模型：</b>T5, mBART, XLNet, ALBERT</p>
+<p style="font-size:.88rem;color:var(--text-2)"><b>特点：</b>基于概率的分词，可以输出多个可能的切分结果（有概率），分词更具一致性和可逆性。直接处理原始文本（无需预分词）。</p>
+</div>
+</div>
+</section>
+
+<section class="blk reveal" id="play">
+<h2 class="blk-title"><span class="num">🎮</span>互动实验</h2>
+
+<div class="demo-box">
+<div class="ctrl" style="align-items:flex-start">
+<label style="flex:1;min-width:300px;flex-direction:column">输入任意文本（中英文混合、新词、专业术语都可）
+<textarea id="inputText" rows="3" style="width:100%;resize:vertical">unhappinessly ChatGPT transformer神经网络模型训练running调试</textarea>
+</label>
+</div>
+
+<div class="legend" style="margin-top:12px">
+<div class="legend-item"><div class="legend-box" style="background:#dbeafe;border:1px solid #93c5fd"></div>完整词（词表中存在）</div>
+<div class="legend-item"><div class="legend-box" style="background:#e9d5ff;border:1px solid #c4b5fd"></div>子词前缀/组合</div>
+<div class="legend-item"><div class="legend-box" style="background:#d1fae5;border:1px solid #6ee7b7"></div>后缀/字符级</div>
+<div class="legend-item"><div class="legend-box" style="background:#fef3c7;border:1px solid #fcd34d"></div>单字符token</div>
+</div>
+
+<div class="grid g3" style="gap:16px;margin-top:14px">
+<div class="algo-card" style="border-top:4px solid #3b6fe0">
+<h3>🔵 BPE</h3>
+<p class="desc">从字符出发，每次合并出现频率最高的相邻对。常用词合并为完整token，罕见词拆为子词。</p>
+<div class="tokens-area" id="bpeArea"></div>
+<div style="margin-top:12px" id="bpeStats"></div>
+</div>
+<div class="algo-card" style="border-top:4px solid #7c3aed">
+<h3>🟣 WordPiece</h3>
+<p class="desc">每步选择让训练数据对数似然提升最大的对进行合并，子词非首位置加"##"前缀。</p>
+<div class="tokens-area" id="wpArea"></div>
+<div style="margin-top:12px" id="wpStats"></div>
+</div>
+<div class="algo-card" style="border-top:4px solid #10a37f">
+<h3>🟢 Unigram</h3>
+<p class="desc">从大词表迭代剪枝，保留使总体似然最大的token集合，基于Viterbi最优路径切分。</p>
+<div class="tokens-area" id="uniArea"></div>
+<div style="margin-top:12px" id="uniStats"></div>
+</div>
+</div>
+
+<div class="grid g4" style="margin-top:18px;gap:12px">
+<div style="padding:14px;border-radius:10px;background:#eef3ff;text-align:center"><div style="font-family:var(--mono);font-size:1.4rem;font-weight:800;color:#3b6fe0" id="cmpBpe">-</div><div style="font-size:.8rem;color:var(--text-2)">BPE词元数</div></div>
+<div style="padding:14px;border-radius:10px;background:#f5f0ff;text-align:center"><div style="font-family:var(--mono);font-size:1.4rem;font-weight:800;color:#7c3aed" id="cmpWp">-</div><div style="font-size:.8rem;color:var(--text-2)">WordPiece词元数</div></div>
+<div style="padding:14px;border-radius:10px;background:#e8f8f3;text-align:center"><div style="font-family:var(--mono);font-size:1.4rem;font-weight:800;color:#10a37f" id="cmpUni">-</div><div style="font-size:.8rem;color:var(--text-2)">Unigram词元数</div></div>
+<div style="padding:14px;border-radius:10px;background:#fff7ed;text-align:center"><div style="font-family:var(--mono);font-size:1.4rem;font-weight:800;color:#f59e0b" id="cmpAvg">-</div><div style="font-size:.8rem;color:var(--text-2)">平均词元长度</div></div>
+</div>
+
+<div class="hint" id="cmpHint"></div>
+</div>
+
+<div class="insight" style="margin-top:24px">
+<b>实际差异大吗？</b> 在英文上三种算法的差异往往不大——它们都会把常见词保留为完整token，罕见词拆开。主要差异在于：① BPE 和 WordPiece 是确定性的（同样输入总是同样切分），Unigram 是概率性的；② WordPiece 和 BPE 用"##"/"Ġ"等前缀标记子词位置，Unigram 不依赖特殊前缀；③ BPE 处理中文通常基于字节（byte-level BPE, GPT-2/LLaMA使用），WordPiece 和 SentencePiece 可以直接处理多语言。实际选型中，BPE 因为实现简单、效果稳定而被最广泛使用。
+</div>
+</section>
+</div>
+
+<footer class="site"><p>💬 agent-nlp-llm · 自然语言技术本体论研究站</p></footer>
+<script src="js/site.js"></script>
+<script>
+(function{
+  // Simulated tokenizer vocabularies and rules
+  var commonWords = new Set(['the','a','is','was','are','to','of','in','for','on','with','that','this','it','and','or','but','not','be','by','as','at','from','model','train','neural','network','run','debug','transformer','chat','神经','网络','模型','训练','调试','ChatGPT','GPT']);
+  var bpeMerges = [
+    ['un','happiness'],['happiness','ly'],['trans','former'],['former','er'],
+    ['run','ning'],['Chat','GP'],['GP','T'],['神经','网络'],['网络','模型'],
+    ['模','型'],['训','练'],['调','试'],['ing','ly'],['un','happy'],
+    ['happy','ness'],['transform','er'],['神','经'],['网','络']
+  ];
+  var wpMerges = [
+    ['un','##happiness'],['un','##happy'],['##happy','##ness'],['##ness','##ly'],
+    ['trans','##former'],['##former','##er'],['run','##ning'],['Chat','##GP'],
+    ['##GP','##T'],['神经','网络'],['网络','模型'],['训','##练'],['调','##试']
+  ];
+  var unigramTokens = new Set;
+  // Initialize with common words, prefixes, suffixes, and chars
+  commonWords.forEach(function(w){unigramTokens.add(w);});
+  'abcdefghijklmnopqrstuvwxyz'.split('').forEach(function(c){unigramTokens.add(c);});
+  for(var i=0x4e00;i<=0x9fff;i++)unigramTokens.add(String.fromCharCode(i));
+  ['un','re','pre','dis','ing','ed','ly','er','est','ness','ment','tion','able','ful','less','trans','form','former','run','runn','ning','happ','happy','happiness','Chat','GP','GPT','chat','transform','transformer','神经','网络','模型','训练','调试','神','经','网','络','模','型','训','练','调','试','神经网','网络模'].forEach(function(t){unigramTokens.add(t);});
+  unigramTokens.add('！');unigramTokens.add('。');unigramTokens.add('，');
+
+  function isEnglish(c){return /[a-zA-Z]/.test(c);}
+  function isChinese(c){return /[\u4e00-\u9fa5]/.test(c);}
+  function isPunct(c){return /[，。！？、；：""''\s,.!?;:"'\-_]/.test(c);}
+
+  function splitMixed(text){
+    var segs=[];
+    var cur='',curType='';
+    for(var i=0;i<text.length;i++){
+      var c=text[i];
+      var t;
+      if(isEnglish(c))t='en';
+      else if(isChinese(c))t='zh';
+      else if(c===' ')t='space';
+      else t='punct';
+      if(t!==curType&&cur){segs.push({text:cur,type:curType});cur='';}
+      if(t!=='space')cur+=c;
+      curType=t;
+    }
+    if(cur)segs.push({text:cur,type:curType});
+    return segs;
+  }
+
+  // BPE tokenization (simplified: longest match from merged vocab)
+  function bpeTokenize(word){
+    if(commonWords.has(word.toLowerCase))return [{text:word,type:'full'}];
+    if(word.length<=1)return [{text:word,type:'char'}];
+    var tokens=[];
+    var i=0;
+    var lower=word.toLowerCase;
+    while(i<word.length){
+      var matched=false;
+      for(var len=Math.min(8,word.length-i);len>=1;len--){
+        var sub=lower.substr(i,len);
+        var origSub=word.substr(i,len);
+        if(commonWords.has(sub)||bpeMerges.some(function(m){return m.join('')===sub;})){
+          tokens.push({text:origSub,type:len>2?'sub':'char'});
+          i+=len;matched=true;break;
+        }
+      }
+      if(!matched){
+        tokens.push({text:word[i],type:'char'});
+        i++;
+      }
+    }
+    return tokens;
+  }
+
+  // WordPiece tokenization (add ## for non-word-start)
+  function wordpieceTokenize(word){
+    if(commonWords.has(word.toLowerCase))return [{text:word,type:'full'}];
+    var tokens=[];
+    var i=0;
+    var lower=word.toLowerCase;
+    var isFirst=true;
+    while(i<word.length){
+      var matched=false;
+      for(var len=Math.min(8,word.length-i);len>=1;len--){
+        var sub=lower.substr(i,len);
+        var origSub=word.substr(i,len);
+        if(commonWords.has(sub)||wpMerges.some(function(m){
+          return m.join('').replace(/##/g,'')===sub.replace(/##/g,'');
+        })){
+          tokens.push({text:(!isFirst&&len<word.length?'##':'')+origSub,type:len>2?'sub':'char'});
+          i+=len;matched=true;isFirst=false;break;
+        }
+      }
+      if(!matched){
+        tokens.push({text:(isFirst?'':'##')+word[i],type:'char'});
+        i++;isFirst=false;
+      }
+    }
+    return tokens;
+  }
+
+  // Unigram tokenization (greedy longest match with scoring)
+  function unigramTokenize(word){
+    if(commonWords.has(word))return [{text:word,type:'full'}];
+    var tokens=[];
+    var i=0;
+    while(i<word.length){
+      var best=null,bestLen=1;
+      for(var len=Math.min(6,word.length-i);len>=1;len--){
+        var sub=word.substr(i,len);
+        if(unigramTokens.has(sub)||unigramTokens.has(sub.toLowerCase)){
+          best=sub;bestLen=len;break;
+        }
+      }
+      if(!best)best=word[i];
+      tokens.push({text:best,type:bestLen>2?'sub':'char'});
+      i+=bestLen;
+    }
+    return tokens;
+  }
+
+  function tokenize(text, algo){
+    var segs=splitMixed(text);
+    var result=[];
+    segs.forEach(function(seg){
+      if(seg.type==='en'){
+        var toks;
+        if(algo==='bpe')toks=bpeTokenize(seg.text);
+        else if(algo==='wp')toks=wordpieceTokenize(seg.text);
+        else toks=unigramTokenize(seg.text);
+        result=result.concat(toks);
+      }else if(seg.type==='zh'){
+        // Chinese: try multi-char words, else split into chars
+        var i=0;
+        while(i<seg.text.length){
+          var matched=false;
+          for(var len=Math.min(4,seg.text.length-i);len>=1;len--){
+            var sub=seg.text.substr(i,len);
+            if(commonWords.has(sub)||unigramTokens.has(sub)){
+              result.push({text:sub,type:len>1?'full':'char'});
+              i+=len;matched=true;break;
+            }
+          }
+          if(!matched){result.push({text:seg.text[i],type:'char'});i++;}
+        }
+      }else{
+        result.push({text:seg.text,type:'punct'});
+      }
+    });
+    return result;
+  }
+
+  function renderTokens(containerId, tokens, prefix){
+    var host=document.getElementById(containerId);
+    var html='';
+    tokens.forEach(function(t){
+      var cls='tok ';
+      if(t.type==='full')cls+='tok-1';
+      else if(t.type==='sub')cls+='tok-2';
+      else if(t.type==='char')cls+='tok-single';
+      else cls+='tok-3';
+      html+='<span class="'+cls+'">'+t.text+'</span>';
+    });
+    host.innerHTML=html;
+  }
+
+  function stats(tokens){
+    var total=tokens.length;
+    var fullCount=tokens.filter(function(t){return t.type==='full';}).length;
+    var subCount=tokens.filter(function(t){return t.type==='sub';}).length;
+    var charCount=tokens.filter(function(t){return t.type==='char';}).length;
+    var totalChars=tokens.reduce(function(s,t){return s+t.text.replace(/##/g,'').length;},0);
+    var avgLen=total?totalChars/total:0;
+    var oov=0; // subword tokenizers have ~0 OOV
+    return {total:total,full:fullCount,sub:subCount,ch:charCount,avgLen:avgLen,oov:oov};
+  }
+
+  function renderStats(id, s, color){
+    var el=document.getElementById(id);
+    el.innerHTML=
+      '<div class="stat-row"><span>总词元数</span><span style="color:'+color+'">'+s.total+'</span></div>'+
+      '<div class="stat-row"><span>完整词token</span><span>'+s.full+'</span></div>'+
+      '<div class="stat-row"><span>子词token</span><span>'+s.sub+'</span></div>'+
+      '<div class="stat-row"><span>单字符token</span><span>'+s.ch+'</span></div>'+
+      '<div class="stat-row"><span>平均token长度</span><span>'+s.avgLen.toFixed(2)+' 字/token</span></div>'+
+      '<div class="stat-row"><span>OOV率</span><span style="color:#10a37f">~0%</span></div>';
+  }
+
+  function process{
+    var text=document.getElementById('inputText').value;
+    if(!text.trim)return;
+
+    var bpeToks=tokenize(text,'bpe');
+    var wpToks=tokenize(text,'wp');
+    var uniToks=tokenize(text,'uni');
+
+    renderTokens('bpeArea',bpeToks);
+    renderTokens('wpArea',wpToks);
+    renderTokens('uniArea',uniToks);
+
+    var bpeS=stats(bpeToks),wpS=stats(wpToks),uniS=stats(uniToks);
+    renderStats('bpeStats',bpeS,'#3b6fe0');
+    renderStats('wpStats',wpS,'#7c3aed');
+    renderStats('uniStats',uniS,'#10a37f');
+
+    document.getElementById('cmpBpe').textContent=bpeS.total;
+    document.getElementById('cmpWp').textContent=wpS.total;
+    document.getElementById('cmpUni').textContent=uniS.total;
+    var avgA=(bpeS.avgLen+wpS.avgLen+uniS.avgLen)/3;
+    document.getElementById('cmpAvg').textContent=avgA.toFixed(2);
+
+    var best = [bpeS.total,wpS.total,uniS.total].reduce(function(a,b){return Math.min(a,b);});
+    var hint=document.getElementById('cmpHint');
+    var msg='📊 <b>对比分析：</b>';
+    if(bpeS.total===best)msg+='BPE 切分最紧凑（'+bpeS.total+'个token）；';
+    else if(wpS.total===best)msg+='WordPiece 切分最紧凑（'+wpS.total+'个token）；';
+    else msg+='Unigram 切分最紧凑（'+uniS.total+'个token）；';
+    msg+='三种算法在常见词汇上差异不大，但在罕见词、新词和多语言文本上会表现出不同的切分偏好。平均token长度越长，说明越多完整词被保留，序列越短，推理效率越高。';
+    hint.innerHTML=msg;
+  }
+
+  document.getElementById('inputText').oninput=process;
+  process;
+});
+</script>
+</body>
+</html>

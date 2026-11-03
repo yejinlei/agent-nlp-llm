@@ -249,9 +249,9 @@ $$ P(w_1,w_2,...,w_n) = \prod_{i=1}^n P(w_i | w_{i-N+1},...,w_{i-1}) $$
 <span class="code-keyword">import</span> math
 
 <span class="code-comment"># 训练语料</span>
-corpus = [<span class="code-string">"我 今天 去 超市 买 了 一瓶 可乐"</span>.split(),
-          <span class="code-string">"我 昨天 去 超市 买 了 一瓶 矿泉水"</span>.split(),
-          <span class="code-string">"小明 去 超市 买 了 一袋 薯片"</span>.split()]
+corpus = [<span class="code-string">"我 今天 去 超市 买 了 一瓶 可乐"</span>.split,
+          <span class="code-string">"我 昨天 去 超市 买 了 一瓶 矿泉水"</span>.split,
+          <span class="code-string">"小明 去 超市 买 了 一袋 薯片"</span>.split]
 
 <span class="code-comment"># 统计Bigram计数</span>
 counts = defaultdict(lambda: defaultdict(int))
@@ -267,7 +267,7 @@ unigram = defaultdict(int)
     total = unigram[prev_word] + vocab_size
     <span class="code-keyword">for</span> w <span class="code-keyword">in</span> counts[prev_word]:
         probs[w] = (counts[prev_word][w] + 1) / total
-    <span class="code-keyword">return</span> sorted(probs.items(), key=lambda x:-x[1])
+    <span class="code-keyword">return</span> sorted(probs.items, key=lambda x:-x[1])
 
 <span class="code-comment"># 测试："买了"后面接什么</span>
 print(predict_next(<span class="code-string">"了"</span>))  
@@ -365,7 +365,7 @@ trans_p = {<span class="code-string">'B'</span>:{<span class="code-string">'E'</
             new_path[s] = path[prev_st] + [s]
         path = new_path
     <span class="code-comment"># 回溯最优路径</span>
-    best_prob = max(delta[T-1].values())
+    best_prob = max(delta[T-1].values)
     best_state = max(delta[T-1], key=delta[T-1].get)
     <span class="code-keyword">return</span> path[best_state]
 
@@ -486,7 +486,7 @@ $$ h_t = o_t * \tanh(C_t) \quad \text{输出} $$
 
 <span class="code-keyword">class</span> LSTMCell(nn.Module):
     <span class="code-keyword">def</span> __init__(self, input_size, hidden_size):
-        super().__init__()
+        super.__init__
         self.hidden_size = hidden_size
         <span class="code-comment"># 四个门的权重合并成一个矩阵，一次计算完</span>
         self.W = nn.Linear(input_size + hidden_size, 4*hidden_size)
@@ -552,7 +552,7 @@ $$ \text{Attention}(Q,K,V) = \text{Softmax}\left( \frac{QK^T}{\sqrt{d_k}} \right
 
 <span class="code-keyword">class</span> ScaledDotProductAttention(nn.Module):
     <span class="code-keyword">def</span> __init__(self, d_k):
-        super().__init__()
+        super.__init__
         self.d_k = d_k
     
     <span class="code-keyword">def</span> forward(self, Q, K, V, mask=None):
@@ -653,7 +653,7 @@ $$ PE_{(pos,2i)} = \sin\left( \frac{pos}{10000^{2i/d_{model}}} \right), \quad PE
 
 <span class="code-keyword">class</span> MultiHeadAttention(nn.Module):
     <span class="code-keyword">def</span> __init__(self, d_model, n_heads):
-        super().__init__()
+        super.__init__
         self.d_model = d_model
         self.n_heads = n_heads
         self.d_k = d_model // n_heads
@@ -670,15 +670,15 @@ $$ PE_{(pos,2i)} = \sin\left( \frac{pos}{10000^{2i/d_{model}}} \right), \quad PE
         scores = q @ k.transpose(-2,-1) / (self.d_k**0.5)
         <span class="code-keyword">if</span> mask <span class="code-keyword">is not None</span>: scores = scores.masked_fill(mask==0, -1e9)
         attn = F.softmax(scores, dim=-1)
-        out = (attn @ v).transpose(1,2).contiguous().view(B,T,C)
+        out = (attn @ v).transpose(1,2).contiguous.view(B,T,C)
         <span class="code-keyword">return</span> self.W_o(out)
 
 <span class="code-keyword">class</span> EncoderBlock(nn.Module):
     <span class="code-keyword">def</span> __init__(self, d_model, n_heads, d_ff):
-        super().__init__()
+        super.__init__
         self.attn = MultiHeadAttention(d_model, n_heads)
         self.norm1 = nn.LayerNorm(d_model)
-        self.ffn = nn.Sequential(nn.Linear(d_model, d_ff), nn.ReLU(), nn.Linear(d_ff, d_model))
+        self.ffn = nn.Sequential(nn.Linear(d_model, d_ff), nn.ReLU, nn.Linear(d_ff, d_model))
         self.norm2 = nn.LayerNorm(d_model)
     
     <span class="code-keyword">def</span> forward(self, x, mask=None):
@@ -783,14 +783,14 @@ $$ PE_{(pos,2i)} = \sin\left( \frac{pos}{10000^{2i/d_{model}}} \right), \quad PE
 </div>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function {
   renderMathInElement(document.body, {delimiters:[{left:"$$",right:"$$",display:true},{left:"$",right:"$",display:false}]});
   
   // 分词Demo
   const segInput = document.getElementById('seg-input');
   const segBtn = document.getElementById('seg-run');
   const segResult = document.getElementById('seg-result');
-  function doSeg() {
+  function doSeg {
     const text = segInput.value;
     const chars = Array.from(text);
     const unigram = chars.join(' | ');
@@ -812,7 +812,7 @@ document.addEventListener('DOMContentLoaded', function() {
     segResult.innerHTML = `单字分词: ${unigram}\n\n最大匹配分词: ${mm.join(' | ')}\n\n(HMM分词结果: ${hmm.join(' | ')})`;
   }
   segBtn.addEventListener('click', doSeg);
-  doSeg();
+  doSeg;
 
   // Viterbi Demo
   const vCanvas = document.getElementById('viterbi-canvas');
@@ -824,7 +824,7 @@ document.addEventListener('DOMContentLoaded', function() {
   const states = ['B','M','E','S'];
   const colors = ['#3b82f6','#10b981','#f59e0b','#8b5cf6'];
   
-  function drawViterbi() {
+  function drawViterbi {
     const ctx = vCanvas.getContext('2d');
     const w = vCanvas.width = vCanvas.offsetWidth;
     const h = vCanvas.height = 250;
@@ -855,10 +855,10 @@ document.addEventListener('DOMContentLoaded', function() {
         let ps = states.indexOf(path[t-1]);
         ctx.strokeStyle = '#ef4444';
         ctx.lineWidth=2;
-        ctx.beginPath();
+        ctx.beginPath;
         ctx.moveTo(t*cellW + cellW-10, 40+ps*cellH + cellH/2);
         ctx.lineTo((t+1)*cellW, 40+s*cellH + cellH/2);
-        ctx.stroke();
+        ctx.stroke;
       }
     }
     if(step >= sent.length) {
@@ -867,22 +867,22 @@ document.addEventListener('DOMContentLoaded', function() {
       vResult.textContent = `第${step+1}步：处理"${sent[step]}"，计算到每个状态的最大概率...`;
     }
   }
-  vStepBtn.addEventListener('click', ()=>{ if(step<sent.length) step++; drawViterbi(); });
-  vResetBtn.addEventListener('click', ()=>{ step=0; drawViterbi(); });
-  drawViterbi();
+  vStepBtn.addEventListener('click', =>{ if(step<sent.length) step++; drawViterbi; });
+  vResetBtn.addEventListener('click', =>{ step=0; drawViterbi; });
+  drawViterbi;
 });
 
 function copyCode(btn) {
   const code = btn.nextElementSibling.textContent;
   navigator.clipboard.writeText(code);
   btn.textContent='已复制';
-  setTimeout(()=>btn.textContent='复制', 2000);
+  setTimeout(=>btn.textContent='复制', 2000);
 }
 
 // 侧边栏高亮
 const sections = document.querySelectorAll('.section');
 const tocLinks = document.querySelectorAll('#toc a');
-window.addEventListener('scroll', () => {
+window.addEventListener('scroll',  => {
   let current = '';
   sections.forEach(sec => {
     if(scrollY >= sec.offsetTop - 100) current = sec.id;

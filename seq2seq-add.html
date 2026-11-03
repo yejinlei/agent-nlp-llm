@@ -102,8 +102,8 @@ function encodeA(s){return s.split('').map(c=>c2i[c]);}
 function genData(N){
   const data=[];
   for(let k=0;k<N;k++){
-    const a=Math.floor(Math.random()*100);
-    const b=Math.floor(Math.random()*100);
+    const a=Math.floor(Math.random*100);
+    const b=Math.floor(Math.random*100);
     let q=`${a}+${b}`;
     while(q.length<5)q=q+' ';
     data.push({q,a:String(a+b).padStart(3,'0')});
@@ -115,13 +115,13 @@ function genData(N){
 function makeModel(useReverse,usePeeky,H){
   // 特征：输入 one-hot 的和（baseline）或逆序加权和（reverse）或加上每个位置的 peek（peeky）
   const W=[]; // 3 个时间步的输出权重 (每个dec步有自己的W)
-  for(let t=0;t<3;t++)W.push(Array.from({length:H},()=>(Math.random()-.5)*.1));
+  for(let t=0;t<3;t++)W.push(Array.from({length:H},=>(Math.random-.5)*.1));
   return{useReverse,usePeeky,H,W,trainAcc:0,hist:[],pred:null};
 }
 
 function featurize(q,m){
   let ids=encodeQ(q);
-  if(m.useReverse)ids=ids.slice().reverse(); // // 简单 bag-of-char + 位置编码
+  if(m.useReverse)ids=ids.slice.reverse; // // 简单 bag-of-char + 位置编码
   const feat=new Array(m.H).fill(0);
   ids.forEach((id,pos)=>{
     for(let k=0;k<m.H;k++){
@@ -194,28 +194,28 @@ function drawChart(histories){
   const W=cv.width,H=cv.height;
   ctx.clearRect(0,0,W,H);
   ctx.strokeStyle='#e2e8f0';ctx.lineWidth=1;
-  for(let i=0;i<=5;i++){ctx.beginPath();ctx.moveTo(40,i*(H-40)/5+10);ctx.lineTo(W-10,i*(H-40)/5+10);ctx.stroke();}
+  for(let i=0;i<=5;i++){ctx.beginPath;ctx.moveTo(40,i*(H-40)/5+10);ctx.lineTo(W-10,i*(H-40)/5+10);ctx.stroke;}
   ctx.strokeStyle='#64748b';
-  ctx.beginPath();ctx.moveTo(40,H-30);ctx.lineTo(W-10,H-30);ctx.moveTo(40,10);ctx.lineTo(40,H-30);ctx.stroke();
+  ctx.beginPath;ctx.moveTo(40,H-30);ctx.lineTo(W-10,H-30);ctx.moveTo(40,10);ctx.lineTo(40,H-30);ctx.stroke;
   ctx.fillStyle='#475569';ctx.font='11px sans-serif';
   ctx.fillText('loss/err',5,15);ctx.fillText('epoch',W-40,H-15);
 
   const colors=['#94a3b8','#3b82f6','#10b981'];
   const names=['Baseline','Reverse','Peeky'];
   histories.forEach((h,i)=>{
-    ctx.strokeStyle=colors[i];ctx.lineWidth=2;ctx.beginPath();
+    ctx.strokeStyle=colors[i];ctx.lineWidth=2;ctx.beginPath;
     h.forEach((v,k)=>{
       const x=40+k/(h.length-1)*(W-50);
       const y=H-30-v*(H-40);
       if(k===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);
     });
-    ctx.stroke();
+    ctx.stroke;
     ctx.fillStyle=colors[i];
     ctx.fillText(names[i]+' final:'+(h[h.length-1]*100).toFixed(1)+'% acc',W-150,20+i*14);
   });
 }
 
-async function run(){
+async function run{
   const btn=document.getElementById('btn');btn.disabled=true;btn.textContent='训练中…';
   const N=+document.getElementById('ns').value;
   const epochs=+document.getElementById('es').value;
@@ -231,7 +231,7 @@ async function run(){
     makeModel(doRev,false,H),
     makeModel(doRev,doPeek,H)
   ];
-  const hists=models.map(()=>[]);
+  const hists=models.map(=>[]);
   for(let ep=0;ep<epochs;ep++){
     models.forEach((m,i)=>{
       const acc=trainOne(m,data,lr);
@@ -252,7 +252,7 @@ async function run(){
     const n=['Baseline','Reverse','Peeky'][i];
     const c=['#94a3b8','#3b82f6','#10b981'][i];
     return `<div style="margin:10px 0"><b style="color:${c}">${n}</b>：`+
-      e.samples.slice(0,6).map(s=>`<span class="ex-box"><span class="q">${s.q.trim()}</span>=<span class="${s.ok?'a':'w'}">${s.pred}</span><span style="color:#94a3b8;font-size:11px">(${s.a})</span></span>`).join('')
+      e.samples.slice(0,6).map(s=>`<span class="ex-box"><span class="q">${s.q.trim}</span>=<span class="${s.ok?'a':'w'}">${s.pred}</span><span style="color:#94a3b8;font-size:11px">(${s.a})</span></span>`).join('')
       +`</div>`;
   }).join('');
   btn.disabled=false;btn.textContent='▶ 重新训练';
@@ -265,7 +265,7 @@ document.getElementById('btn').onclick=run;
   };
 });
 document.getElementById('ls').oninput=e=>{document.getElementById('lv').textContent=Math.pow(10,+e.target.value).toFixed(3);};
-window.addEventListener('load',()=>{
+window.addEventListener('load',=>{
   document.getElementById('ns').dispatchEvent(new Event('input'));
   document.getElementById('es').dispatchEvent(new Event('input'));
   document.getElementById('hs').dispatchEvent(new Event('input'));

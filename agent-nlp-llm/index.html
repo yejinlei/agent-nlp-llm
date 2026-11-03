@@ -360,8 +360,7 @@ td { padding:1rem; border-top:1px solid #e2e8f0; color:#475569; }
    ├─ 知识增强：RAG检索增强生成
    ├─ 智能体：Agent工具调用、多Agent协作
    ├─ 长上下文：RoPE/YaRN/NTK插值、RingAttention
-   └─ 部署优化：量化(GPTQ/AWQ/FP8)、推理加速(vLLM/TensorRT-LLM)、端侧部署
-</div>
+   └─ 部署优化：量化(GPTQ/AWQ/F</div>
 </section>
 
 <section class="section" id="read-path">
@@ -727,7 +726,7 @@ pip install numpy torch
 <script>
 // 路由
 // 单页路由锚点跳转，所有新模块在首页内定位，不刷新页面
-function route() {
+function route {
   const hash = location.hash || '#/';
   // NLP和LLM跳转到子页面，其他模块在首页锚点定位
   if (hash === '#/nlp') {
@@ -752,7 +751,7 @@ function route() {
   const targetId = routeMap[hash] || hash.replace('#/', '');
   const targetEl = document.getElementById(targetId);
   if (targetEl) {
-    setTimeout(() => targetEl.scrollIntoView({behavior: 'smooth', block: 'start'}), 50);
+    setTimeout( => targetEl.scrollIntoView({behavior: 'smooth', block: 'start'}), 50);
   }
   // 更新导航高亮
   document.querySelectorAll('.nav-links a').forEach(a => {
@@ -768,7 +767,7 @@ window.addEventListener('hashchange', route);
 window.addEventListener('load', route);
 
 // 公式渲染
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function {
   renderMathInElement(document.body, { delimiters: [{left: "$$", right: "$$", display: true}, {left: "$", right: "$", display: false}] });
   
   // BPE分词演示
@@ -777,10 +776,10 @@ document.addEventListener('DOMContentLoaded', function() {
   const bpeResult = document.getElementById('bpe-result');
   const bpeDiag = document.getElementById('bpe-diag');
   const corpus = ['abab','abab','abc','ac','ab'];
-  function updateBPE() {
+  function updateBPE {
     const step = parseInt(bpeSlider.value);
     bpeVal.textContent = step;
-    let vocab = new Set();
+    let vocab = new Set;
     corpus.forEach(w => w.split('').forEach(c => vocab.add(c)));
     let tokens = corpus.map(w => w.split(''));
     let merges = [];
@@ -835,14 +834,14 @@ document.addEventListener('DOMContentLoaded', function() {
     bpeDiag.innerHTML = svg;
   }
   bpeSlider.addEventListener('input', updateBPE);
-  updateBPE();
+  updateBPE;
 
   // N-gram滑块
   const nSlider = document.getElementById('ngram-n');
   const nVal = document.getElementById('ngram-n-val');
   const nFormula = document.getElementById('ngram-formula');
   const nDiag = document.getElementById('ngram-window-diag');
-  function updateNgram() {
+  function updateNgram {
     const n = parseInt(nSlider.value);
     nVal.textContent = n;
     let formula = `$$ P(w_i | w_1 ... w_{i-1}) \\approx P(w_i | w_{i-${n-1}} ... w_{i-1}) $$`;
@@ -864,14 +863,14 @@ document.addEventListener('DOMContentLoaded', function() {
     nDiag.innerHTML = svg;
   }
   nSlider.addEventListener('input', updateNgram);
-  updateNgram();
+  updateNgram;
 
   // 注意力热力图
   const attnCanvas = document.getElementById('attn-canvas');
   const attnInput = document.getElementById('attn-input');
   const attnBtn = document.getElementById('attn-run');
-  function drawAttention() {
-    const text = attnInput.value.trim();
+  function drawAttention {
+    const text = attnInput.value.trim;
     const chars = text.split(/\s+/).filter(c=>c);
     const n = chars.length;
     if(n===0) return;
@@ -883,9 +882,9 @@ document.addEventListener('DOMContentLoaded', function() {
     // 模拟注意力权重（简化版本，相似度+指代规则）
     for(let i=0; i<n; i++) {
       for(let j=0; j<n; j++) {
-        let sim = 0.08 + Math.random()*0.25;
+        let sim = 0.08 + Math.random*0.25;
         // 自注意力高一点
-        if(i===j) sim = 0.4 + Math.random()*0.2;
+        if(i===j) sim = 0.4 + Math.random*0.2;
         // 邻近词高一点
         if(Math.abs(i-j) <= 2 && i!==j) sim += 0.15;
         // 简化因果mask：不能看未来
@@ -893,7 +892,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // 指代规则（简化）
         if(['他','她','它'].includes(chars[i])) {
           for(let k=0; k<i; k++) {
-            if(['小明','小红','狗','我','你'].includes(chars[k])) sim = Math.max(sim, 0.6 + Math.random()*0.2);
+            if(['小明','小红','狗','我','你'].includes(chars[k])) sim = Math.max(sim, 0.6 + Math.random*0.2);
           }
         }
         sim = Math.min(0.95, Math.max(0.05, sim));
@@ -910,14 +909,14 @@ document.addEventListener('DOMContentLoaded', function() {
   }
   attnBtn.addEventListener('click', drawAttention);
   window.addEventListener('resize', drawAttention);
-  drawAttention();
+  drawAttention;
 
   // Scaling Law曲线
   const scaleCanvas = document.getElementById('scale-canvas');
   const scaleSlider = document.getElementById('scale-param');
   const scaleVal = document.getElementById('scale-param-val');
   const scaleResult = document.getElementById('scale-result');
-  function drawScale() {
+  function drawScale {
     const param = parseFloat(scaleSlider.value);
     scaleVal.textContent = param.toFixed(1);
     const ctx = scaleCanvas.getContext('2d');
@@ -927,15 +926,15 @@ document.addEventListener('DOMContentLoaded', function() {
     // 坐标轴
     ctx.strokeStyle = '#cbd5e1';
     ctx.lineWidth = 1;
-    ctx.beginPath(); ctx.moveTo(40, h-30); ctx.lineTo(w-20, h-30); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(40, 20); ctx.lineTo(40, h-30); ctx.stroke();
+    ctx.beginPath; ctx.moveTo(40, h-30); ctx.lineTo(w-20, h-30); ctx.stroke;
+    ctx.beginPath; ctx.moveTo(40, 20); ctx.lineTo(40, h-30); ctx.stroke;
     ctx.fillStyle = '#64748b'; ctx.font = '11px sans-serif';
     ctx.fillText('Loss', 10, 25);
     ctx.fillText('参数量(B)', w-60, h-10);
     // 曲线 L ~ 8/(N^0.3) 幂律
     ctx.strokeStyle = '#7c3aed';
     ctx.lineWidth = 3;
-    ctx.beginPath();
+    ctx.beginPath;
     for(let i=0; i<w-60; i++) {
       let p = 0.1 + i/(w-60)*100;
       let l = 8 / Math.pow(p, 0.3);
@@ -943,18 +942,18 @@ document.addEventListener('DOMContentLoaded', function() {
       let y = h-30 - (l/10)*(h-50);
       if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
     }
-    ctx.stroke();
+    ctx.stroke;
     // 当前点
     let l = 8 / Math.pow(param, 0.3);
     let x = 40 + ((param - 0.1)/99.9)*(w-60);
     let y = h-30 - (l/10)*(h-50);
     ctx.fillStyle = '#ef4444';
-    ctx.beginPath(); ctx.arc(x,y,7,0,Math.PI*2); ctx.fill();
+    ctx.beginPath; ctx.arc(x,y,7,0,Math.PI*2); ctx.fill;
     // 涌现阈值 10B
     let x10 = 40 + ((10-0.1)/99.9)*(w-60);
     ctx.strokeStyle = '#f59e0b';
     ctx.setLineDash([5,5]);
-    ctx.beginPath(); ctx.moveTo(x10, 20); ctx.lineTo(x10, h-30); ctx.stroke();
+    ctx.beginPath; ctx.moveTo(x10, 20); ctx.lineTo(x10, h-30); ctx.stroke;
     ctx.fillStyle = '#f59e0b';
     ctx.font = '12px sans-serif';
     ctx.fillText('~10B 能力涌现阈值', x10+5, 35);
@@ -967,7 +966,7 @@ document.addEventListener('DOMContentLoaded', function() {
   }
   scaleSlider.addEventListener('input', drawScale);
   window.addEventListener('resize', drawScale);
-  drawScale();
+  drawScale;
 });
 
 // 复制代码
@@ -975,13 +974,13 @@ function copyCode(btn) {
   const code = btn.nextElementSibling.textContent;
   navigator.clipboard.writeText(code);
   btn.textContent = '已复制';
-  setTimeout(()=>btn.textContent='复制', 2000);
+  setTimeout(=>btn.textContent='复制', 2000);
 }
 
 // 侧边栏高亮
 const sections = document.querySelectorAll('.section');
 const tocLinks = document.querySelectorAll('#toc a');
-window.addEventListener('scroll', () => {
+window.addEventListener('scroll',  => {
   let current = '';
   sections.forEach(sec => {
     const top = sec.offsetTop;

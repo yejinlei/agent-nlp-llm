@@ -43,8 +43,8 @@ h4 { margin-top: 20px; margin-bottom: 12px; color: #6b21a8; }
 <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
 <script>
-(function(){
-  function render(){
+(function{
+  function render{
     if(typeof renderMathInElement !== 'function') return false;
     try{
       renderMathInElement(document.body,{
@@ -60,16 +60,16 @@ h4 { margin-top: 20px; margin-bottom: 12px; color: #6b21a8; }
     }catch(e){console.warn('katex render error',e)}
     return true;
   }
-  function go(){ if(render()) return; setTimeout(go,200); }
-  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',go); else go();
-  window.addEventListener('load',function(){render(); setTimeout(render,500); setTimeout(render,1500)});
+  function go{ if(render) return; setTimeout(go,200); }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',go); else go;
+  window.addEventListener('load',function{render; setTimeout(render,500); setTimeout(render,1500)});
   if(window.MutationObserver){
     var t=null;
-    new MutationObserver(function(){ clearTimeout(t); t=setTimeout(render,200); })
+    new MutationObserver(function{ clearTimeout(t); t=setTimeout(render,200); })
       .observe(document.documentElement,{childList:true,subtree:true});
   }
   window.__katexRender = render;
-})();
+});
 </script>
 </head>
 <body>
@@ -164,8 +164,8 @@ h4 { margin-top: 20px; margin-bottom: 12px; color: #6b21a8; }
       <p class="text-sm text-gray-600 mb-4">BPE通过反复合并语料中最常见的字节对构建词表。点击按钮看BPE合并过程。</p>
       <div class="flex gap-2 mb-4">
         <input type="text" id="bpeInput" value="low lower lowest new newer newest" class="flex-1 px-3 py-2 border border-gray-300 rounded-lg">
-        <button onclick="runBPE()" class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700">▶ 运行BPE合并</button>
-        <button onclick="resetBPE()" class="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600">🔄 重置</button>
+        <button onclick="runBPE" class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700">▶ 运行BPE合并</button>
+        <button onclick="resetBPE" class="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600">🔄 重置</button>
       </div>
       <canvas id="bpeCanvas"></canvas>
       <div id="bpeResult" class="mt-4 p-3 bg-white rounded-lg border border-purple-200 font-mono text-sm"></div>
@@ -215,9 +215,9 @@ h4 { margin-top: 20px; margin-bottom: 12px; color: #6b21a8; }
     <pre class="code"><code class="language-python">import torch, torch.nn as nn
 
 class CausalSelfAttention(nn.Module):
-    """第3章的单头实现，seq_len 每步只能看见自己及之前的 token"""
+    """，seq_len 每步只能看见自己及之前的 token"""
     def __init__(self, d_in, d_out, context_length, dropout, qkv_bias=False):
-        super().__init__()
+        super.__init__
         self.d_out = d_out
         self.W_query = nn.Linear(d_in, d_out, bias=qkv_bias)  # 我要找什么
         self.W_key   = nn.Linear(d_in, d_out, bias=qkv_bias)  # 我能给什么
@@ -231,7 +231,7 @@ class CausalSelfAttention(nn.Module):
         q, k, v = self.W_query(x), self.W_key(x), self.W_value(x)
 
         attn_scores = q @ k.transpose(1, 2)                # (B, T, T)
-        attn_scores.masked_fill_(self.mask.bool()[:num_tokens,:num_tokens], -torch.inf)
+        attn_scores.masked_fill_(self.mask.bool[:num_tokens,:num_tokens], -torch.inf)
         attn_weights = torch.softmax(attn_scores / k.shape[-1]**0.5, dim=-1)
         return attn_weights @ v        # (B, T, d_out)
 
@@ -244,7 +244,7 @@ print(CausalSelfAttention(4, 4, 3, 0.0)(x).shape)   # torch.Size([2, 3, 4])</cod
     <h4>🧩 GELU：为什么大模型抛弃了 ReLU</h4>
     <p class="text-gray-600 mb-3">里 GPT 的 FFN 层用的是 <b>GELU（高斯误差线性单元）</b> 而不是 ReLU。ReLU 在负半轴直接归零，梯度在 0 处不光滑、容易让神经元"死掉"；GELU 用一个平滑的门控曲线给小负值留一条小通路，梯度更稳、表达更细腻。近似写法：</p>
     <pre class="code"><code class="language-python">class GELU(nn.Module):
-    """第4章的 tanh 近似实现，和官方精确版本数值误差 < 1e-3"""
+    """，和官方精确版本数值误差 < 1e-3"""
     def forward(self, x):
         return 0.5 * x * (1.0 + torch.tanh(
             torch.sqrt(torch.tensor(2.0 / torch.pi)) *
@@ -254,10 +254,10 @@ print(CausalSelfAttention(4, 4, 3, 0.0)(x).shape)   # torch.Size([2, 3, 4])</cod
 class FeedForward(nn.Module):
     """Transformer 块里的 FFN：先升维到 4x，再降回原维度"""
     def __init__(self, cfg):
-        super().__init__()
+        super.__init__
         self.layers = nn.Sequential(
             nn.Linear(cfg['emb_dim'], 4 * cfg['emb_dim']),
-            GELU(),
+            GELU,
             nn.Linear(4 * cfg['emb_dim'], cfg['emb_dim']),
         )
     def forward(self, x):
@@ -271,23 +271,12 @@ class FeedForward(nn.Module):
     </div>
     <p class="text-gray-600 mb-3">为什么 NLP 偏爱 LayerNorm？因为文本序列长度不一、batch 里样本差异大，BatchNorm 的统计量会剧烈抖动；而 LayerNorm 对每个样本独立计算，<b>天然不受 batch 大小和序列长度影响</b>，训练和推理行为也一致（这点对在线生成至关重要）。</p>
     <pre class="code"><code class="language-python">class LayerNorm(nn.Module):
-    """第4章：沿最后一维(feature)做归一化"""
-    def __init__(self, emb_dim, eps=1e-5):
-        super().__init__()
-        self.eps = eps
-        self.scale = nn.Parameter(torch.ones(emb_dim))   # γ
-        self.shift = nn.Parameter(torch.zeros(emb_dim))  # β
-
-    def forward(self, x):
-        mean = x.mean(dim=-1, keepdim=True)
-        var  = x.var(dim=-1, keepdim=True, unbiased=False)
-        norm = (x - mean) / torch.sqrt(var + self.eps)
-        return self.scale * norm + self.shift</code></pre>
+    """</code></pre>
 
     <h4>🪟 滑动窗口采样：训练数据是怎么"切"出来的</h4>
     <p class="text-gray-600 mb-3">语言模型训练时，输入和标签是<b>同一段文本错开一位</b>得到的。给定长文本，用一个长度为 <span class="mono">max_length</span> 的窗口滑动取样：</p>
     <pre class="code"><code class="language-python">def create_dataloader(txt, max_length=4, stride=1):
-    """第2章：输入=当前窗口，标签=窗口向右错一位"""
+    """，标签=窗口向右错一位"""
     input_ids = tokenizer.encode(txt)
     for i in range(0, len(input_ids) - max_length, stride):
         yield (input_ids[i : i + max_length],       # 输入
@@ -311,19 +300,10 @@ class FeedForward(nn.Module):
       <div class="callout-note">PPL 可以直观理解为"模型在每一步平均在多少个候选词之间犹豫"。PPL = 10 意味着模型大概在 10 个词里做选择。</div>
     </div>
     <pre class="code"><code class="language-python">def calc_loss_batch(input_batch, target_batch, model, device):
-    """第5章的损失计算：输入和标签只错开一个位置"""
-    input_batch, target_batch = input_batch.to(device), target_batch.to(device)
-    logits = model(input_batch)                      # (B, T, vocab)
-    return torch.nn.functional.cross_entropy(
-        logits.flatten(0, 1), target_batch.flatten() # 拉平成 (B*T, vocab) vs (B*T,)
-    )
-
-# 困惑度 = exp(平均损失)
-loss = 3.2
-print(f'Loss={loss}, PPL={torch.exp(torch.tensor(loss)).item():.1f}')  # PPL=24.5</code></pre>
+    """</code></pre>
 
     <h4>🎲 生成时的"调味料"：温度与 top-k 采样</h4>
-    <p class="text-gray-600 mb-3">同一个模型，换个采样策略，输出的风格天差地别——这正是第5章 <code>generate</code> 函数的核心：</p>
+    <p class="text-gray-600 mb-3">同一个模型，换个采样策略，输出的风格天差地别——这正是<code>generate</code> 函数的核心：</p>
     <div class="grid grid-cols-2 gap-4 mb-4">
       <div class="card bg-orange-50 border-orange-200">
         <h5 class="font-bold text-orange-800">🌡️ 温度 Temperature</h5>
@@ -345,10 +325,10 @@ print(f'Loss={loss}, PPL={torch.exp(torch.tensor(loss)).item():.1f}')  # PPL=24.
       </div>
     </div>
     <pre class="code"><code class="language-python">def generate(model, idx, max_new_tokens, context_size, temperature=0.0, top_k=None):
-    """第5章：自回归逐词生成，temperature 与 top_k 二选一或组合"""
+    """，temperature 与 top_k 二选一或组合"""
     for _ in range(max_new_tokens):
         idx_cond = idx[:, -context_size:]                   # 裁到上下文长度
-        with torch.no_grad():
+        with torch.no_grad:
             logits = model(idx_cond)[:, -1, :]              # 只取最后一个位置的分布
 
         if top_k is not None:                               # ① 长尾截断
@@ -374,7 +354,7 @@ print(f'Loss={loss}, PPL={torch.exp(torch.tensor(loss)).item():.1f}')  # PPL=24.
     <p class="text-gray-700 mb-4">SFT（Supervised Fine-Tuning）是让模型"听懂人话"的第一步：用高质量的"指令-回答"对微调模型，教它按照人类指令输出格式回答问题，而不是继续续写。</p>
     <p class="text-gray-600 mb-4">SFT数据不需要太多，几万到几十万条高质量指令数据就够了，质量远比数量重要。现在开源社区有大量高质量SFT数据集（Alpaca、ShareGPT、UltraChat等）。</p>
 
-    <h4>🍽️ 第6章实战：分类微调——让 GPT 识别垃圾短信</h4>
+    <h4>🍽️</h4>
     <p class="text-gray-600 mb-3">微调不止能"对话"，还能把 GPT 改造成一个<b>分类器</b>（比如判断短信是不是垃圾邮件）。做法只改两处：</p>
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
       <div class="p-4 bg-blue-50 rounded-lg border border-blue-200">
@@ -387,40 +367,19 @@ print(f'Loss={loss}, PPL={torch.exp(torch.tensor(loss)).item():.1f}')  # PPL=24.
       </div>
     </div>
     <pre class="code"><code class="language-python">class SpamClassifier(nn.Module):
-    """第6章：GPT 改造为二分类器"""
-    def __init__(self, cfg):
-        super().__init__()
-        self.gpt = GPTModel(cfg)                 # 预训练好的 GPT 主干
-        self.gpt.out_head = nn.Linear(cfg['emb_dim'], 2)  # 换成 2 类输出头
-
-    def forward(self, token_ids):
-        x = self.gpt(token_ids)
-        return x[:, -1, :]      # 只取最后一个 token 的表示 → 分类依据
-
-# 微调时通常冻结部分层、只训输出头和靠后几层
-for p in classifier.gpt.parameters():
-    p.requires_grad = False
-for p in classifier.gpt.out_head.parameters():
-    p.requires_grad = True   # 只训练新加的分类头</code></pre>
+    """</code></pre>
     <div class="callout callout-info">
       <div class="callout-line">在的垃圾短信数据集上，微调后准确率可达 97% 以上，而完全没微调的 GPT 只能瞎猜（约 50%）。</div>
       <div class="callout-note">关键技巧：<b>微调时其实只需要训练最后几层</b>，前面的层已经学会了通用的语言特征，冻住它们既省算力又防过拟合。</div>
     </div>
 
-    <h4>💬 第7章实战：指令微调——从"接话茬"到"听人话"</h4>
+    <h4>💬</h4>
     <p class="text-gray-600 mb-3">基座模型只会续写。要让它回答问题，得用"指令-回答"数据微调。数据格式有讲究，每个样本是一条结构化的对话：</p>
-    <pre class="code"><code class="language-python"># 第7章的指令数据格式（Alpaca 风格）
-data = {
-    "instruction": "把下面这句话翻译成英文",
-    "input": "今天天气真好",
-    "output": "The weather is really nice today."
-}
-
-# 训练时：只对"回答"部分计算损失，指令部分不监督！
+    <pre class="code"><code class="language-python">#，指令部分不监督！
 def instruction_loss(logits, target_ids, response_start):
     # target 里指令部分的标签设为 -100（ignore_index），不参与 loss
     logits = logits[..., :-1, :].flatten(0, 1)
-    target = target_ids[..., 1:].flatten()
+    target = target_ids[..., 1:].flatten
     return torch.nn.functional.cross_entropy(logits, target, ignore_index=-100)</code></pre>
     <div class="callout callout-info">
       <div class="callout-line">为什么要 mask 掉指令部分？因为我们要模型学会"看到指令→产出回答"的映射，而不是去背诵指令本身。</div>
@@ -431,9 +390,9 @@ def instruction_loss(logits, target_ids, response_start):
     <div class="table-wrap overflow-x-auto">
       <table class="w-full">
         <tr><th>阶段</th><th>数据</th><th>目标</th><th>对应章节</th></tr>
-        <tr><td>预训练</td><td>无标签互联网文本</td><td>学会语言与世界知识</td><td>第5章</td></tr>
-        <tr><td>分类微调</td><td>带标签的分类数据</td><td>学会特定判断任务</td><td>第6章</td></tr>
-        <tr><td>指令微调</td><td>指令-回答对</td><td>学会听懂并执行指令</td><td>第7章</td></tr>
+        <tr><td>预训练</td><td>无标签互联网文本</td><td>学会语言与世界知识</td><td></td></tr>
+        <tr><td>分类微调</td><td>带标签的分类数据</td><td>学会特定判断任务</td><td></td></tr>
+        <tr><td>指令微调</td><td>指令-回答对</td><td>学会听懂并执行指令</td><td></td></tr>
       </table>
     </div>
   </section>
@@ -470,7 +429,7 @@ def instruction_loss(logits, target_ids, response_start):
 <pre><code class="language-python"># LoRA 从零实现核心代码（简化版）
 class LoRALayer(nn.Module):
     def __init__(self, base_layer, rank=8, alpha=16):
-        super().__init__()
+        super.__init__
         self.base_layer = base_layer
         d, k = base_layer.weight.shape
         self.lora_A = nn.Parameter(torch.randn(rank, k) * 0.01)
@@ -568,12 +527,12 @@ result = qa_chain.run("公司年假有多少天？")</code></pre>
   <!-- 量化部署 -->
   <section id="quantize">
     <h2 class="text-3xl font-bold">📦 量化与部署</h2>
-    <p class="text-gray-700 mb-4">大模型默认用FP16精度，7B模型就要14GB显存，根本没法在普通电脑跑。量化就是降低权重精度（FP16→INT8→INT4），大幅降低显存需求和推理速度，精度损失很小。</p>
+    <p class="text-gray-700 mb-4">大模型默认用F，7B模型就要14GB显存，根本没法在普通电脑跑。量化就是降低权重精度（F，大幅降低显存需求和推理速度，精度损失很小。</p>
 
     <h4>量化技术对比</h4>
     <table>
       <tr><th>量化方案</th><th>精度</th><th>7B显存需求</th><th>精度损失</th><th>速度</th></tr>
-      <tr><td>FP16 半精度</td><td>16bit</td><td>14GB</td><td>无</td><td>基准</td></tr>
+      <tr><td>F</td><td>16bit</td><td>14GB</td><td>无</td><td>基准</td></tr>
       <tr><td>INT8 量化</td><td>8bit</td><td>7GB</td><td>极小</td><td>1.5-2倍</td></tr>
       <tr><td>GPTQ/AWQ</td><td>4bit</td><td>3.5-4GB</td><td>很小</td><td>3-4倍</td></tr>
       <tr><td>GGUF (llama.cpp)</td><td>4bit</td><td>3.5-4GB</td><td>很小</td><td>CPU也能跑</td></tr>
@@ -617,7 +576,7 @@ python -m vllm.entrypoints.openai.api_server --model Qwen/Qwen2-7B-Instruct --qu
 <pre><code class="language-python"># Causal Self-Attention 因果自注意力（nanoGPT简化版）
 class CausalSelfAttention(nn.Module):
     def __init__(self, n_embd, n_head, block_size):
-        super().__init__()
+        super.__init__
         assert n_embd % n_head == 0
         self.n_head = n_head
         # 一次算出Q,K,V
@@ -628,7 +587,7 @@ class CausalSelfAttention(nn.Module):
                                      .view(1, 1, block_size, block_size))
 
     def forward(self, x):
-        B, T, C = x.size()
+        B, T, C = x.size
         q, k, v = self.c_attn(x).split(self.n_embd, dim=2)
         k = k.view(B, T, self.n_head, C // self.n_head).transpose(1, 2)
         q = q.view(B, T, self.n_head, C // self.n_head).transpose(1, 2)
@@ -638,7 +597,7 @@ class CausalSelfAttention(nn.Module):
         att = att.masked_fill(self.bias[:,:,:T,:T] == 0, float('-inf'))
         att = F.softmax(att, dim=-1)
         y = att @ v
-        y = y.transpose(1, 2).contiguous().view(B, T, C)
+        y = y.transpose(1, 2).contiguous.view(B, T, C)
         return self.c_proj(y)</code></pre>
     </div>
   </section>

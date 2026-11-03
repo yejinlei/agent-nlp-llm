@@ -25,8 +25,8 @@
 <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
 <script>
-(function(){
-  function render(){
+(function{
+  function render{
     if(typeof renderMathInElement !== 'function') return false;
     try{
       renderMathInElement(document.body,{
@@ -42,16 +42,16 @@
     }catch(e){console.warn('katex render error',e)}
     return true;
   }
-  function go(){ if(render()) return; setTimeout(go,200); }
-  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',go); else go();
-  window.addEventListener('load',function(){render(); setTimeout(render,500); setTimeout(render,1500)});
+  function go{ if(render) return; setTimeout(go,200); }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',go); else go;
+  window.addEventListener('load',function{render; setTimeout(render,500); setTimeout(render,1500)});
   if(window.MutationObserver){
     var t=null;
-    new MutationObserver(function(){ clearTimeout(t); t=setTimeout(render,200); })
+    new MutationObserver(function{ clearTimeout(t); t=setTimeout(render,200); })
       .observe(document.documentElement,{childList:true,subtree:true});
   }
   window.__katexRender = render;
-})();
+});
 </script>
 </head>
 <body>
@@ -316,18 +316,18 @@
 
     <div class="grid g3">
       <a class="card play-card" href="sigmoid.html"><span class="pc-icon">∫</span><h4>激活函数曲线<span style="font-size:.7em;color:var(--text-3);margin-left:4px">附录A</span></h4><p style="font-size:.88rem;color:var(--text-2)">sigmoid/tanh/ReLU/GELU 实时切换，拖动 x 看点的切线，理解为什么大模型偏爱 GELU</p></a>
-      <a class="card play-card" href="cbow.html"><span class="pc-icon">🧩</span><h4>CBOW 推理<span style="font-size:.7em;color:var(--text-3);margin-left:4px"></span></h4><p style="font-size:.88rem;color:var(--text-2)">在你自己的句子上真实训练 300 轮 CBOW，看上下文→中间词的完整推理链</p></a>
-      <a class="card play-card" href="neg-sample.html"><span class="pc-icon">🎲</span><h4>负采样<span style="font-size:.7em;color:var(--text-3);margin-left:4px"></span></h4><p style="font-size:.88rem;color:var(--text-2)">拖动词表大小/负样本数，实时看"百万分类→二分类"加速倍数，抽一次样看谁被抽中</p></a>
-      <a class="card play-card" href="lstm-gate.html"><span class="pc-icon">🚪</span><h4>LSTM 三个门控<span style="font-size:.7em;color:var(--text-3);margin-left:4px"></span></h4><p style="font-size:.88rem;color:var(--text-2)">拖遗忘/输入/输出门滑块，10 步记忆单元可视化；一键播放"写入→保留→输出"长记忆场景</p></a>
-      <a class="card play-card" href="seq2seq-add.html"><span class="pc-icon">➕</span><h4>加法数据集实验<span style="font-size:.7em;color:var(--text-3);margin-left:4px"></span></h4><p style="font-size:.88rem;color:var(--text-2)">真实训练 Baseline/Reverse/Peeky 三种 seq2seq，复现"Peeky 在 30 epoch 近 100%"的结果</p></a>
-      <a class="card play-card" href="attn-date.html"><span class="pc-icon">📅</span><h4>Attention 日期翻译<span style="font-size:.7em;color:var(--text-3);margin-left:4px"></span></h4><p style="font-size:.88rem;color:var(--text-2)">输入任意日期格式，实时画出注意力热力图——复现的对齐可视化</p></a>
+      <a class="card play-card" href="cbow.html"><span class="pc-icon">🧩</span><h4>CBOW 推理</h4><p style="font-size:.88rem;color:var(--text-2)">在你自己的句子上真实训练 300 轮 CBOW，看上下文→中间词的完整推理链</p></a>
+      <a class="card play-card" href="neg-sample.html"><span class="pc-icon">🎲</span><h4>负采样</h4><p style="font-size:.88rem;color:var(--text-2)">拖动词表大小/负样本数，实时看"百万分类→二分类"加速倍数，抽一次样看谁被抽中</p></a>
+      <a class="card play-card" href="lstm-gate.html"><span class="pc-icon">🚪</span><h4>LSTM 三个门控</h4><p style="font-size:.88rem;color:var(--text-2)">拖遗忘/输入/输出门滑块，10 步记忆单元可视化；一键播放"写入→保留→输出"长记忆场景</p></a>
+      <a class="card play-card" href="seq2seq-add.html"><span class="pc-icon">➕</span><h4>加法数据集实验</h4><p style="font-size:.88rem;color:var(--text-2)">真实训练 Baseline/Reverse/Peeky 三种 seq2seq，复现"Peeky 在 30 epoch 近 100%"的结果</p></a>
+      <a class="card play-card" href="attn-date.html"><span class="pc-icon">📅</span><h4>Attention 日期翻译</h4><p style="font-size:.88rem;color:var(--text-2)">输入任意日期格式，实时画出注意力热力图——复现的对齐可视化</p></a>
       <a class="card play-card" href="lora.html"><span class="pc-icon">🪢</span><h4>LoRA 低秩适配<span style="font-size:.7em;color:var(--text-3);margin-left:4px">附录E</span></h4><p style="font-size:.88rem;color:var(--text-2)">拖动 r 和 α，实时看 ΔW 矩阵 vs BA·α/r 的近似误差与参数量压缩比</p></a>
-      <a class="card play-card" href="skip-cbow.html"><span class="pc-icon">⚖️</span><h4>CBOW vs Skip-gram<span style="font-size:.7em;color:var(--text-3);margin-left:4px"></span></h4><p style="font-size:.88rem;color:var(--text-2)">两模型并排对比：上下文预测中心词 vs 中心词预测上下文；拖动窗口大小看样本数 2C 倍差距</p></a>
+      <a class="card play-card" href="skip-cbow.html"><span class="pc-icon">⚖️</span><h4>CBOW vs Skip-gram</h4><p style="font-size:.88rem;color:var(--text-2)">两模型并排对比：上下文预测中心词 vs 中心词预测上下文；拖动窗口大小看样本数 2C 倍差距</p></a>
       <a class="card play-card" href="context-window.html"><span class="pc-icon">🪟</span><h4>滑动窗口 + 因果掩码<span style="font-size:.7em;color:var(--text-3);margin-left:4px">第2-3章</span></h4><p style="font-size:.88rem;color:var(--text-2)">输入句子后滑动窗口切出(X,Y)训练对，实时画出上三角因果掩码矩阵（1/-∞）</p></a>
-      <a class="card play-card" href="multihead.html"><span class="pc-icon">👥</span><h4>多头注意力分工<span style="font-size:.7em;color:var(--text-3);margin-left:4px">第3章</span></h4><p style="font-size:.88rem;color:var(--text-2)">8 个头切换：前邻词/句法/指代消解/自关注/稀有词……复现 Voita & Clark 的经典多头角色分析</p></a>
-      <a class="card play-card" href="gru-lstm.html"><span class="pc-icon">🆚</span><h4>GRU vs LSTM 对比<span style="font-size:.7em;color:var(--text-3);margin-left:4px"></span></h4><p style="font-size:.88rem;color:var(--text-2)">2 个门 vs 3 个门并排走 10 步序列，看 c/h 传送带记忆稳定性差异和参数量对比</p></a>
+      <a class="card play-card" href="multihead.html"><span class="pc-icon">👥</span><h4>多头注意力分工</h4><p style="font-size:.88rem;color:var(--text-2)">8 个头切换：前邻词/句法/指代消解/自关注/稀有词……复现 Voita & Clark 的经典多头角色分析</p></a>
+      <a class="card play-card" href="gru-lstm.html"><span class="pc-icon">🆚</span><h4>GRU vs LSTM 对比</h4><p style="font-size:.88rem;color:var(--text-2)">2 个门 vs 3 个门并排走 10 步序列，看 c/h 传送带记忆稳定性差异和参数量对比</p></a>
       <a class="card play-card" href="gpt-params.html"><span class="pc-icon">🔧</span><h4>GPT 参数量 & 采样<span style="font-size:.7em;color:var(--text-3);margin-left:4px">第4-5章</span></h4><p style="font-size:.88rem;color:var(--text-2)">拖动 d_model/layers/heads 看参数量（GPT-2 124M精确复现），调温度/top-k亲自采样下一词</p></a>
-      <a class="card play-card" href="ppl.html"><span class="pc-icon">📏</span><h4>困惑度 PPL 互动<span style="font-size:.7em;color:var(--text-3);margin-left:4px">第5章</span></h4><p style="font-size:.88rem;color:var(--text-2)">逐词点击调概率看 PPL=exp(Loss) 如何飙升/下降；三句对比+训练曲线可视化过拟合</p></a>
+      <a class="card play-card" href="ppl.html"><span class="pc-icon">📏</span><h4>困惑度 PPL 互动</h4><p style="font-size:.88rem;color:var(--text-2)">逐词点击调概率看 PPL=exp(Loss) 如何飙升/下降；三句对比+训练曲线可视化过拟合</p></a>
       <a class="card play-card" href="bpe.html"><span class="pc-icon">🔤</span><h4>BPE 分词器逐步骤</h4><p style="font-size:.88rem;color:var(--text-2)">一步步看 BPE 怎么把字符合并成子词，理解 GPT 分词原理</p></a>
       <a class="card play-card" href="embedding.html"><span class="pc-icon">🧭</span><h4>词向量类比游戏</h4><p style="font-size:.88rem;color:var(--text-2)">国王−男人+女人=？亲手算一算语义空间里的向量运算</p></a>
       <a class="card play-card" href="attention.html"><span class="pc-icon">🎯</span><h4>注意力可视化沙盒</h4><p style="font-size:.88rem;color:var(--text-2)">换句子、调参数，实时看注意力权重怎么分布</p></a>
@@ -404,13 +404,13 @@ python -c <span class="s">"import torch, jieba, transformers; print('ready:', to
 <script src="js/site.js"></script>
 <script>
 /* ---- Demo 1: N-gram ---- */
-(function(){
+(function{
   var tokens = ['小猫','追','老鼠','因为','它','饿','了'];
   var range = document.getElementById('ngramRange');
   var nEl = document.getElementById('ngramN');
   var out = document.getElementById('ngramOut');
   var hint = document.getElementById('ngramHint');
-  function render(){
+  function render{
     var n = parseInt(range.value, 10);
     nEl.textContent = n;
     var html = '';
@@ -430,11 +430,11 @@ python -c <span class="s">"import torch, jieba, transformers; print('ready:', to
     hint.className = n >= 4 ? 'hint warn' : 'hint';
   }
   range.addEventListener('input', render);
-  render();
-})();
+  render;
+});
 
 /* ---- Demo 2: Self-Attention ---- */
-(function(){
+(function{
   var tokens = ['小猫','追','老鼠','因为','它','饿','了'];
   var matrix = [
     [.45,.20,.15,.05,.05,.05,.05],
@@ -457,7 +457,7 @@ python -c <span class="s">"import torch, jieba, transformers; print('ready:', to
     el.textContent = t;
     el.className = 'demo-cell';
     el.style.cssText = 'background:#eef3ff;color:#2c4a8c;cursor:pointer';
-    el.onclick = function(){ show(i); };
+    el.onclick = function{ show(i); };
     box.appendChild(el);
   });
   function show(row){
@@ -482,15 +482,15 @@ python -c <span class="s">"import torch, jieba, transformers; print('ready:', to
       '）。这正是 Self-Attention 的威力——模型自己学会「它」该指代谁，而这个权重是<b>训练出来的</b>，不是人写的规则。';
   }
   show(4);
-})();
+});
 
 /* ---- Demo 3: 词向量类比 ---- */
-(function(){
+(function{
   var map = {
     '国王':[0.8,0.9],'男人':[0.3,0.5],'女人':[-0.3,0.5],'北京':[0.7,-0.8],
     '中国':[0.5,-0.7],'法国':[-0.6,-0.7],'猫':[-0.2,0.8],'小狗':[-0.4,0.7],'老虎':[-0.6,0.9]
   };
-  document.getElementById('vecGo').onclick = function(){
+  document.getElementById('vecGo').onclick = function{
     var a = document.getElementById('vecA').value,
         b = document.getElementById('vecB').value,
         c = document.getElementById('vecC').value;
@@ -508,7 +508,7 @@ python -c <span class="s">"import torch, jieba, transformers; print('ready:', to
     out.innerHTML = '<b>' + a + ' − ' + b + ' + ' + c + '</b> ≈ <b style="font-size:1.1rem">' + best +
       '</b><br><span style="font-size:.86rem">向量的神奇在于：语义关系变成了空间里的方向。从"男人→女人"这个方向，加上去就得到"国王→女王"，模型完全靠数据自己学出来，没人教它。</span>';
   };
-})();
+});
 </script>
 </body>
 </html>

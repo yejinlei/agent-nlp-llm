@@ -132,8 +132,8 @@ textarea#lab-input {
 <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
 <script>
-(function(){
-  function render(){
+(function{
+  function render{
     if(typeof renderMathInElement !== 'function') return false;
     try{
       renderMathInElement(document.body,{
@@ -149,16 +149,16 @@ textarea#lab-input {
     }catch(e){console.warn('katex render error',e)}
     return true;
   }
-  function go(){ if(render()) return; setTimeout(go,200); }
-  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',go); else go();
-  window.addEventListener('load',function(){render(); setTimeout(render,500); setTimeout(render,1500)});
+  function go{ if(render) return; setTimeout(go,200); }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',go); else go;
+  window.addEventListener('load',function{render; setTimeout(render,500); setTimeout(render,1500)});
   if(window.MutationObserver){
     var t=null;
-    new MutationObserver(function(){ clearTimeout(t); t=setTimeout(render,200); })
+    new MutationObserver(function{ clearTimeout(t); t=setTimeout(render,200); })
       .observe(document.documentElement,{childList:true,subtree:true});
   }
   window.__katexRender = render;
-})();
+});
 </script>
 </head>
 <body>
@@ -389,7 +389,7 @@ textarea#lab-input {
         <p>模型被训练成<b>乐于助人的对话助手</b>。它的训练数据里，"输出 JSON"这类请求的旁边常常跟着寒暄、解释、代码围栏。
           你没指定形状时，它就按"最像人类回应的方式"生成——于是有了开场白、```json 围栏、结束语。</p>
         <ul>
-          <li><b>字段名不确定</b>：你说"输出 JSON"，模型可能用 <code>sentiment</code>、也可能是 <code>情感</code>、<code>emotion</code>、<code>polarity</code>。下游 <code>json.loads()</code> 立刻 KeyError。</li>
+          <li><b>字段名不确定</b>：你说"输出 JSON"，模型可能用 <code>sentiment</code>、也可能是 <code>情感</code>、<code>emotion</code>、<code>polarity</code>。下游 <code>json.loads</code> 立刻 KeyError。</li>
           <li><b>类型不确定</b>："缺点"是数组还是逗号分隔字符串？"评分"是 1-5 整数还是 "极高"？</li>
           <li><b>包装层不确定</b>：```json 围栏、前后寒暄，都会让严格 JSON 解析器直接抛异常。</li>
           <li><b>空值不确定</b>：字段缺失时是省略、是 <code>null</code>、还是 <code>""</code>？</li>
@@ -1090,22 +1090,22 @@ query = "年假 天数 跨年 累积"
           <label for="lab-input">📝 你的原始 Prompt（试试粘贴一段你正在用的）</label>
           <textarea id="lab-input" spellcheck="false" placeholder="例如：&#10;请给我写一个产品介绍，要尽可能好，专业一点。&#10;不要写得太长，也不要用那种很空的词。&#10;另外我们公司是做 SaaS 的，产品是财务对账工具，用户是中小企业的会计。&#10;输出 JSON。"></textarea>
           <div class="btn-row" style="justify-content:flex-start">
-            <button class="btn btn-primary" onclick="Lab.run()">🔬 开始体检</button>
-            <button class="btn btn-outline" onclick="Lab.demo()">🎲 载入示例 prompt</button>
-            <button class="btn btn-outline" onclick="Lab.clear()">🧹 清空</button>
+            <button class="btn btn-primary" onclick="Lab.run">🔬 开始体检</button>
+            <button class="btn btn-outline" onclick="Lab.demo">🎲 载入示例 prompt</button>
+            <button class="btn btn-outline" onclick="Lab.clear">🧹 清空</button>
           </div>
         </div>
         <div class="lab-col">
           <label>📋 改写后的 Prompt（可直接复制使用）</label>
           <div class="lab-out" id="lab-out">点击「开始体检」后，这里会生成一份改写过的 prompt。</div>
-          <button class="btn btn-outline" onclick="Lab.copy()" style="margin-top:8px">📎 复制改写结果</button>
+          <button class="btn btn-outline" onclick="Lab.copy" style="margin-top:8px">📎 复制改写结果</button>
         </div>
       </div>
 
       <div class="score-ring">
         <div class="ring" id="lab-ring"><i id="lab-score">—</i></div>
         <div class="prob" id="lab-prob">
-          <div class="prob-item"><span class="dot ok"></span><span class="txt">等待体检……</span></div>
+          <div class="prob-item"><span class="txt">等待体检……</span></div>
         </div>
       </div>
     </div>
@@ -1120,20 +1120,20 @@ query = "年假 天数 跨年 累积"
       <div class="ck-progress"><i id="ck-fill"></i></div>
       <div class="card">
         <div class="checklist" id="ck-list">
-          <div class="ck-item"><span class="ck-box" data-ck></span><span class="ck-txt"><b>① 指令在首尾</b><span>任务描述和输出格式放在 prompt 开头，并在结尾复述一次关键动作。数据放中间。</span></span></div>
-          <div class="ck-item"><span class="ck-box" data-ck></span><span class="ck-txt"><b>② 没有否定式约束</b><span>把所有"不要写…"翻译成"要写…"。除了安全边界，其余一律用正面规格。</span></span></div>
-          <div class="ck-item"><span class="ck-box" data-ck></span><span class="ck-txt"><b>③ 输出格式被钉死</b><span>给出 schema（字段名 + 类型 + 取值范围）+ 一个 few-shot 样例，并明确"不输出任何解释和代码围栏"。</span></span></div>
-          <div class="ck-item"><span class="ck-box" data-ck></span><span class="ck-txt"><b>④ Few-shot 示例经过审核</b><span>类别均衡、标签 100% 正确、句式多样、格式完全一致；打乱顺序测试过稳定性。</span></span></div>
-          <div class="ck-item"><span class="ck-box" data-ck></span><span class="ck-txt"><b>⑤ 关键约束 ≤ 5 条且结构化</b><span>硬约束编号列出、加粗数字；"必须"与"希望"明确区分；用 Markdown 标题分块降低信噪比。</span></span></div>
-          <div class="ck-item"><span class="ck-box" data-ck></span><span class="ck-txt"><b>⑥ 需要推理的任务给了草稿纸</b><span>数学/多步逻辑题要求"一步一步推理"；必要时用 few-shot CoT 或让模型生成代码执行。</span></span></div>
-          <div class="ck-item"><span class="ck-box" data-ck></span><span class="ck-txt"><b>⑦ 采样参数与任务匹配</b><span>抽取/分类 T=0–0.2，推理 T=0–0.3，创意 T=0.8–1.1；多样性靠多次采样而不是拉高温度。</span></span></div>
-          <div class="ck-item"><span class="ck-box" data-ck></span><span class="ck-txt"><b>⑧ 长上下文做了检索与重排</b><span>不贴全文；用 RAG 取 Top-K 并重排；最相关的片段放在开头和结尾；要求模型标注引用来源。</span></span></div>
-          <div class="ck-item"><span class="ck-box" data-ck></span><span class="ck-txt"><b>⑨ 没有含糊代词</b><span>所有"它/这个/那个/上次说的"都替换为具体名词和路径；做了「陌生人测试」。</span></span></div>
-          <div class="ck-item"><span class="ck-box" data-ck></span><span class="ck-txt"><b>⑩ 一次只做一件事</b><span>复合任务拆成链式调用；每个子任务有明显的输入输出边界；单次 prompt 硬约束 ≤ 5 条。</span></span></div>
-          <div class="ck-item"><span class="ck-box" data-ck></span><span class="ck-txt"><b>⑪ 长度有明确区间</b><span>给出字数区间 + 结构约束（几段/几点）；程序侧做长度校验与超限重试。</span></span></div>
-          <div class="ck-item"><span class="ck-box" data-ck></span><span class="ck-txt"><b>⑫ 目标是可验收的</b><span>每个形容词都翻译成可观测的量；prompt 里不存在无法打分的表述。</span></span></div>
-          <div class="ck-item"><span class="ck-box" data-ck></span><span class="ck-txt"><b>⑬ 做了鲁棒性与安全性设计</b><span>定义了"信息不足时如何回答"（如回答"资料中未提及"）；输入做了注入防护；有失败兜底与日志。</span></span></div>
-          <div class="ck-item"><span class="ck-box" data-ck></span><span class="ck-txt"><b>⑭ 版本化与回归测试</b><span>prompt 与模型版本、参数一起纳入版本管理；有一套固定测试集（含边界 case），改动后跑回归对比。</span></span></div>
+          <div class="ck-item"><span class="ck-txt"><b>① 指令在首尾</b><span>任务描述和输出格式放在 prompt 开头，并在结尾复述一次关键动作。数据放中间。</span></span></div>
+          <div class="ck-item"><span class="ck-txt"><b>② 没有否定式约束</b><span>把所有"不要写…"翻译成"要写…"。除了安全边界，其余一律用正面规格。</span></span></div>
+          <div class="ck-item"><span class="ck-txt"><b>③ 输出格式被钉死</b><span>给出 schema（字段名 + 类型 + 取值范围）+ 一个 few-shot 样例，并明确"不输出任何解释和代码围栏"。</span></span></div>
+          <div class="ck-item"><span class="ck-txt"><b>④ Few-shot 示例经过审核</b><span>类别均衡、标签 100% 正确、句式多样、格式完全一致；打乱顺序测试过稳定性。</span></span></div>
+          <div class="ck-item"><span class="ck-txt"><b>⑤ 关键约束 ≤ 5 条且结构化</b><span>硬约束编号列出、加粗数字；"必须"与"希望"明确区分；用 Markdown 标题分块降低信噪比。</span></span></div>
+          <div class="ck-item"><span class="ck-txt"><b>⑥ 需要推理的任务给了草稿纸</b><span>数学/多步逻辑题要求"一步一步推理"；必要时用 few-shot CoT 或让模型生成代码执行。</span></span></div>
+          <div class="ck-item"><span class="ck-txt"><b>⑦ 采样参数与任务匹配</b><span>抽取/分类 T=0–0.2，推理 T=0–0.3，创意 T=0.8–1.1；多样性靠多次采样而不是拉高温度。</span></span></div>
+          <div class="ck-item"><span class="ck-txt"><b>⑧ 长上下文做了检索与重排</b><span>不贴全文；用 RAG 取 Top-K 并重排；最相关的片段放在开头和结尾；要求模型标注引用来源。</span></span></div>
+          <div class="ck-item"><span class="ck-txt"><b>⑨ 没有含糊代词</b><span>所有"它/这个/那个/上次说的"都替换为具体名词和路径；做了「陌生人测试」。</span></span></div>
+          <div class="ck-item"><span class="ck-txt"><b>⑩ 一次只做一件事</b><span>复合任务拆成链式调用；每个子任务有明显的输入输出边界；单次 prompt 硬约束 ≤ 5 条。</span></span></div>
+          <div class="ck-item"><span class="ck-txt"><b>⑪ 长度有明确区间</b><span>给出字数区间 + 结构约束（几段/几点）；程序侧做长度校验与超限重试。</span></span></div>
+          <div class="ck-item"><span class="ck-txt"><b>⑫ 目标是可验收的</b><span>每个形容词都翻译成可观测的量；prompt 里不存在无法打分的表述。</span></span></div>
+          <div class="ck-item"><span class="ck-txt"><b>⑬ 做了鲁棒性与安全性设计</b><span>定义了"信息不足时如何回答"（如回答"资料中未提及"）；输入做了注入防护；有失败兜底与日志。</span></span></div>
+          <div class="ck-item"><span class="ck-txt"><b>⑭ 版本化与回归测试</b><span>prompt 与模型版本、参数一起纳入版本管理；有一套固定测试集（含边界 case），改动后跑回归对比。</span></span></div>
         </div>
         <div class="hint good" id="ck-msg" style="margin-top:16px">
           <b>📊 进度：</b><span id="ck-num">0 / 14</span> 项已完成。

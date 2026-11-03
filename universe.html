@@ -21,8 +21,8 @@
 <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
 <script>
-(function(){
-  function render(){
+(function{
+  function render{
     if(typeof renderMathInElement !== 'function') return false;
     try{
       renderMathInElement(document.body,{
@@ -38,16 +38,16 @@
     }catch(e){console.warn('katex render error',e)}
     return true;
   }
-  function go(){ if(render()) return; setTimeout(go,200); }
-  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',go); else go();
-  window.addEventListener('load',function(){render(); setTimeout(render,500); setTimeout(render,1500)});
+  function go{ if(render) return; setTimeout(go,200); }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',go); else go;
+  window.addEventListener('load',function{render; setTimeout(render,500); setTimeout(render,1500)});
   if(window.MutationObserver){
     var t=null;
-    new MutationObserver(function(){ clearTimeout(t); t=setTimeout(render,200); })
+    new MutationObserver(function{ clearTimeout(t); t=setTimeout(render,200); })
       .observe(document.documentElement,{childList:true,subtree:true});
   }
   window.__katexRender = render;
-})();
+});
 </script>
 </head>
 <body>
@@ -112,7 +112,7 @@
 
 <script src="js/site.js"></script>
 <script>
-(function(){
+(function{
   var events = [
     {y:1950, t:'图灵测试', d:'图灵提出"机器能思考吗"，用对话作为智能的判据。为整个 NLP 领域埋下思想种子。', era:1},
     {y:1957, t:'分布式假设', d:'Firth 提出"看一个词跟谁玩，就知道它是什么意思"。这是所有词向量方法的理论根基。', era:1},
@@ -155,7 +155,7 @@
   var label = document.getElementById('eraLabel');
   var eHint = document.getElementById('eraHint');
 
-  function focus(){
+  function focus{
     var v = +range.value;
     label.textContent = v;
     var shown = 0;
@@ -169,7 +169,7 @@
       (v < 2017 ? '这是传统 NLP 主导的时代：规则、统计、词向量、RNN 各领风骚。' : '这是大模型时代：注意力、规模化、对齐、应用全面爆发。');
   }
   range.oninput = focus;
-  focus();
+  focus;
 
   var trav = {
     '1966': '回到 1966：你会看到 ELIZA 这样的模板匹配程序。研究者相信"语言 = 语法规则 + 符号逻辑"，写规则是主流。人们乐观地以为十年内就能造出通用翻译机——结果迎来了漫长的寒冬。',
@@ -181,12 +181,12 @@
   };
   var tsel = document.getElementById('timeTravel');
   var tout = document.getElementById('travOut');
-  function setTrav(){
+  function setTrav{
     tout.textContent = trav[tsel.value] || '';
   }
   tsel.onchange = setTrav;
-  setTrav();
-})();
+  setTrav;
+});
 </script>
 </body>
 </html>

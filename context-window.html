@@ -52,7 +52,7 @@ canvas{background:#0f172a;border-radius:8px;border:1px solid var(--border);width
 <section class="hero">
 
 <h1>滑动窗口采样 + <span class="grad-text">因果掩码</span></h1>
-<p style="color:var(--muted)">第2章核心预处理：滑动窗口把长文本切成(input, target)训练对。第3章核心机制：因果掩码让每个位置 i 只能看 ≤ i 的 token，实现"自回归生成"。拖动参数实时观察数据如何被切成训练样本、掩码矩阵如何变化。</p>
+<p style="color:var(--muted)">。，实现"自回归生成"。拖动参数实时观察数据如何被切成训练样本、掩码矩阵如何变化。</p>
 </section>
 
 <div class="demo-box">
@@ -63,7 +63,7 @@ canvas{background:#0f172a;border-radius:8px;border:1px solid var(--border);width
 <div class="ctrl-card"><label>步长 stride: <span id="sVal">1</span></label><input type="range" id="stride" min="1" max="4" value="1" step="1"/></div>
 <div class="ctrl-card"><label>分词方式</label>
 <select id="tokMode" style="width:100%;padding:6px;border-radius:6px;background:var(--panel);color:var(--text);border:1px solid var(--border)">
-<option value="word" selected>按空格（P46 例子）</option><option value="char">按字符</option></select></div>
+<option value="word" selected>按空格（</option><option value="char">按字符</option></select></div>
 </div>
 </div>
 
@@ -80,19 +80,19 @@ canvas{background:#0f172a;border-radius:8px;border:1px solid var(--border);width
 
 <div class="demo-box">
 <h3>3️⃣ 滑动窗口切出的训练对</h3>
-<p style="font-size:14px;color:var(--muted)">每个窗口：<span class="tok tok-ctx" style="padding:2px 8px;font-size:12px">input</span> → <span class="tok tok-tgt" style="padding:2px 8px;font-size:12px">target（右移一位）</span>。P48 图 2.10：target 就是 input 右移 1。</p>
+<p style="font-size:14px;color:var(--muted)">每个窗口：<span class="tok tok-ctx" style="padding:2px 8px;font-size:12px">input</span> → <span class="tok tok-tgt" style="padding:2px 8px;font-size:12px">target（右移一位）</span>。。</p>
 <div id="windows"></div>
 </div>
 
 <div class="demo-box">
-<h3>4️⃣ 因果掩码 Causal Mask（P84）</h3>
+<h3>4️⃣ 因果掩码 Causal Mask（</h3>
 <div class="mask-legend">
-<span><span class="sq" style="background:#10b981"></span>可见（权重正常计算）</span>
-<span><span class="sq" style="background:#be123c"></span>被掩码（注意力权重=-∞）</span>
+<span>可见（权重正常计算）</span>
+<span>被掩码（注意力权重=-∞）</span>
 </div>
 <canvas id="maskCanvas" width="600" height="600"></canvas>
 <div class="insight">
-<b>为什么要掩码？</b>P84：训练 GPT 时，位置 2 的 token 必须通过位置 1、2 预测位置 3，不能让它"偷看"位置 3 以后的未来词。实现方式：softmax 前把上三角（不含对角线）减去一个很大的数（-1e9），softmax 后这些位置变成 0。对角线保留 → 一个 token 可以"看见自己"。
+<b>为什么要掩码？</b>，位置 2 的 token 必须通过位置 1、2 预测位置 3，不能让它"偷看"位置 3 以后的未来词。实现方式：softmax 前把上三角（不含对角线）减去一个很大的数（-1e9），softmax 后这些位置变成 0。对角线保留 → 一个 token 可以"看见自己"。
 </div>
 </div>
 
@@ -105,11 +105,11 @@ canvas{background:#0f172a;border-radius:8px;border:1px solid var(--border);width
 </footer>
 <script>
 const $=id=>document.getElementById(id);
-function render(){
+function render{
   const L=+$('L').value,stride=+$('stride').value;
   $('lVal').textContent=L;$('sVal').textContent=stride;
   const text=$('text').value;
-  const toks=$('tokMode').value==='word'?text.trim().split(/\s+/):[...text];
+  const toks=$('tokMode').value==='word'?text.trim.split(/\s+/):[...text];
   // 建词表
   const vocab={};toks.forEach(t=>{if(!(t in vocab))vocab[t]=Object.keys(vocab).length});
   const ids=toks.map(t=>vocab[t]);

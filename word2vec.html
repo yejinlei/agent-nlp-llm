@@ -63,8 +63,8 @@ input[type=range]{ flex:1; min-width:140px; accent-color:var(--blue); }
 <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
 <script>
-(function(){
-  function render(){
+(function{
+  function render{
     if(typeof renderMathInElement !== 'function') return false;
     try{
       renderMathInElement(document.body,{
@@ -80,16 +80,16 @@ input[type=range]{ flex:1; min-width:140px; accent-color:var(--blue); }
     }catch(e){console.warn('katex render error',e)}
     return true;
   }
-  function go(){ if(render()) return; setTimeout(go,200); }
-  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',go); else go();
-  window.addEventListener('load',function(){render(); setTimeout(render,500); setTimeout(render,1500)});
+  function go{ if(render) return; setTimeout(go,200); }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',go); else go;
+  window.addEventListener('load',function{render; setTimeout(render,500); setTimeout(render,1500)});
   if(window.MutationObserver){
     var t=null;
-    new MutationObserver(function(){ clearTimeout(t); t=setTimeout(render,200); })
+    new MutationObserver(function{ clearTimeout(t); t=setTimeout(render,200); })
       .observe(document.documentElement,{childList:true,subtree:true});
   }
   window.__katexRender = render;
-})();
+});
 </script>
 </head>
 <body>
@@ -188,13 +188,13 @@ input[type=range]{ flex:1; min-width:140px; accent-color:var(--blue); }
 def ppmi(C, eps=1e-8):
     """C: 共现矩阵 (N x N)"""
     N = C.shape[0]
-    total = C.sum()
+    total = C.sum
     S = np.zeros_like(C, dtype=np.float64)
     for i in range(N):
         for j in range(N):
             p_ij = C[i, j] / total
-            p_i  = C[i, :].sum() / total
-            p_j  = C[:, j].sum() / total
+            p_i  = C[i, :].sum / total
+            p_j  = C[:, j].sum / total
             if p_ij == 0:
                 continue
             val = np.log2(p_ij / (p_i * p_j + eps) + eps)
@@ -229,7 +229,7 @@ import matplotlib.pyplot as plt
 for i, word in enumerate(vocab):
     plt.annotate(word, xy=(X_reduced[i,0], X_reduced[i,1]))
 plt.scatter(X_reduced[:,0], X_reduced[:,1])
-plt.show()</code></pre>
+plt.show</code></pre>
   <div class="tip">
     <b>为什么 SVD 能保留语义？</b>因为奇异值大的方向，正是数据里"变化最剧烈"的主成分。把小的奇异值丢掉，相当于扔掉了噪音和细枝末节，留下的是词与词之间最本质的关联结构。
   </div>
@@ -289,7 +289,7 @@ plt.show()</code></pre>
         W_out = 0.01 * np.random.randn(H, V)
         self.in_layer  = MatMul(W_in)    # 输入侧全连接
         self.out_layer = MatMul(W_out)   # 输出侧全连接
-        self.loss_layer = SoftmaxWithLoss()
+        self.loss_layer = SoftmaxWithLoss
 
     def forward(self, contexts, target):
         h = sum(self.in_layer.forward(c) for c in contexts) / len(contexts)  # 平均
@@ -356,7 +356,7 @@ word_vecs = weight_in  # shape: (V, H)</code></pre>
   <pre><code class="language-python">def sample_negative(vocab_size, word_freqs, K=5):
     """按 0.75 次方加权采样负样本"""
     freqs = np.array(word_freqs) ** 0.75
-    probs = freqs / freqs.sum()
+    probs = freqs / freqs.sum
     return np.random.choice(vocab_size, size=K, p=probs)</code></pre>
 
   <div class="demo">

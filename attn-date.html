@@ -99,7 +99,7 @@ const MONTHS={january:'01',february:'02',march:'03',april:'04',may:'05',june:'06
               jan:'01',feb:'02',mar:'03',apr:'04',jun:'06',jul:'07',aug:'08',sep:'09',oct:'10',nov:'11',dec:'12'};
 
 function parseDate(s){
-  s=s.trim().toLowerCase().replace(/[.,]/g,' ');
+  s=s.trim.toLowerCase.replace(/[.,]/g,' ');
   const toks=s.split(/\s+/).filter(x=>x);
   let mo='',da='',yr='';
   toks.forEach(t=>{
@@ -114,9 +114,9 @@ function parseDate(s){
 function charAlignment(src,tgt){
   // 构造一个 (tgt_len x src_len) 的注意力矩阵，模拟的"对角对齐"
   const S=src.length,T=tgt.length;
-  const A=Array.from({length:T},()=>Array(S).fill(0));
+  const A=Array.from({length:T},=>Array(S).fill(0));
   // 找到关键段的位置
-  const srcL=src.toLowerCase();
+  const srcL=src.toLowerCase;
   const moIdx=Object.keys(MONTHS).filter(k=>srcL.startsWith(k)||srcL.includes(' '+k)).map(k=>srcL.indexOf(k))[0]??0;
   const moName=Object.keys(MONTHS).find(k=>srcL.startsWith(k))||'';
   const moLen=moName.length;
@@ -156,7 +156,7 @@ function charAlignment(src,tgt){
   return A;
 }
 
-function render(){
+function render{
   const src=document.getElementById('src').value;
   const tgt=parseDate(src);
   document.getElementById('srcShow').textContent=src;
@@ -188,9 +188,9 @@ function render(){
 
 document.getElementById('src').addEventListener('input',render);
 document.querySelectorAll('button[data-s]').forEach(b=>{
-  b.onclick=()=>{document.getElementById('src').value=b.dataset.s;render();};
+  b.onclick==>{document.getElementById('src').value=b.dataset.s;render;};
 });
-render();
+render;
 </script>
 <script src="js/math.js"></script>
 </body>

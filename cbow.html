@@ -118,8 +118,8 @@ function makePairs(tokens,win=1){
 }
 
 function initParams(V,H){
-  W_in=Array.from({length:V},()=>Array.from({length:H},()=>(Math.random()-.5)*.5));
-  W_out=Array.from({length:H},()=>Array.from({length:V},()=>(Math.random()-.5)*.5));
+  W_in=Array.from({length:V},=>Array.from({length:H},=>(Math.random-.5)*.5));
+  W_out=Array.from({length:H},=>Array.from({length:V},=>(Math.random-.5)*.5));
 }
 
 function forward(ctxIds){
@@ -136,9 +136,9 @@ function forward(ctxIds){
 function trainStep(ctxIds,tgtId,lr=.1){
   const{h,p}=forward(ctxIds);
   // dout = p - onehot(tgt)
-  const dout=p.slice();dout[tgtId]-=1;
+  const dout=p.slice;dout[tgtId]-=1;
   // dW_out = h^T · dout, dh = dout · W_out^T
-  const dW_out=Array.from({length:hidden},()=>Array(vocab.length).fill(0));
+  const dW_out=Array.from({length:hidden},=>Array(vocab.length).fill(0));
   const dh=Array(hidden).fill(0);
   for(let i=0;i<hidden;i++)for(let v=0;v<vocab.length;v++){dW_out[i][v]=h[i]*dout[v];dh[i]+=dout[v]*W_out[i][v];}
   for(let i=0;i<hidden;i++)dh[i]/=ctxIds.length; // mean back
@@ -150,8 +150,8 @@ function trainStep(ctxIds,tgtId,lr=.1){
   return -Math.log(p[tgtId]+1e-9);
 }
 
-function train(){
-  const tokens=document.getElementById('sent').value.trim().split(/\s+/);
+function train{
+  const tokens=document.getElementById('sent').value.trim.split(/\s+/);
   buildVocab(tokens);
   const{X,Y}=makePairs(tokens);
   if(X.length===0){document.getElementById('trainInfo').textContent='句子太短，需要至少3个词。';return;}
@@ -164,7 +164,7 @@ function train(){
   trained=true;
   document.getElementById('trainInfo').textContent=`✅ 训练完成，词表 ${vocab.length} 个词，最终平均 loss=${(loss/X.length).toFixed(3)}`;
   refreshSelects(tokens);
-  predict();
+  predict;
 }
 
 function refreshSelects(tokens){
@@ -175,7 +175,7 @@ function refreshSelects(tokens){
   });
 }
 
-function predict(){
+function predict{
   if(!trained)return;
   const lw=document.getElementById('leftCtx').value;
   const rw=document.getElementById('rightCtx').value;
@@ -214,7 +214,7 @@ document.getElementById('trainBtn').onclick=train;
 document.getElementById('leftCtx').onchange=predict;
 document.getElementById('rightCtx').onchange=predict;
 // 默认演示：触发一次训练
-window.addEventListener('load',()=>setTimeout(train,200));
+window.addEventListener('load',=>setTimeout(train,200));
 </script>
 <script src="js/math.js"></script>
 </body>

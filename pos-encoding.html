@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>正弦位置编码可视化 · agent-nlp-llm</title>
+<link rel="stylesheet" href="css/site.css">
+<style>
+canvas { display: block; max-width: 100%; background: #fff; border: 1px solid var(--border); border-radius: 10px; }
+.heatmap-grid { display: grid; gap: 2px; margin-top: 12px; }
+.heatmap-cell { width: 28px; height: 28px; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 10px; font-family: var(--mono); cursor: pointer; transition: transform .15s; }
+.heatmap-cell:hover { transform: scale(1.2); z-index: 2; position: relative; }
+.pe-val { display: inline-block; width: 50px; font-family: var(--mono); font-weight: 600; color: var(--blue); }
+</style>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function{
+  function r{try{renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false});}catch(e){}}
+  if(document.readyState==='complete')r;else window.addEventListener('load',r);
+  setTimeout(r,300);setTimeout(r,1000);
+});
+</script>
+</head>
+<body>
+<nav class="navbar">
+<div class="nav-inner">
+<a href="index.html" class="nav-logo">💬 agent-nlp-llm</a>
+<button class="nav-toggle" aria-label="菜单" onclick="document.querySelector('.nav-links').classList.toggle('open')">☰</button>
+<div class="nav-links">
+<a href="index.html" class="nav-link">🏠&nbsp;首页</a>
+<a href="nlp/index.html" class="nav-link">📝&nbsp;NLP</a>
+<a href="llm/index.html" class="nav-link">🤖&nbsp;LLM</a>
+<a href="lab.html" class="nav-link active">🧪&nbsp;实验室</a>
+<a href="papers.html" class="nav-link">📚&nbsp;论文</a>
+<a href="clinic.html" class="nav-link">🕵️&nbsp;诊所</a>
+<a href="pitfalls.html" class="nav-link">💥&nbsp;踩坑</a>
+<a href="benchmark.html" class="nav-link">📊&nbsp;选型</a>
+<a href="universe.html" class="nav-link">🌌&nbsp;宇宙</a>
+<a href="https://github.com/yejinlei/agent-nlp-llm" target="_blank" rel="noopener" class="nav-gh" aria-label="GitHub"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg></a>
+</div>
+</div>
+</nav>
+
+<div class="wrap page">
+<section class="hero reveal">
+<h1>📐 正弦位置编码可视化</h1>
+<p class="sub">Transformer 不递归，没有"顺序"概念——正弦位置编码用不同频率的正弦余弦波，给每个位置注入独一无二的"坐标"。拖动滑块，看编码曲线如何随位置和维度变化。</p>
+</section>
+
+<section class="blk reveal">
+<h2 class="blk-title"><span class="num">📐</span>公式</h2>
+<div class="math">
+\[ PE(pos, 2i) = \sin\!\left(\frac{pos}{10000^{2i/d_{\text{model}}}}\right), \quad PE(pos, 2i+1) = \cos\!\left(\frac{pos}{10000^{2i/d_{\text{model}}}}\right) \]
+</div>
+<p style="color:var(--text-2)">偶数维度用 sin，奇数维度用 cos。低维度波长短（频率高），捕捉局部位置差异；高维度波长长（频率低），捕捉全局位置差异。</p>
+<div class="insight"><b>为什么能表达相对位置？</b> 正弦函数的性质：\(PE(pos+k)\) 可以表示为 \(PE(pos)\) 的线性变换。也就是说，位置 pos+k 的编码 = 位置 pos 编码乘以一个只依赖 k（相对距离）的旋转矩阵。模型不用重新学"偏移量"，线性层就能处理相对位置关系。</div>
+</section>
+
+<section class="blk reveal" id="play">
+<h2 class="blk-title"><span class="num">🎮</span>互动实验</h2>
+
+<div class="demo-box">
+<div class="ctrl">
+<label>d_model (维度)
+<input type="range" id="dModel" min="2" max="512" step="2" value="64">
+<span id="dModelVal" style="font-weight:700;color:var(--blue)">64</span>
+</label>
+<label>位置 pos
+<input type="range" id="posVal" min="0" max="100" step="1" value="10">
+<span id="posValDisplay" style="font-weight:700;color:var(--blue)">10</span>
+</label>
+<label>查看维度 i
+<input type="range" id="dimI" min="0" max="31" step="1" value="0">
+<span id="dimIVal" style="font-weight:700;color:var(--blue)">0</span>
+</label>
+</div>
+
+<h3 style="margin:18px 0 8px;font-size:1.05rem">PE(pos, 2i) 和 PE(pos, 2i+1) 随位置变化的曲线</h3>
+<canvas id="curveCanvas" width="800" height="320"></canvas>
+<div class="hint" id="curveHint">蓝色=sin(偶数维)，红色=cos(奇数维)。绿色竖线标记当前 pos。i 越小，波长越短，频率越高。</div>
+
+<h3 style="margin:22px 0 8px;font-size:1.05rem">当前位置编码向量（前16维）</h3>
+<div id="peValues" style="display:flex;flex-wrap:wrap;gap:6px;margin:8px 0"></div>
+
+<h3 style="margin:22px 0 8px;font-size:1.05rem">不同位置间的编码相似度热图</h3>
+<p style="color:var(--text-2);font-size:.9rem;margin-bottom:8px">展示 pos=0~20 各位置之间的余弦相似度：对角=1（自己和自己最像），相邻位置相似度高，距离远则相似度衰减。</p>
+<canvas id="simCanvas" width="520" height="480" style="max-width:100%"></canvas>
+</div>
+
+<div class="grid g2" style="margin-top:24px">
+<div class="card">
+<h4>✅ 正弦编码的优势</h4>
+<ul style="color:var(--text-2);font-size:.92rem;padding-left:18px;line-height:2">
+<li>不需要训练，直接用公式计算</li>
+<li>可以外推到训练时未见过的更长序列</li>
+<li>相对位置可以通过线性变换表达</li>
+<li>每个位置的编码唯一且连续变化</li>
+</ul>
+</div>
+<div class="card">
+<h4>⚠️ 局限性</h4>
+<ul style="color:var(--text-2);font-size:.92rem;padding-left:18px;line-height:2">
+<li>绝对位置信息对某些任务不够灵活</li>
+<li>现代模型（RoPE、ALiBi）用旋转位置编码或注意力偏置替代</li>
+<li>长文本外推能力仍有限，需要额外技巧</li>
+</ul>
+</div>
+</div>
+</section>
+</div>
+
+<footer class="site"><p>💬 agent-nlp-llm · 自然语言技术本体论研究站</p></footer>
+<script src="js/site.js"></script>
+<script>
+(function{
+  var dModelEl = document.getElementById('dModel');
+  var posEl = document.getElementById('posVal');
+  var dimIEl = document.getElementById('dimI');
+  var curveCanvas = document.getElementById('curveCanvas');
+  var simCanvas = document.getElementById('simCanvas');
+  var ctx = curveCanvas.getContext('2d');
+  var sctx = simCanvas.getContext('2d');
+
+  function pe(pos, i, d) {
+    var angle = pos / Math.pow(10000, (2*i) / d);
+    return [Math.sin(angle), Math.cos(angle)];
+  }
+
+  function drawCurve {
+    var d = parseInt(dModelEl.value);
+    var pos = parseInt(posEl.value);
+    var i = parseInt(dimIEl.value);
+    document.getElementById('dModelVal').textContent = d;
+    document.getElementById('posValDisplay').textContent = pos;
+    document.getElementById('dimIVal').textContent = i;
+
+    var W = curveCanvas.width, H = curveCanvas.height;
+    ctx.clearRect(0,0,W,H);
+
+    var pad = {l:50,r:20,t:20,b:40};
+    var cw = W-pad.l-pad.r, ch = H-pad.t-pad.b;
+    var maxPos = 100;
+
+    // axes
+    ctx.strokeStyle = '#e2e8f0'; ctx.lineWidth = 1;
+    ctx.beginPath;
+    ctx.moveTo(pad.l, pad.t); ctx.lineTo(pad.l, pad.t+ch); ctx.lineTo(pad.l+cw, pad.t+ch);
+    ctx.stroke;
+
+    // grid
+    ctx.strokeStyle = '#f1f5f9';
+    for(var g=0;g<=5;g++){
+      var gy = pad.t + ch*g/5;
+      ctx.beginPath; ctx.moveTo(pad.l,gy); ctx.lineTo(pad.l+cw,gy); ctx.stroke;
+      ctx.fillStyle = '#94a3b8'; ctx.font='11px sans-serif'; ctx.textAlign='right';
+      ctx.fillText((1-g*0.4).toFixed(1), pad.l-6, gy+4);
+    }
+    for(var gx=0;gx<=5;gx++){
+      var gxp = pad.l+cw*gx/5;
+      ctx.beginPath; ctx.moveTo(gxp,pad.t); ctx.lineTo(gxp,pad.t+ch); ctx.stroke;
+      ctx.fillStyle='#94a3b8';ctx.textAlign='center';
+      ctx.fillText(Math.round(maxPos*gx/5), gxp, pad.t+ch+18);
+    }
+
+    // sin curve (even dim 2i)
+    ctx.strokeStyle = '#3b6fe0'; ctx.lineWidth = 2.5; ctx.beginPath;
+    for(var p=0;p<=maxPos;p++){
+      var v = pe(p,i,d)[0];
+      var x = pad.l + cw*p/maxPos;
+      var y = pad.t + ch*(1-(v+1)/2);
+      if(p===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+    }
+    ctx.stroke;
+
+    // cos curve (odd dim 2i+1)
+    ctx.strokeStyle = '#ec4899'; ctx.lineWidth = 2.5; ctx.beginPath;
+    for(var p=0;p<=maxPos;p++){
+      var v = pe(p,i,d)[1];
+      var x = pad.l + cw*p/maxPos;
+      var y = pad.t + ch*(1-(v+1)/2);
+      if(p===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+    }
+    ctx.stroke;
+
+    // vertical line at current pos
+    var vx = pad.l + cw*pos/maxPos;
+    ctx.strokeStyle = '#10a37f'; ctx.lineWidth = 2; ctx.setLineDash([6,4]);
+    ctx.beginPath; ctx.moveTo(vx,pad.t); ctx.lineTo(vx,pad.t+ch); ctx.stroke;
+    ctx.setLineDash([]);
+
+    // dots at intersection
+    var sv = pe(pos,i,d)[0], cv = pe(pos,i,d)[1];
+    var sy = pad.t+ch*(1-(sv+1)/2), cy = pad.t+ch*(1-(cv+1)/2);
+    ctx.fillStyle = '#3b6fe0'; ctx.beginPath; ctx.arc(vx,sy,6,0,Math.PI*2); ctx.fill;
+    ctx.fillStyle = '#ec4899'; ctx.beginPath; ctx.arc(vx,cy,6,0,Math.PI*2); ctx.fill;
+
+    // labels
+    ctx.fillStyle = '#3b6fe0'; ctx.font='bold 12px sans-serif'; ctx.textAlign='left';
+    ctx.fillText('sin(pos, 2i) 波长='+(2*Math.PI*Math.pow(10000,2*i/d)).toFixed(1), pad.l+10, pad.t+18);
+    ctx.fillStyle = '#ec4899';
+    ctx.fillText('cos(pos, 2i+1)', pad.l+10, pad.t+36);
+    ctx.fillStyle='#64748b';
+    ctx.fillText('位置 pos →', pad.l+cw-60, pad.t+ch+34);
+  }
+
+  function drawSim {
+    var d = parseInt(dModelEl.value);
+    var N = 21; // pos 0..20
+    var cellSize = 22;
+    var labelW = 36, labelH = 28;
+    var W = labelW + N*cellSize + 10;
+    var H = labelH + N*cellSize + 10;
+    simCanvas.width = W;
+    simCanvas.height = H;
+    sctx.clearRect(0,0,W,H);
+
+    // compute PE matrix
+    var P = [];
+    for(var p=0;p<N;p++){
+      var vec=[];
+      for(var k=0;k<d;k++){
+        var idx=Math.floor(k/2);
+        var angle=p/Math.pow(10000,2*idx/d);
+        vec.push(k%2===0?Math.sin(angle):Math.cos(angle));
+      }
+      P.push(vec);
+    }
+
+    // cosine similarity
+    function cos(a,b){
+      var dot=0,na=0,nb=0;
+      for(var k=0;k<a.length;k++){dot+=a[k]*b[k];na+=a[k]*a[k];nb+=b[k]*b[k];}
+      return dot/(Math.sqrt(na)*Math.sqrt(nb));
+    }
+
+    // draw
+    sctx.font='10px sans-serif';
+    for(var i=0;i<N;i++){
+      sctx.fillStyle='#64748b'; sctx.textAlign='right';
+      sctx.fillText(i, labelW-4, labelH+i*cellSize+cellSize/2+4);
+      sctx.textAlign='center';
+      sctx.fillText(i, labelW+i*cellSize+cellSize/2, labelH-8);
+      for(var j=0;j<N;j++){
+        var s = cos(P[i],P[j]);
+        var alpha = Math.max(0, (s+1)/2);
+        // blue for positive, red-ish for negative? use blue gradient
+        var r = Math.round(59 + (255-59)*(1-alpha));
+        var g = Math.round(111 + (255-111)*(1-alpha));
+        var bl = Math.round(224 + (255-224)*(1-alpha));
+        if(s<0){r=236;g=Math.round(72+180*(1+s));bl=Math.round(153+100*(1+s));}
+        sctx.fillStyle = s>=0 ? 'rgba(59,111,224,'+alpha.toFixed(2)+')' : 'rgba(236,72,153,'+Math.abs(s).toFixed(2)+')';
+        sctx.fillRect(labelW+j*cellSize, labelH+i*cellSize, cellSize-1, cellSize-1);
+        if(cellSize>=18){
+          sctx.fillStyle = alpha>0.55?'#fff':'#334155';
+          sctx.textAlign='center';
+          sctx.fillText(s.toFixed(1), labelW+j*cellSize+cellSize/2, labelH+i*cellSize+cellSize/2+3);
+        }
+      }
+    }
+  }
+
+  function showValues {
+    var d = parseInt(dModelEl.value);
+    var pos = parseInt(posEl.value);
+    var host = document.getElementById('peValues');
+    var html='';
+    var showDim = Math.min(16,d);
+    for(var k=0;k<showDim;k++){
+      var idx=Math.floor(k/2);
+      var angle=pos/Math.pow(10000,2*idx/d);
+      var v = k%2===0?Math.sin(angle):Math.cos(angle);
+      var color = k%2===0?'var(--blue)':'var(--pink)';
+      var label = k%2===0?('sin,'+k):('cos,'+k);
+      html += '<span style="display:inline-block;padding:6px 10px;background:'+(k%2===0?'#eef3ff':'#fdf2f8')+';border-radius:8px;font-family:var(--mono);font-size:.78rem;color:'+color+'">d'+k+': '+v.toFixed(3)+'</span>';
+    }
+    if(d>16) html+='<span style="color:var(--text-3);font-size:.85rem;padding:6px">...共'+d+'维</span>';
+    host.innerHTML=html;
+  }
+
+  function update{
+    dimIEl.max = Math.min(31, Math.floor(dModelEl.value/2)-1);
+    if(parseInt(dimIEl.value)>parseInt(dimIEl.max)) dimIEl.value=dimIEl.max;
+    drawCurve;
+    drawSim;
+    showValues;
+  }
+
+  dModelEl.oninput = update;
+  posEl.oninput = update;
+  dimIEl.oninput = update;
+  update;
+});
+</script>
+</body>
+</html>

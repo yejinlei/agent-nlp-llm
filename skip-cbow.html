@@ -119,9 +119,9 @@ canvas{background:var(--panel);border-radius:8px;margin:10px 0;border:1px solid 
   </footer>
 <script>
 const $=id=>document.getElementById(id);
-function render(){
+function render{
   const win=+$('win').value;$('winVal').textContent=win;
-  const toks=$('sent').value.trim().split(/\s+/);
+  const toks=$('sent').value.trim.split(/\s+/);
   // cbow render
   const cs=toks.map(t=>`<span class="token" style="background:#0ea5e920;color:var(--text)">${t}</span>`).join(' ');
   $('cbowSent').innerHTML=cs;
@@ -145,13 +145,13 @@ function render(){
   const pad={l:60,r:20,t:30,b:50};
   const xs=4;
   ctx.strokeStyle='#888';ctx.fillStyle='#ccc';ctx.font='12px sans-serif';
-  ctx.beginPath();ctx.moveTo(pad.l,pad.t);ctx.lineTo(pad.l,H-pad.b);ctx.lineTo(W-pad.r,H-pad.b);ctx.stroke();
+  ctx.beginPath;ctx.moveTo(pad.l,pad.t);ctx.lineTo(pad.l,H-pad.b);ctx.lineTo(W-pad.r,H-pad.b);ctx.stroke;
   const maxY=Math.max(...[1,2,3,4].map(w=>2*w*(toks.length-2*w)))*1.1;
   // axes labels
   ctx.fillText('样本数',10,pad.t+10);
   for(let y=0;y<=4;y++){
     const yy=pad.t+(H-pad.t-pad.b)*y/4;
-    ctx.beginPath();ctx.moveTo(pad.l,yy);ctx.lineTo(W-pad.r,yy);ctx.strokeStyle='#222';ctx.stroke();
+    ctx.beginPath;ctx.moveTo(pad.l,yy);ctx.lineTo(W-pad.r,yy);ctx.strokeStyle='#222';ctx.stroke;
     ctx.fillText(Math.round(maxY*(1-y/4)),10,yy+4);
   }
   // bars

@@ -58,8 +58,8 @@ input[type=range]{ flex:1; min-width:140px; accent-color:var(--blue); }
 <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
 <script>
-(function(){
-  function render(){
+(function{
+  function render{
     if(typeof renderMathInElement !== 'function') return false;
     try{
       renderMathInElement(document.body,{
@@ -75,16 +75,16 @@ input[type=range]{ flex:1; min-width:140px; accent-color:var(--blue); }
     }catch(e){console.warn('katex render error',e)}
     return true;
   }
-  function go(){ if(render()) return; setTimeout(go,200); }
-  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',go); else go();
-  window.addEventListener('load',function(){render(); setTimeout(render,500); setTimeout(render,1500)});
+  function go{ if(render) return; setTimeout(go,200); }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',go); else go;
+  window.addEventListener('load',function{render; setTimeout(render,500); setTimeout(render,1500)});
   if(window.MutationObserver){
     var t=null;
-    new MutationObserver(function(){ clearTimeout(t); t=setTimeout(render,200); })
+    new MutationObserver(function{ clearTimeout(t); t=setTimeout(render,200); })
       .observe(document.documentElement,{childList:true,subtree:true});
   }
   window.__katexRender = render;
-})();
+});
 </script>
 </head>
 <body>
@@ -272,7 +272,7 @@ input[type=range]{ flex:1; min-width:140px; accent-color:var(--blue); }
     idx = start_id
     for _ in range(sample_size):
         h = decoder.forward(idx, h)          # 一步步喂回去
-        idx = h.argmax()                     # 贪心：取概率最高的
+        idx = h.argmax                     # 贪心：取概率最高的
         sampled_ids.append(idx)
     return sampled_ids</code></pre>
   <div class="warn">
@@ -308,13 +308,13 @@ input[type=range]{ flex:1; min-width:140px; accent-color:var(--blue); }
 
 <script src="js/site.js"></script>
 <script>
-document.addEventListener('DOMContentLoaded', function () {
-  if (window.hljs) hljs.highlightAll();
+document.addEventListener('DOMContentLoaded', function  {
+  if (window.hljs) hljs.highlightAll;
 
   // ===== RNN 记忆流动 =====
   const words = ['我','昨天','在','公园','看见','一只','猫'];
   const tS = document.getElementById('tSlider');
-  function renderRNN(){
+  function renderRNN{
     const t = parseInt(tS.value);
     document.getElementById('tVal').textContent = t;
     let h = '';
@@ -331,12 +331,12 @@ document.addEventListener('DOMContentLoaded', function () {
     document.getElementById('rnnFlow').innerHTML = h;
     document.getElementById('rnnOut').innerHTML = '到第 <b>'+t+'</b> 步，隐藏状态 h<sub>'+t+'</sub> 已经"读过" <b>'+(t+1)+'</b> 个词：<b>'+words.slice(0,t+1).join('')+'</b>。它把这句话到目前的信息压缩进了一个固定长度的向量。';
   }
-  tS.addEventListener('input', renderRNN); renderRNN();
+  tS.addEventListener('input', renderRNN); renderRNN;
 
   // ===== 梯度消失 =====
   const dS = document.getElementById('distSlider');
   const cS = document.getElementById('decaySlider');
-  function renderGrad(){
+  function renderGrad{
     const T = parseInt(dS.value), d = parseFloat(cS.value);
     document.getElementById('distVal').textContent = T;
     document.getElementById('decayVal').textContent = d.toFixed(2);
@@ -349,11 +349,11 @@ document.addEventListener('DOMContentLoaded', function () {
     document.getElementById('gradOut').innerHTML =
       '经过 '+T+' 步回传后，梯度幅度 = '+d.toFixed(2)+'<sup>'+T+'</sup> ≈ <b>'+g.toExponential(3)+'</b><br>'+verdict;
   }
-  dS.addEventListener('input', renderGrad); cS.addEventListener('input', renderGrad); renderGrad();
+  dS.addEventListener('input', renderGrad); cS.addEventListener('input', renderGrad); renderGrad;
 
   // ===== LSTM 门控 =====
   const gf=document.getElementById('gf'), gi=document.getElementById('gi'), go=document.getElementById('go');
-  function renderGate(){
+  function renderGate{
     const f=parseFloat(gf.value), i=parseFloat(gi.value), o=parseFloat(go.value);
     document.getElementById('gvF').textContent=f.toFixed(2);
     document.getElementById('gvI').textContent=i.toFixed(2);
@@ -366,7 +366,7 @@ document.addEventListener('DOMContentLoaded', function () {
       '<br><b>h = o·tanh(c) = </b>'+o.toFixed(2)+'×'+Math.tanh(c_new).toFixed(3)+' = <b style="color:#ea580c">'+h.toFixed(3)+'</b>'+
       '<br><span style="font-size:12.5px;color:var(--mute)">把 f 拉到 1：旧记忆几乎完整保留（长期记忆）。把 f 拉到 0：旧记忆被清空（重新开始）。</span>';
   }
-  [gf,gi,go].forEach(s=>s.addEventListener('input',renderGate)); renderGate();
+  [gf,gi,go].forEach(s=>s.addEventListener('input',renderGate)); renderGate;
 
   // ===== Attention 权重 =====
   const src = ['I','love','natural','language','processing','.'];
@@ -383,7 +383,7 @@ document.addEventListener('DOMContentLoaded', function () {
   attnMaps.forEach((m,idx)=>{
     const b=document.createElement('button');
     b.className='act ghost'; b.textContent='生成「'+m.q+'」';
-    b.onclick=()=>{
+    b.onclick==>{
       let h='<tr><th>输入词</th>'+src.map(s=>'<th>'+s+'</th>').join('')+'</tr>';
       h+='<tr><th>权重</th>'+m.w.map(w=>{
         const a=0.12+0.78*w;

@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>集束搜索演示 · agent-nlp-llm</title>
+<link rel="stylesheet" href="css/site.css">
+<style>
+.tree-visual { overflow-x:auto; padding:16px 0; }
+.beam-node { display:inline-flex; align-items:center; justify-content:center; padding:8px 14px; border-radius:10px; font-family:var(--mono); font-size:.88rem; font-weight:600; margin:3px; cursor:pointer; transition:all .15s; border:2px solid transparent; position:relative; }
+.beam-node.active { border-color:var(--blue); box-shadow:0 4px 12px rgba(59,111,224,.3); transform:translateY(-2px); }
+.beam-node.pruned { opacity:0.3; text-decoration:line-through; }
+.beam-step { display:flex; gap:8px; align-items:center; margin:8px 0; padding:10px 14px; background:#fafbff; border-radius:12px; border:1px solid var(--border); overflow-x:auto; }
+.step-label { font-weight:700; font-size:.85rem; color:var(--text-3); min-width:60px; flex-shrink:0; }
+.step-nodes { display:flex; gap:6px; flex-wrap:wrap; flex:1; }
+.beam-arrow { color:var(--text-3); font-size:1.2rem; flex-shrink:0; }
+.output-box { padding:16px 20px; background:linear-gradient(135deg,#eef3ff,#f5f0ff); border-radius:12px; margin:12px 0; font-size:1.1rem; font-weight:600; color:#1e293b; min-height:50px; }
+.prob-tag { font-size:.72rem; font-weight:700; padding:2px 7px; border-radius:6px; margin-left:6px; }
+.compare-row { display:flex; gap:12px; margin:10px 0; }
+.compare-item { flex:1; padding:14px; border-radius:10px; border:1px solid var(--border); }
+.compare-item.greedy { border-left:4px solid #ef4444; }
+.compare-item.beam { border-left:4px solid #10a37f; }
+</style>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function{
+  function r{try{renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false});}catch(e){}}
+  if(document.readyState==='complete')r;else window.addEventListener('load',r);
+  setTimeout(r,300);setTimeout(r,1000);
+});
+</script>
+</head>
+<body>
+<nav class="navbar">
+<div class="nav-inner">
+<a href="index.html" class="nav-logo">💬 agent-nlp-llm</a>
+<button class="nav-toggle" aria-label="菜单" onclick="document.querySelector('.nav-links').classList.toggle('open')">☰</button>
+<div class="nav-links">
+<a href="index.html" class="nav-link">🏠&nbsp;首页</a>
+<a href="nlp/index.html" class="nav-link">📝&nbsp;NLP</a>
+<a href="llm/index.html" class="nav-link">🤖&nbsp;LLM</a>
+<a href="lab.html" class="nav-link active">🧪&nbsp;实验室</a>
+<a href="papers.html" class="nav-link">📚&nbsp;论文</a>
+<a href="clinic.html" class="nav-link">🕵️&nbsp;诊所</a>
+<a href="pitfalls.html" class="nav-link">💥&nbsp;踩坑</a>
+<a href="benchmark.html" class="nav-link">📊&nbsp;选型</a>
+<a href="universe.html" class="nav-link">🌌&nbsp;宇宙</a>
+<a href="https://github.com/yejinlei/agent-nlp-llm" target="_blank" rel="noopener" class="nav-gh" aria-label="GitHub"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg></a>
+</div>
+</div>
+</nav>
+
+<div class="wrap page">
+<section class="hero reveal">
+<h1>🔍 集束搜索演示</h1>
+<p class="sub">贪心搜索每步只选概率最高的词，容易走进死胡同（局部最优）。Beam Search 每步保留 top-k 个候选序列，最终选全局概率最高的——集束越宽，搜索越全面，但计算量也越大。</p>
+</section>
+
+<section class="blk reveal">
+<h2 class="blk-title"><span class="num">📐</span>原理</h2>
+<div class="grid g3">
+<div class="card" style="border-top:3px solid #ef4444">
+<h4>Beam size = 1（贪心）</h4>
+<p style="font-size:.9rem;color:var(--text-2)">每步只选概率最高的 1 个词。速度快，但一旦某步选错就无法回头，经常生成重复或不通顺的文本。</p>
+</div>
+<div class="card" style="border-top:3px solid #3b6fe0">
+<h4>Beam size = 3~5（常用）</h4>
+<p style="font-size:.9rem;color:var(--text-2)">每步保留 3~5 个最有希望的候选序列继续扩展。计算量增加，但输出质量显著提升，是机器翻译的标配。</p>
+</div>
+<div class="card" style="border-top:3px solid #10a37f">
+<h4>Beam size 大（穷举近似）</h4>
+<p style="font-size:.9rem;color:var(--text-2)">集束越大越接近全局最优，但计算量和内存开销线性增长。太大的 beam 反而可能导致输出过于"安全"和通用。</p>
+</div>
+</div>
+<div class="insight"><b>注意：</b> Beam Search 找的是近似最优序列，不是采样——它没有随机性，同样输入会得到同样输出。要生成有创造性的文本，应该用温度采样+top-k/top-p，而不是 beam search。</div>
+</section>
+
+<section class="blk reveal" id="play">
+<h2 class="blk-title"><span class="num">🎮</span>互动实验</h2>
+
+<div class="demo-box">
+<div class="ctrl">
+<label style="flex-direction:column">Beam Width（集束宽度）
+<input type="range" id="beamSlider" min="1" max="5" step="1" value="3">
+<span id="beamVal" style="font-weight:700;color:var(--blue)">3</span>
+</label>
+<label style="flex-direction:column">最大生成长度
+<input type="range" id="lenSlider" min="3" max="8" step="1" value="5">
+<span id="lenVal" style="font-weight:700;color:var(--blue)">5</span>
+</label>
+<label>示例场景
+<select id="sceneSelect">
+<option value="weather" selected>天气预报</option>
+<option value="food">美食推荐</option>
+<option value="travel">旅行描述</option>
+</select>
+</label>
+<button class="btn btn-primary" id="runBtn" style="padding:10px 20px">▶️ 运行搜索</button>
+</div>
+
+<h3 style="font-size:1.05rem;margin:16px 0 8px">搜索过程（每步保留 top-k 候选，灰色=被剪枝）</h3>
+<div class="tree-visual" id="treeVis"></div>
+
+<h3 style="font-size:1.05rem;margin:20px 0 8px">生成结果对比</h3>
+<div class="compare-row">
+<div class="compare-item greedy">
+<h4 style="color:#ef4444;font-size:.95rem">贪心搜索 (beam=1)</h4>
+<div class="output-box" id="greedyOut" style="background:#fef2f2;border:1px solid #fecaca">-</div>
+<div style="font-size:.82rem;color:var(--text-2)" id="greedyProb">-</div>
+</div>
+<div class="compare-item beam">
+<h4 style="color:#10a37f;font-size:.95rem">Beam Search (beam=<span id="beamLabel">3</span>)</h4>
+<div class="output-box" id="beamOut" style="background:#ecfdf5;border:1px solid #a7f3d0">-</div>
+<div style="font-size:.82rem;color:var(--text-2)" id="beamProb">-</div>
+</div>
+</div>
+
+<div class="hint" id="beamHint"></div>
+</div>
+</section>
+</div>
+
+<footer class="site"><p>💬 agent-nlp-llm · 自然语言技术本体论研究站</p></footer>
+<script src="js/site.js"></script>
+<script>
+(function{
+  // Character-level language model: a simple bigram-like model
+  // Define transition probabilities for different scenes
+  var vocab = '今天明气下雨晴多云吃好吃美去北南上火锅旅行海边山玩。';
+  var scenes = {
+    weather: buildWeatherProbs,
+    food: buildFoodProbs,
+    travel: buildTravelProbs
+  };
+  var START = '^';
+  var END = '$';
+
+  function buildWeatherProbs{
+    // transitions from state: {nextChar: logProb, ...}
+    // log probabilities (natural log), higher is better
+    var p={};
+    p['^']={'今':Math.log(0.6),'明':Math.log(0.4)};
+    p['今']={'天':Math.log(0.9),'日':Math.log(0.1)};
+    p['明']={'天':Math.log(0.85),'日':Math.log(0.15)};
+    p['天']={'气':Math.log(0.5),'下':Math.log(0.15),'是':Math.log(0.2),'有':Math.log(0.15)};
+    p['气']={'晴':Math.log(0.25),'下':Math.log(0.25),'多':Math.log(0.2),'好':Math.log(0.3)};
+    p['下']={'雨':Math.log(0.85),'雪':Math.log(0.15)};
+    p['雨']={'。':Math.log(0.7),'很':Math.log(0.2),'转':Math.log(0.1)};
+    p['晴']={'天':Math.log(0.1),'。':Math.log(0.5),'朗':Math.log(0.25),'多':Math.log(0.15)};
+    p['多']={'云':Math.log(0.9)};
+    p['云']={'。':Math.log(0.6),'转':Math.log(0.3),'有':Math.log(0.1)};
+    p['好']={'。':Math.log(0.85),'极':Math.log(0.1),'爽':Math.log(0.05)};
+    p['是']={'{'/*placeholder*/}:0};
+    // greedy trap: 天气->好->。 is decent but 天气->下雨 is more likely globally
+    p['是']={'晴':Math.log(0.3),'下':Math.log(0.2),'多':Math.log(0.2),'好':Math.log(0.3)};
+    p['有']={'雨':Math.log(0.4),'云':Math.log(0.35),'雾':Math.log(0.25)};
+    p['朗']={'。':Math.log(0.9)};
+    p['很']={'大':Math.log(0.5),'小':Math.log(0.5)};
+    p['大']={'。':Math.log(0.9)};
+    p['小']={'。':Math.log(0.9)};
+    p['转']={'晴':Math.log(0.4),'多':Math.log(0.4),'阴':Math.log(0.2)};
+    p['阴']={'。':Math.log(0.8)};
+    p['雾']={'。':Math.log(0.8)};
+    p['。']={'$':Math.log(1.0)};
+    p['极']={'了':Math.log(0.9)};
+    p['了']={'。':Math.log(0.9)};
+    p['爽']={'。':Math.log(0.9)};
+    p['日']={'下':Math.log(0.4),'晴':Math.log(0.3),'气':Math.log(0.3)};
+    return p;
+  }
+
+  function buildFoodProbs{
+    var p={};
+    p['^']={'我':Math.log(0.4),'今':Math.log(0.3),'最':Math.log(0.3)};
+    p['我']={'想':Math.log(0.5),'爱':Math.log(0.3),'要':Math.log(0.2)};
+    p['想']={'吃':Math.log(0.8),'去':Math.log(0.2)};
+    p['吃']={'火':Math.log(0.35),'好':Math.log(0.25),'面':Math.log(0.2),'美':Math.log(0.2)};
+    p['火']={'锅':Math.log(0.9)};
+    p['锅']={'。':Math.log(0.3),'真':Math.log(0.35),'很':Math.log(0.35)};
+    p['好']={'吃':Math.log(0.5),'美':Math.log(0.25),'。':Math.log(0.25)};
+    p['面']={'。':Math.log(0.5),'真':Math.log(0.3),'很':Math.log(0.2)};
+    p['美']={'食':Math.log(0.7),'味':Math.log(0.3)};
+    p['食']={'。':Math.log(0.6),'真':Math.log(0.4)};
+    p['味']={'。':Math.log(0.6),'真':Math.log(0.2),'好':Math.log(0.2)};
+    p['真']={'好':Math.log(0.5),'美':Math.log(0.3),'香':Math.log(0.2)};
+    p['很']={'好':Math.log(0.4),'美':Math.log(0.3),'辣':Math.log(0.3)};
+    p['香']={'。':Math.log(0.9)};
+    p['辣']={'。':Math.log(0.7),'过':Math.log(0.3)};
+    p['过']={'瘾':Math.log(0.9)};
+    p['瘾']={'。':Math.log(0.9)};
+    p['今']={'天':Math.log(0.9)};
+    p['天']={'吃':Math.log(0.5),'想':Math.log(0.3),'去':Math.log(0.2)};
+    p['最']={'爱':Math.log(0.5),'想':Math.log(0.3),'喜':Math.log(0.2)};
+    p['爱']={'吃':Math.log(0.7),'火':Math.log(0.2),'面':Math.log(0.1)};
+    p['去']={'吃':Math.log(0.6),'火':Math.log(0.25),'美':Math.log(0.15)};
+    p['要']={'吃':Math.log(0.8)};
+    p['喜']={'欢':Math.log(0.9)};
+    p['欢']={'吃':Math.log(0.6),'火':Math.log(0.2),'面':Math.log(0.2)};
+    p['。']={'$':Math.log(1.0)};
+    return p;
+  }
+
+  function buildTravelProbs{
+    var p={};
+    p['^']={'我':Math.log(0.5),'去':Math.log(0.3),'今':Math.log(0.2)};
+    p['我']={'去':Math.log(0.45),'想':Math.log(0.35),'爱':Math.log(0.2)};
+    p['去']={'北':Math.log(0.25),'海':Math.log(0.3),'上':Math.log(0.2),'旅':Math.log(0.25)};
+    p['北']={'京':Math.log(0.9)};
+    p['京']={'玩':Math.log(0.4),'旅':Math.log(0.3),'看':Math.log(0.3)};
+    p['海']={'边':Math.log(0.7),'上':Math.log(0.3)};
+    p['边']={'玩':Math.log(0.5),'旅':Math.log(0.25),'看':Math.log(0.25)};
+    p['上']={'海':Math.log(0.6),'山':Math.log(0.4)};
+    p['山']={'玩':Math.log(0.5),'旅':Math.log(0.25),'看':Math.log(0.25)};
+    p['旅']={'行':Math.log(0.8),'游':Math.log(0.2)};
+    p['行']={'。':Math.log(0.3),'真':Math.log(0.35),'很':Math.log(0.35)};
+    p['玩']={'。':Math.log(0.3),'真':Math.log(0.35),'很':Math.log(0.35)};
+    p['看']={'风':Math.log(0.5),'海':Math.log(0.3),'山':Math.log(0.2)};
+    p['风']={'景':Math.log(0.9)};
+    p['景']={'。':Math.log(0.4),'真':Math.log(0.35),'很':Math.log(0.25)};
+    p['真']={'美':Math.log(0.5),'好':Math.log(0.3),'棒':Math.log(0.2)};
+    p['很']={'美':Math.log(0.4),'好':Math.log(0.3),'棒':Math.log(0.3)};
+    p['美']={'。':Math.log(0.7),'极':Math.log(0.2),'丽':Math.log(0.1)};
+    p['好']={'玩':Math.log(0.5),'。':Math.log(0.3),'美':Math.log(0.2)};
+    p['棒']={'。':Math.log(0.85)};
+    p['极']={'了':Math.log(0.9)};
+    p['了']={'。':Math.log(0.9)};
+    p['丽']={'。':Math.log(0.9)};
+    p['想']={'去':Math.log(0.7),'旅':Math.log(0.3)};
+    p['爱']={'旅':Math.log(0.5),'去':Math.log(0.3),'北':Math.log(0.2)};
+    p['今']={'天':Math.log(0.9)};
+    p['天']={'去':Math.log(0.4),'旅':Math.log(0.35),'想':Math.log(0.25)};
+    p['游']={'。':Math.log(0.3),'真':Math.log(0.35),'很':Math.log(0.35)};
+    p['。']={'$':Math.log(1.0)};
+    return p;
+  }
+
+  function getNextProbs(trans, lastChar) {
+    if(!trans[lastChar]){return {'$':Math.log(0.5),'。':Math.log(0.5)};}
+    return trans[lastChar];
+  }
+
+  function beamSearch(scene, beamSize, maxLen){
+    var trans = scenes[scene];
+    // beams: array of {seq, score, finished}
+    var beams = [{seq:'', score:0, finished:false}];
+    var history = []; // each step: array of candidates
+    var step = 0;
+    history.push(beams.map(function(b){return {seq:b.seq||'^',score:b.score,alive:true};}));
+
+    while(step<maxLen){
+      step++;
+      var candidates = [];
+      beams.forEach(function(b){
+        if(b.finished){candidates.push(b);return;}
+        var last = b.seq.length?b.seq[b.seq.length-1]:START;
+        var nextP = getNextProbs(trans, last);
+        Object.keys(nextP).forEach(function(c){
+          var newSeq = b.seq + (c==='$'?'':c);
+          var newScore = b.score + nextP[c];
+          var finished = (c==='$');
+          candidates.push({seq:newSeq, score:newScore, finished:finished});
+        });
+      });
+      // sort by score desc
+      candidates.sort(function(a,b){return b.score-a.score;});
+      // take top beamSize (finished ones stay)
+      var alive = candidates.filter(function(c){return !c.finished;});
+      var finished = candidates.filter(function(c){return c.finished;});
+      beams = alive.slice(0, beamSize).concat(finished.slice(0, beamSize)).slice(0, beamSize);
+      history.push(candidates.map(function(c){return {seq:c.seq||'^',score:c.score,finished:c.finished,alive:beams.indexOf(c)>=0||c.finished};}));
+      // check if all finished
+      if(beams.every(function(b){return b.finished;})) break;
+    }
+
+    // find best (finished, highest score)
+    var best = beams.sort(function(a,b){return b.score-a.score;})[0];
+    return {best:best, history:history};
+  }
+
+  function greedySearch(scene, maxLen){
+    var trans=scenes[scene];
+    var seq='';var score=0;
+    for(var step=0;step<maxLen;step++){
+      var last=seq.length?seq[seq.length-1]:START;
+      var nextP=getNextProbs(trans,last);
+      var best='',bestS=-Infinity;
+      Object.keys(nextP).forEach(function(c){if(nextP[c]>bestS){bestS=nextP[c];best=c;}});
+      if(best==='$')break;
+      seq+=best;score+=bestS;
+    }
+    return {seq:seq,score:score};
+  }
+
+  function colorForScore(score, maxS, minS){
+    if(maxS===minS)return 'rgba(59,111,224,0.5)';
+    var t=(score-minS)/(maxS-minS);
+    var alpha=0.2+t*0.7;
+    return 'rgba(59,111,224,'+alpha.toFixed(2)+')';
+  }
+
+  function render(scene, beamSize, maxLen){
+    var beam=beamSearch(scene,beamSize,maxLen);
+    var greedy=greedySearch(scene,maxLen);
+    var hist=beam.history;
+
+    document.getElementById('beamLabel').textContent=beamSize;
+    document.getElementById('greedyOut').textContent=greedy.seq||'(空)';
+    document.getElementById('beamOut').textContent=beam.best.seq||'(空)';
+    document.getElementById('greedyProb').innerHTML='序列对数概率: <b>'+greedy.score.toFixed(3)+'</b>（普通概率: '+Math.exp(greedy.score).toExponential(2)+'）';
+    document.getElementById('beamProb').innerHTML='序列对数概率: <b>'+beam.best.score.toFixed(3)+'</b>（普通概率: '+Math.exp(beam.best.score).toExponential(2)+'）';
+
+    // render tree
+    var host=document.getElementById('treeVis');
+    var html='';
+    hist.forEach(function(stepCands,si){
+      var alive=stepCands.filter(function(c){return c.alive&&!c.finished;});
+      var pruned=stepCands.filter(function(c){return !c.alive&&!c.finished;});
+      var finished=stepCands.filter(function(c){return c.finished;});
+      // find score range
+      var scores=stepCands.map(function(c){return c.score;});
+      var mx=Math.max.apply(null,scores),mn=Math.min.apply(null,scores);
+
+      html+='<div class="beam-step"><div class="step-label">第'+si+'步</div><div class="step-nodes">';
+      alive.forEach(function(c){
+        var prob=Math.exp(c.score);
+        var bg=colorForScore(c.score,mx,mn);
+        html+='<span class="beam-node active" style="background:'+bg+';color:#fff">'+(c.seq==='^'?'<起始>':c.seq)+'<span class="prob-tag" style="background:rgba(255,255,255,.2)">'+c.score.toFixed(2)+'</span></span>';
+      });
+      finished.forEach(function(c){
+        html+='<span class="beam-node active" style="background:#10a37f;color:#fff">'+(c.seq==='^'?'<起始>':c.seq)+' <span style="opacity:.8">✓</span><span class="prob-tag" style="background:rgba(255,255,255,.2)">'+c.score.toFixed(2)+'</span></span>';
+      });
+      pruned.slice(0,8).forEach(function(c){
+        html+='<span class="beam-node pruned" style="background:#f1f5f9;color:#94a3b8">'+(c.seq==='^'?'<起始>':c.seq)+'</span>';
+      });
+      if(pruned.length>8) html+='<span style="color:var(--text-3);font-size:.82rem">...还有'+(pruned.length-8)+'个被剪枝</span>';
+      html+='</div></div>';
+    });
+    host.innerHTML=html;
+
+    // hint
+    var hint=document.getElementById('beamHint');
+    if(beamSize===1){
+      hint.className='hint warn';
+      hint.innerHTML='⚠️ <b>Beam size=1 就是贪心搜索</b>：每步只选局部最优，容易错过全局概率更高的序列。注意此时beam结果和贪心结果一致。';
+    }else{
+      var better=beam.best.score>greedy.score+0.001;
+      if(better){
+        hint.className='hint good';
+        hint.innerHTML='✅ <b>Beam Search 找到了更好的序列！</b>集束搜索保留了多个候选，最终序列的概率 ('+Math.exp(beam.best.score).toExponential(2)+') 高于贪心搜索 ('+Math.exp(greedy.score).toExponential(2)+')。这正是 beam search 的价值——避免局部最优。';
+      }else{
+        hint.className='hint';
+        hint.innerHTML='💡 在这个简单例子中，贪心和 beam 找到了同样好的解。在复杂翻译/摘要任务中，beam 的优势更明显。试着换一个场景或增大生成长度。';
+      }
+    }
+  }
+
+  document.getElementById('beamSlider').oninput=function{document.getElementById('beamVal').textContent=this.value;};
+  document.getElementById('lenSlider').oninput=function{document.getElementById('lenVal').textContent=this.value;};
+  document.getElementById('runBtn').onclick=function{
+    var b=parseInt(document.getElementById('beamSlider').value);
+    var l=parseInt(document.getElementById('lenSlider').value);
+    var s=document.getElementById('sceneSelect').value;
+    render(s,b,l);
+  };
+  // initial
+  render('weather',3,5);
+});
+</script>
+</body>
+</html>

@@ -43,8 +43,8 @@ h4 { margin-top: 20px; margin-bottom: 12px; color: #1e40af; }
 <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
 <script>
-(function(){
-  function render(){
+(function{
+  function render{
     if(typeof renderMathInElement !== 'function') return false;
     try{
       renderMathInElement(document.body,{
@@ -60,16 +60,16 @@ h4 { margin-top: 20px; margin-bottom: 12px; color: #1e40af; }
     }catch(e){console.warn('katex render error',e)}
     return true;
   }
-  function go(){ if(render()) return; setTimeout(go,200); }
-  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',go); else go();
-  window.addEventListener('load',function(){render(); setTimeout(render,500); setTimeout(render,1500)});
+  function go{ if(render) return; setTimeout(go,200); }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',go); else go;
+  window.addEventListener('load',function{render; setTimeout(render,500); setTimeout(render,1500)});
   if(window.MutationObserver){
     var t=null;
-    new MutationObserver(function(){ clearTimeout(t); t=setTimeout(render,200); })
+    new MutationObserver(function{ clearTimeout(t); t=setTimeout(render,200); })
       .observe(document.documentElement,{childList:true,subtree:true});
   }
   window.__katexRender = render;
-})();
+});
 </script>
 </head>
 <body>
@@ -220,8 +220,8 @@ print(list(jieba.cut(text)))  # ['我', '爱', '自然语言', '处理']</code><
     <div class="lab-card">
       <div class="flex gap-2 mb-4">
         <input type="text" id="viterbiInput" value="我爱北京天安门" class="flex-1 px-3 py-2 border border-gray-300 rounded-lg">
-        <button onclick="runViterbi()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">▶ 运行分词</button>
-        <button onclick="resetViterbi()" class="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600">🔄 重置</button>
+        <button onclick="runViterbi" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">▶ 运行分词</button>
+        <button onclick="resetViterbi" class="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600">🔄 重置</button>
       </div>
       <canvas id="viterbiCanvas"></canvas>
       <div id="viterbiResult" class="mt-4 p-3 bg-white rounded-lg border border-blue-200 font-mono"></div>
@@ -278,7 +278,7 @@ print(list(jieba.cut(text)))  # ['我', '爱', '自然语言', '处理']</code><
 <pre><code class="language-python"># Word2Vec Skip-gram 核心实现（简化版）
 class SkipGram(nn.Module):
     def __init__(self, vocab_size, embed_size):
-        super().__init__()
+        super.__init__
         self.in_embed = nn.Embedding(vocab_size, embed_size)
         self.out_embed = nn.Embedding(vocab_size, embed_size)
     
@@ -288,10 +288,10 @@ class SkipGram(nn.Module):
         # 正样本：上下文词
         context_vec = self.out_embed(context)
         # 负采样损失
-        pos_score = torch.bmm(context_vec, center_vec.unsqueeze(2)).squeeze()
-        neg_score = torch.bmm(self.out_embed(negatives).neg(), 
-                              center_vec.unsqueeze(2)).squeeze()
-        return -F.logsigmoid(pos_score).sum() - F.logsigmoid(neg_score).sum()</code></pre>
+        pos_score = torch.bmm(context_vec, center_vec.unsqueeze(2)).squeeze
+        neg_score = torch.bmm(self.out_embed(negatives).neg, 
+                              center_vec.unsqueeze(2)).squeeze
+        return -F.logsigmoid(pos_score).sum - F.logsigmoid(neg_score).sum</code></pre>
     </div>
 
     <h4>🎯 负采样：把 100 万分类变成 5 分类</h4>
@@ -334,7 +334,7 @@ def negative_sampling_loss(score_pos, score_neg):
 # 实战：找出与 "king" 最相近的词
 def most_similar(query_id, word_vecs, word_to_id, top=5):
     sims = [(w, cosine_similarity(word_vecs[query_id], word_vecs[i]))
-            for w, i in word_to_id.items() if w != list(word_to_id)[query_id]]
+            for w, i in word_to_id.items if w != list(word_to_id)[query_id]]
     return sorted(sims, key=lambda t: t[1], reverse=True)[:top]</code></pre>
   </section>
 
@@ -393,8 +393,8 @@ def most_similar(query_id, word_vecs, word_to_id, top=5):
 # 训练循环的核心：块内算梯度，块间只搬运状态
 # for chunk in chunks:
 #     loss = model.forward(chunk, hs)     # 前向：状态延续
-#     model.backward()                     # 反向：只在当前块内
-#     model.update()                       # 更新
+#     model.backward                     # 反向：只在当前块内
+#     model.update                       # 更新
 #     hs[0] = hs[-1]                       # 把最后状态递交给下一块</code></pre>
     <p class="text-gray-600">💡 <b>LSTM 为什么能缓解？</b> 它用<b>遗忘门</b>把连乘换成了"加法式累积"（细胞状态 C 的更新是 <code>C_t = f_t·C_{t−1} + i_t·C̃_t</code>），梯度沿 C 回传时是乘上接近 1 的 f，而不是一长串小于 1 的连乘，所以记忆能延续几百步。但门控再巧也改不了"串行"的本质，最终仍被可并行的<b>自注意力</b>取代。</p>
   </section>
@@ -489,7 +489,7 @@ model = BertForSequenceClassification.from_pretrained('bert-base-chinese')
 
 text = "这个电影太好看了！"
 inputs = tokenizer(text, return_tensors='pt', padding=True, truncation=True)
-with torch.no_grad():
+with torch.no_grad:
     outputs = model(**inputs)
     prediction = torch.argmax(outputs.logits, dim=-1)
 print("预测结果:", "正面" if prediction == 1 else "负面")</code></pre>

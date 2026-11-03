@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Softmax温度实验 · agent-nlp-llm</title>
+<link rel="stylesheet" href="css/site.css">
+<style>
+canvas { display:block; max-width:100%; background:#fff; border:1px solid var(--border); border-radius:10px; }
+.logit-input { width: 70px; text-align: center; }
+.bar-row { display: flex; align-items: center; gap: 10px; margin: 6px 0; }
+.bar-label { width: 80px; font-weight:600; font-size:.9rem; }
+.bar-track { flex:1; height: 32px; background:#f1f5f9; border-radius:8px; overflow:hidden; position:relative; }
+.bar-fill { height:100%; border-radius:8px; transition:width .3s ease; display:flex; align-items:center; padding:0 10px; color:#fff; font-weight:600; font-size:.85rem; font-family:var(--mono); }
+.preset-btn { padding:6px 14px; border-radius:8px; border:1px solid var(--border-2); background:#fff; cursor:pointer; font-size:.85rem; font-weight:600; color:var(--text-2); transition:all .15s; }
+.preset-btn:hover { border-color:var(--blue); color:var(--blue); }
+.preset-btn.active { background:var(--blue); color:#fff; border-color:var(--blue); }
+</style>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function{
+  function r{try{renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false});}catch(e){}}
+  if(document.readyState==='complete')r;else window.addEventListener('load',r);
+  setTimeout(r,300);setTimeout(r,1000);
+});
+</script>
+</head>
+<body>
+<nav class="navbar">
+<div class="nav-inner">
+<a href="index.html" class="nav-logo">💬 agent-nlp-llm</a>
+<button class="nav-toggle" aria-label="菜单" onclick="document.querySelector('.nav-links').classList.toggle('open')">☰</button>
+<div class="nav-links">
+<a href="index.html" class="nav-link">🏠&nbsp;首页</a>
+<a href="nlp/index.html" class="nav-link">📝&nbsp;NLP</a>
+<a href="llm/index.html" class="nav-link">🤖&nbsp;LLM</a>
+<a href="lab.html" class="nav-link active">🧪&nbsp;实验室</a>
+<a href="papers.html" class="nav-link">📚&nbsp;论文</a>
+<a href="clinic.html" class="nav-link">🕵️&nbsp;诊所</a>
+<a href="pitfalls.html" class="nav-link">💥&nbsp;踩坑</a>
+<a href="benchmark.html" class="nav-link">📊&nbsp;选型</a>
+<a href="universe.html" class="nav-link">🌌&nbsp;宇宙</a>
+<a href="https://github.com/yejinlei/agent-nlp-llm" target="_blank" rel="noopener" class="nav-gh" aria-label="GitHub"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg></a>
+</div>
+</div>
+</nav>
+
+<div class="wrap page">
+<section class="hero reveal">
+<h1>🌡️ Softmax温度实验</h1>
+<p class="sub">温度 τ 控制 softmax 输出分布的"尖锐程度"。τ→0 时模型只选概率最高的词（确定性强但重复），τ→∞ 时所有词概率相等（创造性强但可能胡说）。拖动滑块亲手感受。</p>
+</section>
+
+<section class="blk reveal">
+<h2 class="blk-title"><span class="num">📐</span>公式</h2>
+<div class="math">
+\[ p_i = \frac{\exp(z_i / \tau)}{\sum_j \exp(z_j / \tau)} \]
+</div>
+<p style="color:var(--text-2)">\(z_i\) 是模型输出的 logit（未归一化分数），τ 是温度参数：</p>
+<div class="grid g3">
+<div class="card" style="border-left:4px solid #ef4444">
+<h4 style="color:#ef4444">τ → 0 (低温)</h4>
+<p style="font-size:.9rem;color:var(--text-2)">最大 logit 对应的概率趋近 1，其他趋近 0，变成 one-hot。输出极度确定，容易重复和乏味。</p>
+</div>
+<div class="card" style="border-left:4px solid #10a37f">
+<h4 style="color:#10a37f">τ = 1 (标准)</h4>
+<p style="font-size:.9rem;color:var(--text-2)">就是标准 softmax。概率按 logit 差距正常分配，平衡确定性和多样性。</p>
+</div>
+<div class="card" style="border-left:4px solid #f59e0b">
+<h4 style="color:#f59e0b">τ → ∞ (高温)</h4>
+<p style="font-size:.9rem;color:var(--text-2)">所有类概率趋近 1/n，变成均匀分布。输出极随机，可能生成不相关或无意义内容。</p>
+</div>
+</div>
+</section>
+
+<section class="blk reveal" id="play">
+<h2 class="blk-title"><span class="num">🎮</span>互动实验</h2>
+
+<div class="demo-box">
+<div class="ctrl">
+<label style="flex-direction:column">温度 τ
+<input type="range" id="tempSlider" min="0.1" max="5.0" step="0.1" value="1.0">
+<span id="tempVal" style="font-weight:700;color:var(--blue)">1.0</span>
+</label>
+<div class="ctrl" style="margin:0;gap:8px">
+<button class="preset-btn" data-temp="0.2">❄️ τ=0.2 极冷</button>
+<button class="preset-btn active" data-temp="1.0">✓ τ=1 标准</button>
+<button class="preset-btn" data-temp="2.0">🔥 τ=2 偏热</button>
+<button class="preset-btn" data-temp="5.0">🌋 τ=5 极热</button>
+</div>
+</div>
+
+<h3 style="margin:16px 0 8px;font-size:1.05rem">输入 Logits（可手动修改）</h3>
+<div id="logitInputs" style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:12px"></div>
+<div class="ctrl" style="margin:8px 0">
+<button class="btn btn-outline" id="resetBtn" style="padding:8px 16px;font-size:.88rem">🔄 重置为示例</button>
+<button class="btn btn-outline" id="randomBtn" style="padding:8px 16px;font-size:.88rem">🎲 随机logits</button>
+</div>
+
+<h3 style="margin:20px 0 8px;font-size:1.05rem">概率分布柱状图</h3>
+<canvas id="barCanvas" width="800" height="340"></canvas>
+
+<h3 style="margin:20px 0 8px;font-size:1.05rem">概率分布数值</h3>
+<div id="probBars"></div>
+
+<div class="hint" id="tempHint"></div>
+</div>
+
+<div class="insight" style="margin-top:24px">
+<b>实践建议：</b> 文本生成时，常用温度范围 0.7~1.0。创意写作可以提高到 1.0~1.2；事实性问答降低到 0.3~0.5。注意：温度只在采样（sampling）时生效，如果用贪心解码或 beam search，温度参数不起作用。温度通常配合 top-k 或 top-p（nucleus sampling）一起使用，效果更好。
+</div>
+</section>
+</div>
+
+<footer class="site"><p>💬 agent-nlp-llm · 自然语言技术本体论研究站</p></footer>
+<script src="js/site.js"></script>
+<script>
+(function{
+  var labels = ['猫','狗','鱼','鸟','树','车','书','电脑'];
+  var defaultLogits = [3.2, 2.8, 1.5, 1.1, 0.3, -0.5, -1.2, -2.0];
+  var logits = defaultLogits.slice;
+  var colors = ['#3b6fe0','#7c3aed','#ec4899','#f59e0b','#10a37f','#06b6d4','#ef4444','#8b5cf6'];
+
+  var tempSlider = document.getElementById('tempSlider');
+  var canvas = document.getElementById('barCanvas');
+  var ctx = canvas.getContext('2d');
+
+  function buildInputs {
+    var host = document.getElementById('logitInputs');
+    host.innerHTML = '';
+    labels.forEach(function(lb, i){
+      var wrap = document.createElement('div');
+      wrap.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:2px';
+      var label = document.createElement('span');
+      label.textContent = lb;
+      label.style.cssText = 'font-size:.8rem;font-weight:600;color:var(--text-2)';
+      var inp = document.createElement('input');
+      inp.type = 'number'; inp.step = '0.1'; inp.value = logits[i];
+      inp.className = 'logit-input';
+      inp.dataset.idx = i;
+      inp.oninput = function{
+        logits[i] = parseFloat(this.value)||0;
+        update;
+      };
+      wrap.appendChild(label); wrap.appendChild(inp);
+      host.appendChild(wrap);
+    });
+  }
+
+  function softmax(zs, tau) {
+    var scaled = zs.map(function(z){return z/tau;});
+    var mx = Math.max.apply(null, scaled);
+    var ex = scaled.map(function(z){return Math.exp(z-mx);});
+    var sum = ex.reduce(function(a,b){return a+b;},0);
+    return ex.map(function(e){return e/sum;});
+  }
+
+  function entropy(ps) {
+    var h=0;
+    ps.forEach(function(p){if(p>1e-10)h-=p*Math.log2(p);});
+    return h;
+  }
+
+  function drawBars(probs) {
+    var W=canvas.width, H=canvas.height;
+    ctx.clearRect(0,0,W,H);
+    var pad={l:50,r:20,t:30,b:50};
+    var cw=W-pad.l-pad.r, ch=H-pad.t-pad.b;
+    var n = probs.length;
+    var bw = cw/n*0.7;
+    var gap = cw/n*0.3;
+
+    // axes
+    ctx.strokeStyle='#e2e8f0'; ctx.lineWidth=1;
+    ctx.beginPath; ctx.moveTo(pad.l,pad.t); ctx.lineTo(pad.l,pad.t+ch); ctx.lineTo(pad.l+cw,pad.t+ch); ctx.stroke;
+
+    // grid
+    ctx.strokeStyle='#f1f5f9'; ctx.fillStyle='#94a3b8'; ctx.font='11px sans-serif'; ctx.textAlign='right';
+    for(var g=0;g<=5;g++){
+      var gy=pad.t+ch-ch*g/5;
+      ctx.beginPath; ctx.moveTo(pad.l,gy); ctx.lineTo(pad.l+cw,gy); ctx.stroke;
+      ctx.fillText((g/5).toFixed(1), pad.l-6, gy+4);
+    }
+
+    var maxP = Math.max.apply(null, probs);
+    var tau = parseFloat(tempSlider.value);
+
+    for(var i=0;i<n;i++){
+      var p = probs[i];
+      var x = pad.l + (cw/n)*i + gap/2;
+      var bh = ch*p;
+      var y = pad.t+ch-bh;
+      // bar
+      var grd = ctx.createLinearGradient(x,y,x,pad.t+ch);
+      grd.addColorStop(0, colors[i%colors.length]);
+      grd.addColorStop(1, colors[i%colors.length]+'88');
+      ctx.fillStyle=grd;
+      ctx.beginPath;
+      var r=6;
+      ctx.moveTo(x+r,y); ctx.lineTo(x+bw-r,y);
+      ctx.quadraticCurveTo(x+bw,y,x+bw,y+r);
+      ctx.lineTo(x+bw,pad.t+ch); ctx.lineTo(x,pad.t+ch);
+      ctx.lineTo(x,y+r); ctx.quadraticCurveTo(x,y,x+r,y);
+      ctx.closePath;
+      ctx.fill;
+      // label
+      ctx.fillStyle='#475569'; ctx.textAlign='center'; ctx.font='13px sans-serif';
+      ctx.fillText(labels[i], x+bw/2, pad.t+ch+18);
+      // value
+      ctx.fillStyle=colors[i%colors.length]; ctx.font='bold 12px var(--mono)';
+      if(p>0.01) ctx.fillText(p.toFixed(3), x+bw/2, y-6);
+      else ctx.fillText('≈0', x+bw/2, y-6);
+    }
+
+    // title
+    ctx.fillStyle='#1e293b'; ctx.font='bold 14px sans-serif'; ctx.textAlign='left';
+    ctx.fillText('Softmax 概率分布 (τ='+tau.toFixed(1)+')', pad.l, 20);
+    ctx.fillStyle='#64748b'; ctx.font='12px sans-serif';
+    ctx.fillText('最大概率: '+maxP.toFixed(3)+'  |  熵: '+entropy(probs).toFixed(2)+' bits', pad.l+250, 20);
+  }
+
+  function drawProbBars(probs){
+    var host=document.getElementById('probBars');
+    var html='';
+    var sorted = probs.map(function(p,i){return {p:p,i:i};}).sort(function(a,b){return b.p-a.p;});
+    sorted.forEach(function(item){
+      var pct = (item.p*100).toFixed(1);
+      html += '<div class="bar-row"><div class="bar-label">'+labels[item.i]+'</div><div class="bar-track"><div class="bar-fill" style="width:'+pct+'%;background:'+colors[item.i%colors.length]+'">'+pct+'%</div></div></div>';
+    });
+    host.innerHTML=html;
+  }
+
+  function update{
+    var tau = parseFloat(tempSlider.value);
+    document.getElementById('tempVal').textContent = tau.toFixed(1);
+    document.querySelectorAll('.preset-btn').forEach(function(b){
+      b.classList.toggle('active', Math.abs(parseFloat(b.dataset.temp)-tau)<0.05);
+    });
+    var probs = softmax(logits, tau);
+    drawBars(probs);
+    drawProbBars(probs);
+
+    var hint = document.getElementById('tempHint');
+    var h = entropy(probs);
+    var maxH = Math.log2(labels.length);
+    var msg;
+    if(tau<0.5) msg='❄️ <b>低温模式</b>：分布极其尖锐，最大词占据大部分概率。模型几乎确定性地选择最优词，输出一致性强但容易陷入重复循环。';
+    else if(tau<1.2) msg='✓ <b>标准模式</b>：分布自然，概率按 logit 大小合理分配。兼顾准确性和多样性，是大多数场景的常用配置。';
+    else if(tau<2.5) msg='🔥 <b>高温模式</b>：分布趋于平滑，低概率词也有机会被选中。输出更有创造性和意外性，但可能出现不太相关的内容。';
+    else msg='🌋 <b>极高温</b>：分布接近均匀，选词几乎随机。模型"胡言乱语"的概率大增，实际应用中很少使用这么高的温度。';
+    msg += '<br>当前熵 = '+h.toFixed(2)+' / '+maxH.toFixed(2)+' bits （熵越高越随机）';
+    hint.innerHTML = msg;
+  }
+
+  tempSlider.oninput = update;
+  document.querySelectorAll('.preset-btn').forEach(function(b){
+    b.onclick = function{ tempSlider.value = b.dataset.temp; update; };
+  });
+  document.getElementById('resetBtn').onclick = function{
+    logits = defaultLogits.slice;
+    buildInputs; update;
+  };
+  document.getElementById('randomBtn').onclick = function{
+    logits = logits.map(function{return (Math.random*6-3);});
+    logits.sort(function(a,b){return b-a;});
+    buildInputs; update;
+  };
+
+  buildInputs;
+  update;
+});
+</script>
+</body>
+</html>

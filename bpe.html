@@ -83,8 +83,8 @@
 <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
 <script>
-(function(){
-  function render(){
+(function{
+  function render{
     if(typeof renderMathInElement !== 'function') return false;
     try{
       renderMathInElement(document.body,{
@@ -100,16 +100,16 @@
     }catch(e){console.warn('katex render error',e)}
     return true;
   }
-  function go(){ if(render()) return; setTimeout(go,200); }
-  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',go); else go();
-  window.addEventListener('load',function(){render(); setTimeout(render,500); setTimeout(render,1500)});
+  function go{ if(render) return; setTimeout(go,200); }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',go); else go;
+  window.addEventListener('load',function{render; setTimeout(render,500); setTimeout(render,1500)});
   if(window.MutationObserver){
     var t=null;
-    new MutationObserver(function(){ clearTimeout(t); t=setTimeout(render,200); })
+    new MutationObserver(function{ clearTimeout(t); t=setTimeout(render,200); })
       .observe(document.documentElement,{childList:true,subtree:true});
   }
   window.__katexRender = render;
-})();
+});
 </script>
 </head>
 <body>
@@ -596,8 +596,8 @@ BPE (Byte Pair Encoding) 最小可运行实现
       with Subword Units." ACL 2016.  (原始字节对编码思想来自 Gage, 1994)
 
 核心只有两件事:
-  1) get_stats()  —— 统计所有相邻符号对的加权频次
-  2) merge_vocab()—— 把最高频的那一对在所有出现位置粘起来
+  1) get_stats  —— 统计所有相邻符号对的加权频次
+  2) merge_vocab—— 把最高频的那一对在所有出现位置粘起来
 """</span>
 <span class="k">import</span> re
 <span class="k">import</span> collections
@@ -612,8 +612,8 @@ BPE (Byte Pair Encoding) 最小可运行实现
     返回: {(符号a, 符号b): 加权出现次数}
     """</span>
     pairs = collections.defaultdict(<span class="k">int</span>)
-    <span class="k">for</span> word, freq <span class="k">in</span> vocab.items():
-        symbols = word.split()                 <span class="c"># 'l o w &lt;/w&gt;' -&gt; ['l','o','w','&lt;/w&gt;']</span>
+    <span class="k">for</span> word, freq <span class="k">in</span> vocab.items:
+        symbols = word.split                 <span class="c"># 'l o w &lt;/w&gt;' -&gt; ['l','o','w','&lt;/w&gt;']</span>
         <span class="k">for</span> i <span class="k">in</span> <span class="k">range</span>(<span class="k">len</span>(symbols) - <span class="n">1</span>):
             <span class="c"># 注意: 累加的是 freq 而不是 1 —— 词频就是这一对的投票权重</span>
             pairs[symbols[i], symbols[i + <span class="n">1</span>]] += freq
@@ -651,7 +651,7 @@ BPE (Byte Pair Encoding) 最小可运行实现
     num_merges = <span class="n">10</span>          <span class="c"># BPE 唯一的超参数: 合并次数</span>
     merges = []             <span class="c"># 记录合并顺序 —— 这就是 merges.txt 的内容</span>
 
-    <span class="k">print</span>(<span class="s">'初始词表:'</span>, sorted(vocab.keys()))
+    <span class="k">print</span>(<span class="s">'初始词表:'</span>, sorted(vocab.keys))
     <span class="k">for</span> i <span class="k">in</span> <span class="k">range</span>(num_merges):
         pairs = get_stats(vocab)
         <span class="k">if</span> <span class="k">not</span> pairs:
@@ -696,7 +696,7 @@ BPE (Byte Pair Encoding) 最小可运行实现
           否则在合并 <code class="inline">('e','s')</code> 时，
           会把 "newest" 里已经粘好的 "est" 中的 "es" 也错误地替换掉，
           得到非法的中间状态。<br><br>
-          <b>③ <code class="inline">encode()</code> 必须按 merges 列表的顺序执行</b><br>
+          <b>③ <code class="inline">encode</code> 必须按 merges 列表的顺序执行</b><br>
           合并顺序本身就是训练产出的信息。跳过顺序、或者按频次重排，都会得到错误的分词。
         </p>
       </div>
@@ -967,7 +967,7 @@ toks = enc.encode(<span class="s">"你好，world！"</span>)
           如果用户在输入里直接写了这些字符串，而分词器又没有把它们当作普通文本处理，
           就可能<b>伪造出对话结构</b>——这就是一类经典的提示注入。
           正确的做法是在编码用户输入时禁止解析特殊 token
-          （tiktoken 提供 <code class="inline">encode(..., allowed_special=set())</code> 之类的开关）。
+          （tiktoken 提供 <code class="inline">encode(..., allowed_special=set)</code> 之类的开关）。
           <br><br>
           <b>一句话：</b>分词器是安全边界的一部分，不只是预处理工具。
         </p>
@@ -1082,7 +1082,7 @@ toks = enc.encode(<span class="s">"你好，world！"</span>)
    与工业实现的差异已在页面上显式说明（无预切分正则、起点是字符而非
    字节、朴素重扫描而非增量统计）。
    ================================================================ */
-(function () {
+(function  {
   'use strict';
 
   var $ = function (id) { return document.getElementById(id); };
@@ -1127,7 +1127,7 @@ toks = enc.encode(<span class="s">"你好，world！"</span>)
     var out = [];
     var lines = String(text || '').split(/[\n,，|]+/);
     for (var i = 0; i < lines.length; i++) {
-      var line = lines[i].trim();
+      var line = lines[i].trim;
       if (!line) continue;
       var parts = line.split(/\s+/);
       var last = parts[parts.length - 1];
@@ -1202,7 +1202,7 @@ toks = enc.encode(<span class="s">"你好，world！"</span>)
     var out = [];
     for (var i = 0; i < seqs.length; i++) {
       var s = seqs[i];
-      var c = s.slice();
+      var c = s.slice;
       c.__freq = s.__freq;
       c.__word = s.__word;
       out.push(c);
@@ -1240,14 +1240,14 @@ toks = enc.encode(<span class="s">"你好，world！"</span>)
   }
 
   /* ---------------- 构建完整历史 ---------------- */
-  function build() {
+  function build {
     var entries = parseCorpus(corpusEl.value);
     var tail = tailEl.value;
 
     if (!entries.length) {
       state.ready = false;
       stageBody.innerHTML = '<span style="color:#ff8f8f">语料是空的，请输入一些词。</span>';
-      resetStats();
+      resetStats;
       return;
     }
 
@@ -1296,11 +1296,11 @@ toks = enc.encode(<span class="s">"你好，world！"</span>)
     state.target = merged.length;
     state.cur = 0;
 
-    renderDots();
+    renderDots;
     renderStep(0);
   }
 
-  function resetStats() {
+  function resetStats {
     stStep.textContent = '0';
     stVocab.textContent = '0';
     stCorpus.textContent = '0';
@@ -1313,7 +1313,7 @@ toks = enc.encode(<span class="s">"你好，world！"</span>)
   }
 
   /* ---------------- 渲染 ---------------- */
-  function renderDots() {
+  function renderDots {
     var n = state.history.length;   // 0..target
     if (n <= 1) { stepDots.innerHTML = ''; return; }
     var html = '';
@@ -1324,7 +1324,7 @@ toks = enc.encode(<span class="s">"你好，world！"</span>)
     stepDots.innerHTML = html;
 
     Array.prototype.forEach.call(stepDots.children, function (el) {
-      el.addEventListener('click', function () {
+      el.addEventListener('click', function  {
         var idx = parseInt(el.getAttribute('data-i'), 10);
         if (state.ready && idx < state.history.length) {
           state.cur = idx;
@@ -1478,18 +1478,18 @@ toks = enc.encode(<span class="s">"你好，world！"</span>)
   }
 
   /* ---------------- 事件绑定 ---------------- */
-  rangeEl.addEventListener('input', function () {
+  rangeEl.addEventListener('input', function  {
     rangeValEl.textContent = rangeEl.value;
   });
-  rangeEl.addEventListener('change', function () {
-    if (state.ready) build();
+  rangeEl.addEventListener('change', function  {
+    if (state.ready) build;
   });
-  tailEl.addEventListener('change', function () {
-    if (state.ready) build();
+  tailEl.addEventListener('change', function  {
+    if (state.ready) build;
   });
 
-  $('btnRun').addEventListener('click', function () {
-    build();
+  $('btnRun').addEventListener('click', function  {
+    build;
     if (!state.ready) return;
     if (!state.merged.length) {
       labHint.innerHTML = '🤔 这段语料里没有可合并的相邻对（词都太短了，或者每个词只有一个符号）。'
@@ -1504,9 +1504,9 @@ toks = enc.encode(<span class="s">"你好，world！"</span>)
     renderStep(state.merged.length);
   });
 
-  $('btnNext').addEventListener('click', function () {
+  $('btnNext').addEventListener('click', function  {
     if (!state.ready) {
-      build();
+      build;
       if (!state.ready) return;
     }
     if (state.cur >= state.history.length - 1) {
@@ -1518,44 +1518,44 @@ toks = enc.encode(<span class="s">"你好，world！"</span>)
     renderStep(state.cur + 1);
   });
 
-  $('btnAll').addEventListener('click', function () {
-    if (!state.ready) build();
+  $('btnAll').addEventListener('click', function  {
+    if (!state.ready) build;
     if (!state.ready) return;
     renderStep(state.history.length - 1);
     labHint.innerHTML = '⏩ <b>已跳到最后一次合并。</b>看左边舞台：序列已经从一堆单字符'
       + '变成了若干较长的子词。切到「合并记录」面板，那一列就是这个词表的完整诞生史。';
   });
 
-  $('btnReset').addEventListener('click', function () {
+  $('btnReset').addEventListener('click', function  {
     state.ready = false;
     state.merged = [];
     state.history = [];
     state.vocabHist = [];
     state.cur = 0;
-    resetStats();
+    resetStats;
     stageBody.innerHTML = '<span style="color:#7d8bb0">点「运行 BPE 合并步骤」开始。</span>';
     var stageTitle = document.querySelector('.bpe-stage .stage-title');
     if (stageTitle) stageTitle.textContent = '当前符号序列（每个词一行）';
     labHint.innerHTML = '📌 <b>玩法提示：</b>先用默认语料跑一遍，看 "low"、"est" 是怎么被粘出来的。'
       + '然后把语料换成你自己的句子，或者把"词尾标记"改成"不加"，观察合并结果有什么变化。';
-    build();   // 重置后立即构建，回到第 0 步
+    build;   // 重置后立即构建，回到第 0 步
   });
 
   /* 初始化：先构建一次，让页面一打开就处于"可单步"状态 */
   rangeValEl.textContent = rangeEl.value;
-  build();
+  build;
   if (state.ready) {
     labHint.innerHTML = '📌 <b>已就绪。</b>当前共 '
       + state.merged.length + ' 步合并待观察。'
       + '灰色高亮的那一对是最高频的相邻符号对——点「▶ 下一步」看它被粘起来。'
       + '<br>也可以直接改上面的语料，然后点「运行 BPE 合并步骤」重新计算。';
   }
-})();
+});
 
 /* ================================================================
    进入视口淡入
    ================================================================ */
-(function () {
+(function  {
   'use strict';
   var els = document.querySelectorAll('.reveal');
   if (!('IntersectionObserver' in window)) {
@@ -1568,7 +1568,7 @@ toks = enc.encode(<span class="s">"你好，world！"</span>)
     });
   }, { threshold: 0.08 });
   Array.prototype.forEach.call(els, function (el) { io.observe(el); });
-})();
+});
 </script>
 </body>
 </html>

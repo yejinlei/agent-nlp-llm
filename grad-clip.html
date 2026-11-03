@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>梯度裁剪演示 · agent-nlp-llm</title>
+<link rel="stylesheet" href="css/site.css">
+<style>
+canvas { display:block; max-width:100%; background:#fff; border:1px solid var(--border); border-radius:10px; }
+.vec-vis { display:flex; gap:12px; flex-wrap:wrap; margin:12px 0; }
+.vec-item { padding:10px 16px; border-radius:10px; font-family:var(--mono); font-size:.88rem; }
+.vec-before { background:#fef2f2; border:1px solid #fecaca; color:#b91c1c; }
+.vec-after { background:#ecfdf5; border:1px solid #a7f3d0; color:#047857; }
+</style>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function{
+  function r{try{renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false});}catch(e){}}
+  if(document.readyState==='complete')r;else window.addEventListener('load',r);
+  setTimeout(r,300);setTimeout(r,1000);
+});
+</script>
+</head>
+<body>
+<nav class="navbar">
+<div class="nav-inner">
+<a href="index.html" class="nav-logo">💬 agent-nlp-llm</a>
+<button class="nav-toggle" aria-label="菜单" onclick="document.querySelector('.nav-links').classList.toggle('open')">☰</button>
+<div class="nav-links">
+<a href="index.html" class="nav-link">🏠&nbsp;首页</a>
+<a href="nlp/index.html" class="nav-link">📝&nbsp;NLP</a>
+<a href="llm/index.html" class="nav-link">🤖&nbsp;LLM</a>
+<a href="lab.html" class="nav-link active">🧪&nbsp;实验室</a>
+<a href="papers.html" class="nav-link">📚&nbsp;论文</a>
+<a href="clinic.html" class="nav-link">🕵️&nbsp;诊所</a>
+<a href="pitfalls.html" class="nav-link">💥&nbsp;踩坑</a>
+<a href="benchmark.html" class="nav-link">📊&nbsp;选型</a>
+<a href="universe.html" class="nav-link">🌌&nbsp;宇宙</a>
+<a href="https://github.com/yejinlei/agent-nlp-llm" target="_blank" rel="noopener" class="nav-gh" aria-label="GitHub"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg></a>
+</div>
+</div>
+</nav>
+
+<div class="wrap page">
+<section class="hero reveal">
+<h1>✂️ 梯度裁剪演示</h1>
+<p class="sub">梯度爆炸时，参数更新步长太大，模型会直接飞出最优区域。梯度裁剪把梯度向量的 L2 范数限制在阈值内——方向不变，长度缩短，训练就稳定了。</p>
+</section>
+
+<section class="blk reveal">
+<h2 class="blk-title"><span class="num">📐</span>原理</h2>
+<div class="math">
+\[ \text{if } \|\mathbf{g}\| > c \text{, then } \mathbf{g} \leftarrow \frac{c}{\|\mathbf{g}\|} \cdot \mathbf{g} \]
+</div>
+<p style="color:var(--text-2)">先算梯度向量 \(\mathbf{g}\) 的 L2 范数。如果超过阈值 c，就等比例缩放所有分量，使范数恰好等于 c。关键：<b>方向不变</b>，只是步子迈小一点。</p>
+<div class="grid g3">
+<div class="card">
+<h4>❌ 不裁剪</h4>
+<p style="font-size:.9rem;color:var(--text-2)">梯度范数100甚至1000，参数被推飞，loss 突然飙升变成 NaN。RNN/LSTM 和深层 Transformer 训练初期极易遇到。</p>
+</div>
+<div class="card">
+<h4>✂️ 裁剪后</h4>
+<p style="font-size:.9rem;color:var(--text-2)">梯度范数被压到阈值（常用 1.0），更新方向保持正确，步长不会失控。这是训练稳定的"保险丝"。</p>
+</div>
+<div class="card">
+<h4>⚙️ 常用值</h4>
+<p style="font-size:.9rem;color:var(--text-2)">max_norm = 1.0 是大多数 GPT 类模型的默认值。RNN 有时用 5.0 或更大。值太小会导致更新太慢、收敛慢。</p>
+</div>
+</div>
+</section>
+
+<section class="blk reveal" id="play">
+<h2 class="blk-title"><span class="num">🎮</span>互动实验</h2>
+
+<div class="demo-box">
+<div class="ctrl">
+<label style="flex-direction:column">裁剪阈值 c
+<input type="range" id="clipVal" min="0.1" max="10" step="0.1" value="1.0">
+<span id="clipDisplay" style="font-weight:700;color:var(--blue)">1.0</span>
+</label>
+<div class="ctrl" style="margin:0;gap:8px">
+<button class="preset-btn scene" data-scene="normal">正常梯度</button>
+<button class="preset-btn scene active" data-scene="explode">梯度爆炸</button>
+<button class="preset-btn scene" data-scene="moderate">中等梯度</button>
+<button class="preset-btn scene" data-scene="random">🎲 随机</button>
+</div>
+</div>
+
+<div class="grid g2">
+<div>
+<h3 style="font-size:1.05rem;margin-bottom:10px">2D 梯度向量裁剪示意</h3>
+<canvas id="vecCanvas" width="420" height="420"></canvas>
+<p style="font-size:.85rem;color:var(--text-3);margin-top:6px">红色箭头=原始梯度，绿色箭头=裁剪后梯度，蓝色虚线圆=阈值球</p>
+</div>
+<div>
+<h3 style="font-size:1.05rem;margin-bottom:10px">梯度分量对比</h3>
+<canvas id="compCanvas" width="420" height="420"></canvas>
+<p style="font-size:.85rem;color:var(--text-3);margin-top:6px">红色条=原始梯度分量，绿色条=裁剪后分量</p>
+</div>
+</div>
+
+<div style="margin-top:18px">
+<h3 style="font-size:1.05rem;margin-bottom:10px">梯度范数对比</h3>
+<div class="kv"><span>原始梯度范数 ||g||</span><span id="origNorm" style="color:#ef4444">-</span></div>
+<div class="kv"><span>裁剪阈值 c</span><span id="threshDisplay" style="color:var(--blue)">-</span></div>
+<div class="kv"><span>裁剪后范数</span><span id="clippedNorm" style="color:#10a37f">-</span></div>
+<div class="kv"><span>缩放比例</span><span id="scaleRatio">-</span></div>
+<div class="kv"><span>是否触发裁剪</span><span id="clipped">-</span></div>
+</div>
+
+<div class="hint" id="clipHint"></div>
+</div>
+
+<div class="insight" style="margin-top:24px">
+<b>为什么梯度会爆炸？</b> 在深度网络中，梯度反向传播需要经过层层连乘。如果每层的权重矩阵最大奇异值 > 1，梯度在反向传播中会指数级增长（RNN 尤其严重）。梯度裁剪不会解决根本问题，但能防止训练崩溃。配合合适的初始化（Xavier/He）和归一化层（LayerNorm）才能从根本上稳定训练。
+</div>
+</section>
+</div>
+
+<footer class="site"><p>💬 agent-nlp-llm · 自然语言技术本体论研究站</p></footer>
+<script src="js/site.js"></script>
+<script>
+(function{
+  var scenes = {
+    normal: [0.8, -0.5, 0.3, -0.2, 0.6, -0.4, 0.1, 0.7],
+    explode: [12.0, -8.5, 15.3, -6.7, 9.2, -11.8, 7.4, -13.1],
+    moderate: [3.2, -2.1, 1.8, -2.9, 3.5, -1.2, 2.6, -3.0]
+  };
+  var grad = scenes.explode.slice;
+
+  function norm(g){return Math.sqrt(g.reduce(function(s,x){return s+x*x;},0));}
+  function clipGrad(g,c){var n=norm(g);if(n<=c)return g.slice;var r=c/n;return g.map(function(x){return x*r;});}
+
+  var clipSlider = document.getElementById('clipVal');
+  var vctx = document.getElementById('vecCanvas').getContext('2d');
+  var cctx = document.getElementById('compCanvas').getContext('2d');
+
+  function drawVec(orig, clipped, c){
+    var W=420, H=420, cx=W/2, cy=H/2;
+    vctx.clearRect(0,0,W,H);
+    var scale = Math.max(norm(orig),c)*1.2;
+    var sc = (W/2-30)/scale;
+
+    // grid
+    vctx.strokeStyle='#f1f5f9';vctx.lineWidth=1;
+    for(var i=-5;i<=5;i++){
+      var x=cx+i*30;
+      vctx.beginPath;vctx.moveTo(x,20);vctx.lineTo(x,H-20);vctx.stroke;
+      var y=cy+i*30;
+      vctx.beginPath;vctx.moveTo(20,y);vctx.lineTo(W-20,y);vctx.stroke;
+    }
+
+    // axes
+    vctx.strokeStyle='#cbd5e1';vctx.lineWidth=1.5;
+    vctx.beginPath;vctx.moveTo(20,cy);vctx.lineTo(W-20,cy);vctx.stroke;
+    vctx.beginPath;vctx.moveTo(cx,20);vctx.lineTo(cx,H-20);vctx.stroke;
+
+    // threshold circle
+    vctx.strokeStyle='#3b6fe0';vctx.lineWidth=2;vctx.setLineDash([6,4]);
+    vctx.beginPath;vctx.arc(cx,cy,c*sc,0,Math.PI*2);vctx.stroke;
+    vctx.setLineDash([]);
+    vctx.fillStyle='rgba(59,111,224,0.06)';
+    vctx.beginPath;vctx.arc(cx,cy,c*sc,0,Math.PI*2);vctx.fill;
+
+    // original gradient (red)
+    var gx=orig[0]*sc, gy=-orig[1]*sc;
+    vctx.strokeStyle='#ef4444';vctx.lineWidth=3;
+    vctx.beginPath;vctx.moveTo(cx,cy);vctx.lineTo(cx+gx,cy+gy);vctx.stroke;
+    // arrowhead
+    var angle=Math.atan2(gy,gx);
+    vctx.beginPath;
+    vctx.moveTo(cx+gx,cy+gy);
+    vctx.lineTo(cx+gx-12*Math.cos(angle-0.3),cy+gy-12*Math.sin(angle-0.3));
+    vctx.lineTo(cx+gx-12*Math.cos(angle+0.3),cy+gy-12*Math.sin(angle+0.3));
+    vctx.closePath;vctx.fillStyle='#ef4444';vctx.fill;
+
+    // clipped gradient (green)
+    var clgx=clipped[0]*sc, clgy=-clipped[1]*sc;
+    vctx.strokeStyle='#10a37f';vctx.lineWidth=3;
+    vctx.beginPath;vctx.moveTo(cx,cy);vctx.lineTo(cx+clgx,cy+clgy);vctx.stroke;
+    angle=Math.atan2(clgy,clgx);
+    vctx.beginPath;
+    vctx.moveTo(cx+clgx,cy+clgy);
+    vctx.lineTo(cx+clgx-12*Math.cos(angle-0.3),cy+clgy-12*Math.sin(angle-0.3));
+    vctx.lineTo(cx+clgx-12*Math.cos(angle+0.3),cy+clgy-12*Math.sin(angle+0.3));
+    vctx.closePath;vctx.fillStyle='#10a37f';vctx.fill;
+
+    // legend
+    vctx.font='12px sans-serif';
+    vctx.fillStyle='#ef4444';vctx.fillRect(W-130,20,14,14);vctx.fillStyle='#475569';vctx.fillText('原始梯度 g',W-110,32);
+    vctx.fillStyle='#10a37f';vctx.fillRect(W-130,42,14,14);vctx.fillStyle='#475569';vctx.fillText('裁剪后梯度',W-110,54);
+    vctx.fillStyle='rgba(59,111,224,0.3)';vctx.fillRect(W-130,64,14,14);vctx.strokeStyle='#3b6fe0';vctx.strokeRect(W-130,64,14,14);vctx.fillStyle='#475569';vctx.fillText('阈值球 (半径='+c+')',W-110,76);
+
+    vctx.fillStyle='#64748b';vctx.font='11px sans-serif';vctx.textAlign='center';
+    vctx.fillText('g[0]',W-25,cy+18);vctx.fillText('g[1]',cx+15,30);
+  }
+
+  function drawComp(orig, clipped){
+    var W=420,H=420;
+    cctx.clearRect(0,0,W,H);
+    var pad={l:60,r:20,t:20,b:40};
+    var cw=W-pad.l-pad.r, ch=H-pad.t-pad.b;
+    var n=orig.length;
+    var maxAbs=Math.max.apply(null,orig.map(Math.abs));
+    var bh = ch/n*0.38;
+    var gap = ch/n*0.62;
+
+    // axes
+    cctx.strokeStyle='#e2e8f0';cctx.lineWidth=1;
+    cctx.beginPath;cctx.moveTo(pad.l,pad.t);cctx.lineTo(pad.l,pad.t+ch);cctx.stroke;
+    var zeroX = pad.l+cw/2;
+    cctx.beginPath;cctx.moveTo(zeroX,pad.t);cctx.lineTo(zeroX,pad.t+ch);cctx.stroke;
+
+    for(var i=0;i<n;i++){
+      var y=pad.t+gap*i+bh/2;
+      var origW = (orig[i]/maxAbs)*(cw/2-10);
+      var clipW = (clipped[i]/maxAbs)*(cw/2-10);
+      // original (red)
+      cctx.fillStyle='rgba(239,68,68,0.5)';
+      cctx.fillRect(zeroX, y, origW, bh*0.9);
+      if(origW<0){cctx.fillRect(zeroX+origW,y,-origW,bh*0.9);}
+      // clipped (green)
+      cctx.fillStyle='rgba(16,163,127,0.7)';
+      if(clipW>=0) cctx.fillRect(zeroX, y+bh, clipW, bh*0.9);
+      else cctx.fillRect(zeroX+clipW, y+bh, -clipW, bh*0.9);
+
+      cctx.fillStyle='#475569';cctx.font='11px sans-serif';cctx.textAlign='right';
+      cctx.fillText('g['+i+']', pad.l-6, y+bh+4);
+    }
+    cctx.fillStyle='#94a3b8';cctx.font='11px sans-serif';cctx.textAlign='center';
+    cctx.fillText('负', pad.l+30, pad.t+ch+20);
+    cctx.fillText('正', pad.l+cw-30, pad.t+ch+20);
+    cctx.fillStyle='#ef4444';cctx.fillRect(pad.l,pad.t+ch+28,12,12);cctx.fillStyle='#475569';cctx.textAlign='left';cctx.fillText('原始',pad.l+16,pad.t+ch+39);
+    cctx.fillStyle='#10a37f';cctx.fillRect(pad.l+80,pad.t+ch+28,12,12);cctx.fillStyle='#475569';cctx.fillText('裁剪后',pad.l+96,pad.t+ch+39);
+  }
+
+  function update{
+    var c = parseFloat(clipSlider.value);
+    document.getElementById('clipDisplay').textContent = c.toFixed(1);
+    var origN = norm(grad);
+    var clipped = clipGrad(grad,c);
+    var clipN = norm(clipped);
+    var isClipped = origN > c;
+
+    drawVec([grad[0],grad[1]], [clipped[0],clipped[1]], c);
+    drawComp(grad, clipped);
+
+    document.getElementById('origNorm').textContent = origN.toFixed(3);
+    document.getElementById('threshDisplay').textContent = c.toFixed(1);
+    document.getElementById('clippedNorm').textContent = clipN.toFixed(3);
+    document.getElementById('scaleRatio').textContent = isClipped ? (c/origN).toFixed(3) : '1.000 (未裁剪)';
+    var clippedTag = document.getElementById('clipped');
+    clippedTag.innerHTML = isClipped ? '<span style="color:#f59e0b;font-weight:700">✂️ 已裁剪</span>' : '<span style="color:#10a37f;font-weight:700">✓ 无需裁剪</span>';
+
+    var hint = document.getElementById('clipHint');
+    if(isClipped){
+      hint.className='hint warn';
+      hint.innerHTML='⚠️ <b>梯度范数 ('+origN.toFixed(2)+') 超过阈值 ('+c+')，触发裁剪！</b>每个分量乘以缩放因子 '+(c/origN).toFixed(3)+'，方向不变，范数被压到 '+c+'。这就是为什么大梯度不会导致参数飞出去。';
+    } else {
+      hint.className='hint good';
+      hint.innerHTML='✅ 梯度范数 ('+origN.toFixed(2)+') 在阈值范围内，无需裁剪。训练稳定。';
+    }
+  }
+
+  clipSlider.oninput = update;
+  document.querySelectorAll('.scene').forEach(function(b){
+    b.onclick=function{
+      document.querySelectorAll('.scene').forEach(function(x){x.classList.remove('active');});
+      b.classList.add('active');
+      var s=b.dataset.scene;
+      if(s==='random'){
+        grad=[];for(var i=0;i<8;i++)grad.push((Math.random*30-15));
+      }else{grad=scenes[s].slice;}
+      update;
+    };
+  });
+
+  update;
+});
+</script>
+</body>
+</html>

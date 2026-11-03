@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dropout随机失活 · agent-nlp-llm</title>
+<link rel="stylesheet" href="css/site.css">
+<style>
+canvas { display:block; max-width:100%; background:#fff; border:1px solid var(--border); border-radius:10px; }
+.stat-card { padding:16px; border-radius:12px; text-align:center; }
+.stat-val { font-size:1.8rem; font-weight:800; font-family:var(--mono); }
+.stat-label { font-size:.82rem; color:var(--text-2); margin-top:4px; }
+</style>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function{
+  function r{try{renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false});}catch(e){}}
+  if(document.readyState==='complete')r;else window.addEventListener('load',r);
+  setTimeout(r,300);setTimeout(r,1000);
+});
+</script>
+</head>
+<body>
+<nav class="navbar">
+<div class="nav-inner">
+<a href="index.html" class="nav-logo">💬 agent-nlp-llm</a>
+<button class="nav-toggle" aria-label="菜单" onclick="document.querySelector('.nav-links').classList.toggle('open')">☰</button>
+<div class="nav-links">
+<a href="index.html" class="nav-link">🏠&nbsp;首页</a>
+<a href="nlp/index.html" class="nav-link">📝&nbsp;NLP</a>
+<a href="llm/index.html" class="nav-link">🤖&nbsp;LLM</a>
+<a href="lab.html" class="nav-link active">🧪&nbsp;实验室</a>
+<a href="papers.html" class="nav-link">📚&nbsp;论文</a>
+<a href="clinic.html" class="nav-link">🕵️&nbsp;诊所</a>
+<a href="pitfalls.html" class="nav-link">💥&nbsp;踩坑</a>
+<a href="benchmark.html" class="nav-link">📊&nbsp;选型</a>
+<a href="universe.html" class="nav-link">🌌&nbsp;宇宙</a>
+<a href="https://github.com/yejinlei/agent-nlp-llm" target="_blank" rel="noopener" class="nav-gh" aria-label="GitHub"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg></a>
+</div>
+</div>
+</nav>
+
+<div class="wrap page">
+<section class="hero reveal">
+<h1>🎲 Dropout 随机失活</h1>
+<p class="sub">训练时以概率 p 随机"关闭"一部分神经元，强迫网络不依赖任何单个特征——这就是 Dropout，深度学习中最简单也最有效的正则化手段之一。</p>
+</section>
+
+<section class="blk reveal">
+<h2 class="blk-title"><span class="num">📐</span>原理</h2>
+<div class="math">
+\[ \text{训练时：} \tilde{h}_i = \frac{m_i}{1-p} \cdot h_i, \quad m_i \sim \text{Bernoulli}(1-p) \]
+</div>
+<p style="color:var(--text-2)">训练阶段，每个神经元以概率 p 被置零（失活），存活的神经元输出除以 1-p 做"倒置缩放"，使得期望值保持不变。推理时所有神经元都参与，权重自动乘以 1-p（因为训练时已经缩放了，所以推理直接用即可）。</p>
+<div class="grid g2">
+<div class="card" style="border-top:3px solid #ef4444">
+<h4>🏋️ 训练时</h4>
+<p style="font-size:.92rem;color:var(--text-2)">每次前向传播随机采样一个子网络，只有存活的神经元参与计算。相当于同时训练大量共享权重的子网络的集成。</p>
+</div>
+<div class="card" style="border-top:3px solid #10a37f">
+<h4>🧪 推理时</h4>
+<p style="font-size:.92rem;color:var(--text-2)">所有神经元都使用，但由于倒置缩放，输出期望与训练时一致。相当于把所有子网络的预测做平均（模型集成）。</p>
+</div>
+</div>
+</section>
+
+<section class="blk reveal" id="play">
+<h2 class="blk-title"><span class="num">🎮</span>互动实验</h2>
+
+<div class="demo-box">
+<div class="ctrl">
+<label style="flex-direction:column">Dropout 概率 p
+<input type="range" id="pSlider" min="0" max="0.9" step="0.05" value="0.5">
+<span id="pVal" style="font-weight:700;color:var(--blue)">0.50</span>
+</label>
+<label style="flex-direction:column">层数
+<input type="range" id="layerSlider" min="2" max="6" step="1" value="4">
+<span id="layerVal" style="font-weight:700;color:var(--blue)">4</span>
+</label>
+<label style="flex-direction:column">每层神经元数
+<input type="range" id="neuronSlider" min="4" max="12" step="1" value="8">
+<span id="neuronVal" style="font-weight:700;color:var(--blue)">8</span>
+</label>
+<button class="btn btn-primary" id="resampleBtn" style="padding:10px 20px">🎲 重新采样</button>
+</div>
+
+<div style="display:flex;gap:12px;flex-wrap:wrap;margin:16px 0">
+<div class="stat-card" style="background:#eef3ff;flex:1;min-width:120px"><div class="stat-val" style="color:var(--blue)" id="aliveCount">-</div><div class="stat-label">存活神经元</div></div>
+<div class="stat-card" style="background:#fef2f2;flex:1;min-width:120px"><div class="stat-val" style="color:#ef4444" id="deadCount">-</div><div class="stat-label">失活神经元</div></div>
+<div class="stat-card" style="background:#f0fdf4;flex:1;min-width:120px"><div class="stat-val" style="color:#10a37f" id="aliveRate">-</div><div class="stat-label">存活率</div></div>
+<div class="stat-card" style="background:#fff7ed;flex:1;min-width:120px"><div class="stat-val" style="color:#f59e0b" id="scaleFactor">-</div><div class="stat-label">缩放因子 1/(1-p)</div></div>
+</div>
+
+<h3 style="font-size:1.05rem;margin:10px 0 8px">神经网络可视化（灰色=失活）</h3>
+<canvas id="netCanvas" width="860" height="420"></canvas>
+
+<h3 style="font-size:1.05rem;margin:20px 0 8px">训练 vs 推理对比</h3>
+<div class="grid g2">
+<div class="card" style="border-left:4px solid #ef4444">
+<h4>🏋️ 训练模式</h4>
+<p style="font-size:.9rem;color:var(--text-2)" id="trainDesc">-</p>
+<p style="font-size:.85rem;color:var(--text-3);margin-top:8px" id="trainDetail">-</p>
+</div>
+<div class="card" style="border-left:4px solid #10a37f">
+<h4>🧪 推理模式</h4>
+<p style="font-size:.9rem;color:var(--text-2)" id="inferDesc">-</p>
+<p style="font-size:.85rem;color:var(--text-3);margin-top:8px" id="inferDetail">-</p>
+</div>
+</div>
+
+<div class="hint" id="dropHint"></div>
+</div>
+
+<div class="insight" style="margin-top:24px">
+<b>为什么 Dropout 能防止过拟合？</b> ① <b>特征协同适应</b>：神经元不能依赖某个特定的"搭档"神经元，因为搭档可能随时被关掉，必须学到更鲁棒的特征；② <b>模型集成</b>：每次采样一个不同的子网络，推理时相当于 2^N 个子网络的几何平均集成；③ <b>加噪</b>：随机失活相当于给隐层加了乘性噪声，类似数据增强的效果。实践中 p=0.5 是隐藏层的常用值，输入层用更小的 p（如 0.1~0.2）。
+</div>
+</section>
+</div>
+
+<footer class="site"><p>💬 agent-nlp-llm · 自然语言技术本体论研究站</p></footer>
+<script src="js/site.js"></script>
+<script>
+(function{
+  var pSlider=document.getElementById('pSlider');
+  var layerSlider=document.getElementById('layerSlider');
+  var neuronSlider=document.getElementById('neuronSlider');
+  var canvas=document.getElementById('netCanvas');
+  var ctx=canvas.getContext('2d');
+
+  var mask=[]; // mask[layer][neuron] = true=alive, false=dead
+
+  function generateMask(layers, neurons, p){
+    mask=[];
+    for(var l=0;l<layers;l++){
+      var lay=[];
+      for(var n=0;n<neurons;n++){
+        lay.push(Math.random>p);
+      }
+      mask.push(lay);
+    }
+  }
+
+  function drawNetwork(layers, neurons, p){
+    var W=canvas.width, H=canvas.height;
+    ctx.clearRect(0,0,W,H);
+    var pad={l:40,r:40,t:40,b:40};
+    var layerSpacing = (W-pad.l-pad.r)/(layers-1);
+    var neuronSpacing = layers<=4?(H-pad.t-pad.b)/(neurons-1):Math.min(40,(H-pad.t-pad.b)/(neurons-1));
+    var neuronR = Math.max(10,Math.min(18, 300/neurons));
+
+    // compute positions
+    var positions=[];
+    for(var l=0;l<layers;l++){
+      var layerX = pad.l+l*layerSpacing;
+      var totalH = (neurons-1)*neuronSpacing;
+      var startY = (H-totalH)/2;
+      var pos=[];
+      for(var n=0;n<neurons;n++){
+        pos.push({x:layerX, y:startY+n*neuronSpacing});
+      }
+      positions.push(pos);
+    }
+
+    // draw connections
+    for(var l=0;l<layers-1;l++){
+      for(var i=0;i<neurons;i++){
+        for(var j=0;j<neurons;j++){
+          var alive = mask[l][i] && mask[l+1][j];
+          ctx.strokeStyle = alive?'rgba(59,111,224,0.3)':'rgba(203,213,225,0.15)';
+          ctx.lineWidth = alive?1:0.5;
+          ctx.beginPath;
+          ctx.moveTo(positions[l][i].x+neuronR, positions[l][i].y);
+          ctx.lineTo(positions[l+1][j].x-neuronR, positions[l+1][j].y);
+          ctx.stroke;
+        }
+      }
+    }
+
+    // draw neurons
+    for(var l=0;l<layers;l++){
+      for(var n=0;n<neurons;n++){
+        var alive = mask[l][n];
+        var x=positions[l][n].x, y=positions[l][n].y;
+        if(alive){
+          var grd=ctx.createRadialGradient(x-3,y-3,2,x,y,neuronR);
+          grd.addColorStop(0,'#6d9eeb');grd.addColorStop(1,'#3b6fe0');
+          ctx.fillStyle=grd;
+        }else{
+          ctx.fillStyle='#cbd5e1';
+          ctx.globalAlpha=0.4;
+        }
+        ctx.beginPath;ctx.arc(x,y,neuronR,0,Math.PI*2);ctx.fill;
+        ctx.globalAlpha=1;
+
+        // outline
+        ctx.strokeStyle=alive?'#2557b8':'#94a3b8';ctx.lineWidth=2;
+        ctx.beginPath;ctx.arc(x,y,neuronR,0,Math.PI*2);ctx.stroke;
+
+        if(!alive){
+          // draw X
+          ctx.strokeStyle='#94a3b8';ctx.lineWidth=2;
+          ctx.beginPath;ctx.moveTo(x-neuronR*0.5,y-neuronR*0.5);ctx.lineTo(x+neuronR*0.5,y+neuronR*0.5);ctx.stroke;
+          ctx.beginPath;ctx.moveTo(x+neuronR*0.5,y-neuronR*0.5);ctx.lineTo(x-neuronR*0.5,y+neuronR*0.5);ctx.stroke;
+        }
+      }
+
+      // layer label
+      ctx.fillStyle='#64748b';ctx.font='12px sans-serif';ctx.textAlign='center';
+      var label = l===0?'输入层':l===layers-1?'输出层':'隐藏层 '+l;
+      ctx.fillText(label, positions[l][0].x, H-12);
+    }
+
+    // stats
+    var total=layers*neurons;
+    var alive=0;
+    mask.forEach(function(lay){lay.forEach(function(n){if(n)alive++;});});
+    var dead=total-alive;
+    document.getElementById('aliveCount').textContent=alive;
+    document.getElementById('deadCount').textContent=dead;
+    document.getElementById('aliveRate').textContent=(alive/total*100).toFixed(0)+'%';
+    document.getElementById('scaleFactor').textContent=p<1?(1/(1-p)).toFixed(2)+'x':'∞';
+
+    document.getElementById('trainDesc').innerHTML='随机失活 <b>'+dead+'</b> 个神经元，保留 <b>'+alive+'</b> 个。存活神经元输出乘以 <b>'+(1/(1-p)).toFixed(2)+'</b> 补偿失活导致的总输出降低。';
+    document.getElementById('trainDetail').textContent='这次前向传播用的是随机采样的"子网络"。每个神经元被关掉的概率是 '+p.toFixed(2)+'，不同batch采样不同的子网络。';
+    document.getElementById('inferDesc').innerHTML='所有 <b>'+total+'</b> 个神经元全部参与计算。不需要额外缩放——因为训练时已经做了倒置缩放（inverted dropout）。';
+    document.getElementById('inferDetail').textContent='推理时输出 = 所有子网络的集成平均。Dropout 在推理时关闭，相当于确定性行为。';
+  }
+
+  function update{
+    var p=parseFloat(pSlider.value);
+    var layers=parseInt(layerSlider.value);
+    var neurons=parseInt(neuronSlider.value);
+    document.getElementById('pVal').textContent=p.toFixed(2);
+    document.getElementById('layerVal').textContent=layers;
+    document.getElementById('neuronVal').textContent=neurons;
+    generateMask(layers,neurons,p);
+    drawNetwork(layers,neurons,p);
+
+    var hint=document.getElementById('dropHint');
+    if(p===0){
+      hint.className='hint warn';
+      hint.innerHTML='⚠️ <b>p=0，没有 Dropout</b>：所有神经元都参与，网络可能过拟合——特别是在小数据集或大模型上。';
+    }else if(p<=0.3){
+      hint.className='hint';
+      hint.innerHTML='💡 <b>p='+p.toFixed(2)+'，轻度失活</b>：正则化效果温和，适合输入层或不想丢失太多信息的场景。';
+    }else if(p<=0.6){
+      hint.className='hint good';
+      hint.innerHTML='✅ <b>p='+p.toFixed(2)+'，标准配置</b>：这是隐藏层最常用的取值。一半神经元被关掉，网络被迫学习冗余、鲁棒的特征表示。';
+    }else{
+      hint.className='hint warn';
+      hint.innerHTML='⚠️ <b>p='+p.toFixed(2)+'，失活比例过高</b>：大部分神经元被关闭，网络容量严重不足，可能欠拟合。一般隐藏层不超过 0.5。';
+    }
+  }
+
+  pSlider.oninput=update;
+  layerSlider.oninput=update;
+  neuronSlider.oninput=update;
+  document.getElementById('resampleBtn').onclick=update;
+  update;
+});
+</script>
+</body>
+</html>

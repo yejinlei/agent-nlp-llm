@@ -137,8 +137,8 @@
 <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
 <script>
-(function(){
-  function render(){
+(function{
+  function render{
     if(typeof renderMathInElement !== 'function') return false;
     try{
       renderMathInElement(document.body,{
@@ -154,16 +154,16 @@
     }catch(e){console.warn('katex render error',e)}
     return true;
   }
-  function go(){ if(render()) return; setTimeout(go,200); }
-  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',go); else go();
-  window.addEventListener('load',function(){render(); setTimeout(render,500); setTimeout(render,1500)});
+  function go{ if(render) return; setTimeout(go,200); }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',go); else go;
+  window.addEventListener('load',function{render; setTimeout(render,500); setTimeout(render,1500)});
   if(window.MutationObserver){
     var t=null;
-    new MutationObserver(function(){ clearTimeout(t); t=setTimeout(render,200); })
+    new MutationObserver(function{ clearTimeout(t); t=setTimeout(render,200); })
       .observe(document.documentElement,{childList:true,subtree:true});
   }
   window.__katexRender = render;
-})();
+});
 </script>
 </head>
 <body>
@@ -205,9 +205,9 @@
       </div>
     </div>
     <div class="btn-row" style="margin-top:22px">
-      <button class="btn btn-outline" onclick="Clinic.reset()">🔄 重置全部病历</button>
-      <button class="btn btn-outline" onclick="Clinic.revealAll()">📖 一键揭开全部谜底</button>
-      <button class="btn btn-primary" onclick="Clinic.showReport()">📋 查看我的诊断报告</button>
+      <button class="btn btn-outline" onclick="Clinic.reset">🔄 重置全部病历</button>
+      <button class="btn btn-outline" onclick="Clinic.revealAll">📖 一键揭开全部谜底</button>
+      <button class="btn btn-primary" onclick="Clinic.showReport">📋 查看我的诊断报告</button>
     </div>
   </section>
 
@@ -411,7 +411,7 @@
                 <div class="math">
                   <span class="math">\(g \leftarrow g \cdot \min\!\left(1, \frac{c}{\lVert g \rVert_2 + \varepsilon}\right),\quad c \in [0.5, 1.0]\)</span>
                 </div>
-                一行 <code>torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)</code> 就能救命。</li>
+                一行 <code>torch.nn.utils.clip_grad_norm_(model.parameters, 1.0)</code> 就能救命。</li>
               <li><b>降学习率 + warmup</b>：爆炸常由 lr 过大触发，前 1–2% 步数线性 warmup 非常有效。</li>
               <li><b>更稳的初始化</b>：正交初始化 / Xavier，把循环矩阵的谱半径往 1 附近推。</li>
               <li><b>结构改良</b>：换 GRU / 加 LayerNorm / 用 Transformer（自注意力路径更短，系统性缓解连乘问题）。</li>
@@ -501,7 +501,7 @@
       </div>
       <div class="symptom">
         <span class="label">病人症状</span>
-        训练一个分类模型，用 <code>nn.CrossEntropyLoss()</code>。学习率手设为 <code>0.5</code>。
+        训练一个分类模型，用 <code>nn.CrossEntropyLoss</code>。学习率手设为 <code>0.5</code>。
         第 1 个 step loss <code>2.30</code>，第 2 个 step <code>1.87</code>，第 3 个 step 输出
         <code>inf</code>，第 4 个 step <code>NaN</code>，此后全部 NaN。
         把 lr 改到 <code>1e-5</code> 就正常，但收敛慢得让人想辞职。
@@ -538,7 +538,7 @@
           </div>
           <div class="rx">
             <b>🩺 主治医师备注：</b>NaN 是"不可逆伤害"——一旦出现，网络里的参数就永久坏了。
-            所以要在每一步之后做 <code>torch.isfinite(loss).all()</code> 断言，第一时间定位到是哪一步、哪个模块炸的。
+            所以要在每一步之后做 <code>torch.isfinite(loss).all</code> 断言，第一时间定位到是哪一步、哪个模块炸的。
             另外记住：<b>lr 从 0.5 改到 1e-5 能用</b>，恰恰说明病根在优化器步长，而非别的。
           </div>
         </div>

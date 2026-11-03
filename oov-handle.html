@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>未登录词处理对比 · agent-nlp-llm</title>
+<link rel="stylesheet" href="css/site.css">
+<style>
+.token { display:inline-block; padding:6px 12px; margin:3px; border-radius:8px; font-weight:600; font-size:.88rem; transition:transform .15s; }
+.token:hover { transform:scale(1.05); }
+.token-oov { background:#fef2f2; color:#b91c1c; border:1px solid #fecaca; }
+.token-known { background:#eef3ff; color:#1e40af; border:1px solid #bfdbfe; }
+.token-sub { background:#f0fdf4; color:#166534; border:1px solid #bbf7d0; }
+.token-char { background:#fff7ed; color:#9a3412; border:1px solid #fed7aa; }
+.token-unk { background:#f1f5f9; color:#ef4444; border:2px dashed #ef4444; }
+.metric-box { padding:18px; border-radius:12px; text-align:center; }
+.metric-val { font-size:2rem; font-weight:800; font-family:var(--mono); }
+.metric-label { font-size:.82rem; color:var(--text-2); margin-top:4px; }
+.compare-col { padding:16px; border-radius:12px; border:1px solid var(--border); background:#fff; }
+.compare-col h4 { font-size:1rem; margin-bottom:10px; display:flex; align-items:center; gap:8px; }
+.tokens-display { min-height:120px; padding:12px; background:#fafbff; border-radius:8px; border:1px dashed var(--border-2); line-height:2.2; }
+</style>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function{
+  function r{try{renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false});}catch(e){}}
+  if(document.readyState==='complete')r;else window.addEventListener('load',r);
+  setTimeout(r,300);setTimeout(r,1000);
+});
+</script>
+</head>
+<body>
+<nav class="navbar">
+<div class="nav-inner">
+<a href="index.html" class="nav-logo">💬 agent-nlp-llm</a>
+<button class="nav-toggle" aria-label="菜单" onclick="document.querySelector('.nav-links').classList.toggle('open')">☰</button>
+<div class="nav-links">
+<a href="index.html" class="nav-link">🏠&nbsp;首页</a>
+<a href="nlp/index.html" class="nav-link">📝&nbsp;NLP</a>
+<a href="llm/index.html" class="nav-link">🤖&nbsp;LLM</a>
+<a href="lab.html" class="nav-link active">🧪&nbsp;实验室</a>
+<a href="papers.html" class="nav-link">📚&nbsp;论文</a>
+<a href="clinic.html" class="nav-link">🕵️&nbsp;诊所</a>
+<a href="pitfalls.html" class="nav-link">💥&nbsp;踩坑</a>
+<a href="benchmark.html" class="nav-link">📊&nbsp;选型</a>
+<a href="universe.html" class="nav-link">🌌&nbsp;宇宙</a>
+<a href="https://github.com/yejinlei/agent-nlp-llm" target="_blank" rel="noopener" class="nav-gh" aria-label="GitHub"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg></a>
+</div>
+</div>
+</nav>
+
+<div class="wrap page">
+<section class="hero reveal">
+<h1>🔤 未登录词（OOV）处理对比</h1>
+<p class="sub">"绝绝子""yyds""ChatGPT"这些新词，传统词表根本不认识。UNK 直接丢掉信息，字符级不会有OOV但序列太长，BPE 通过子词合并在词表大小和OOV率之间找到了平衡。输入任意文本试试。</p>
+</section>
+
+<section class="blk reveal">
+<h2 class="blk-title"><span class="num">📊</span>三种策略对比</h2>
+<div class="grid g3">
+<div class="card" style="border-top:3px solid #ef4444">
+<h4>❌ UNK 替换</h4>
+<p style="font-size:.9rem;color:var(--text-2)">所有不在词表中的词统一替换成 &lt;UNK&gt; 标记。简单粗暴，但完全丢失了OOV词的信息——模型根本不知道这个词长什么样。</p>
+</div>
+<div class="card" style="border-top:3px solid #f59e0b">
+<h4>🔡 字符级</h4>
+<p style="font-size:.9rem;color:var(--text-2)">把每个字符当作一个token。理论上OOV率为0（任何字符都在表中），但序列长度暴增，训练和推理都慢，字符间的远距离依赖更难学。</p>
+</div>
+<div class="card" style="border-top:3px solid #10a37f">
+<h4>✓ BPE/子词</h4>
+<p style="font-size:.9rem;color:var(--text-2)">通过数据驱动的合并操作，把常用词保留完整，罕见词拆成已知的子词单元。既控制了词表大小，又保证OOV率接近0，是现代LLM的标配。</p>
+</div>
+</div>
+</section>
+
+<section class="blk reveal" id="play">
+<h2 class="blk-title"><span class="num">🎮</span>互动实验</h2>
+
+<div class="demo-box">
+<div class="ctrl" style="align-items:flex-start">
+<label style="flex:1;min-width:300px;flex-direction:column">输入文本（可以包含生僻词、网络用语、英文、emoji）
+<textarea id="inputText" rows="3" style="width:100%;resize:vertical">今天用ChatGPT写代码真是yyds！那个绝绝子的绝绝子效果，比我自己写强太多了。还有那个薅羊毛的活动太香了！</textarea>
+</label>
+</div>
+
+<div class="grid g3" style="margin:16px 0">
+<div class="metric-box" style="background:#fef2f2"><div class="metric-val" style="color:#ef4444" id="unkOOV">-</div><div class="metric-label">UNK方式OOV率</div></div>
+<div class="metric-box" style="background:#fff7ed"><div class="metric-val" style="color:#f59e0b" id="charLen">-</div><div class="metric-label">字符级序列长度</div></div>
+<div class="metric-box" style="background:#ecfdf5"><div class="metric-val" style="color:#10a37f" id="bpeOOV">-</div><div class="metric-label">BPE方式OOV率</div></div>
+</div>
+
+<div class="grid g3" style="gap:14px">
+<div class="compare-col" style="border-top:4px solid #ef4444">
+<h4><span style="font-size:1.3rem">❌</span> UNK 替换（固定词表）</h4>
+<div class="tokens-display" id="unkTokens"></div>
+<div style="margin-top:10px;font-size:.85rem;color:var(--text-3)" id="unkStats"></div>
+</div>
+<div class="compare-col" style="border-top:4px solid #f59e0b">
+<h4><span style="font-size:1.3rem">🔡</span> 字符级切分</h4>
+<div class="tokens-display" id="charTokens"></div>
+<div style="margin-top:10px;font-size:.85rem;color:var(--text-3)" id="charStats"></div>
+</div>
+<div class="compare-col" style="border-top:4px solid #10a37f">
+<h4><span style="font-size:1.3rem">✓</span> BPE 子词切分</h4>
+<div class="tokens-display" id="bpeTokens"></div>
+<div style="margin-top:10px;font-size:.85rem;color:var(--text-3)" id="bpeStats"></div>
+</div>
+</div>
+
+<div class="hint" id="oovHint"></div>
+</div>
+
+<div class="insight" style="margin-top:24px">
+<b>为什么 BPE 是最优解？</b> BPE（Byte-Pair Encoding）从字符开始，迭代合并出现频率最高的相邻字符对，直到词表达到预设大小。常用词（如"今天""我们"）会被合并为完整token，罕见词（如"ChatGPT""绝绝子"）会被拆成多个子词（如"Chat"+"GP"+"T"或"绝"+"绝子"），模型仍然可以从子词组合中推测含义。GPT 系列用 BPE，BERT 用 WordPiece，T5 用 Unigram——本质都是子词切分，只是合并策略略有不同。
+</div>
+</section>
+</div>
+
+<footer class="site"><p>💬 agent-nlp-llm · 自然语言技术本体论研究站</p></footer>
+<script src="js/site.js"></script>
+<script>
+(function{
+  // Simulated vocabulary for UNK approach: common Chinese words
+  var knownWords = new Set([
+    '今天','用','写','代码','真是','那个','的','效果','比','我','自己','强','太多','了',
+    '还有','活动','太','香','不','错','好','很','在','是','有','和','也','都','就','要',
+    '这','那','你','我','他','她','它','们','个','一','是','为','上','下','中','大','小',
+    '可以','能','会','说','去','来','到','看','想','要','知道','觉得','时候','什么','怎么',
+    '东西','问题','一下','如果','因为','所以','但是','而且','或者','已经','还是','这样','那样'
+  ]);
+  // BPE merges (simulated): common subword units
+  var bpeMerges = {
+    'Chat':['C','h','a','t'], 'GP':['G','P'], '绝绝':['绝','绝'],
+    'yy':['y','y'], 'ds':['d','s'], '羊毛':['羊','毛'], '薅羊':['薅','羊'],
+    'ChatGPT':['Chat','GP','T'], 'yyds':['yy','d','s'], '绝绝子':['绝绝','子'],
+    '薅羊毛':['薅羊','毛']
+  };
+  var bpeVocab = new Set;
+  // Add common chars
+  for(var i=0x4e00;i<=0x9fff;i++)bpeVocab.add(String.fromCharCode(i));
+  'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'.split('').forEach(function(c){bpeVocab.add(c);});
+  // Add merged tokens
+  Object.keys(bpeMerges).forEach(function(k){bpeVocab.add(k);});
+  bpeVocab.add('！');bpeVocab.add('。');bpeVocab.add('，');bpeVocab.add('？');bpeVocab.add('！');
+  bpeVocab.add('！');bpeVocab.add(' ');bpeVocab.add('、');bpeVocab.add('；');bpeVocab.add('：');
+  bpeVocab.add('“');bpeVocab.add('”');bpeVocab.add('（');bpeVocab.add('）');
+
+  // Simple Chinese word segmentation (forward maximum matching)
+  function segmentChinese(text){
+    var tokens=[];
+    var i=0;
+    while(i<text.length){
+      var matched=false;
+      // Try match 2-char words first, then single chars
+      for(var len=4;len>=1;len--){
+        if(i+len>text.length)continue;
+        var w=text.substr(i,len);
+        if(knownWords.has(w)){tokens.push({text:w,known:true});i+=len;matched=true;break;}
+      }
+      if(!matched){
+        // check if it's Chinese char or other
+        var c=text[i];
+        if(/[\u4e00-\u9fa5]/.test(c)){
+          // Try 2-char
+          if(i+1<text.length&&knownWords.has(text.substr(i,2))){
+            tokens.push({text:text.substr(i,2),known:true});i+=2;
+          }else{
+            tokens.push({text:c,known:knownWords.has(c)});i++;
+          }
+        }else if(/[a-zA-Z]/.test(c)){
+          // collect english word
+          var eng='';while(i<text.length&&/[a-zA-Z]/.test(text[i])){eng+=text[i];i++;}
+          tokens.push({text:eng,known:false});
+        }else{
+          tokens.push({text:c,known:true});i++;
+        }
+      }
+    }
+    return tokens;
+  }
+
+  // BPE tokenization (simplified)
+  function bpeTokenize(text){
+    var tokens=[];
+    var i=0;
+    while(i<text.length){
+      var matched=false;
+      // Try to match longest known BPE token
+      for(var len=Math.min(8,text.length-i);len>=1;len--){
+        var w=text.substr(i,len);
+        if(bpeVocab.has(w)&&len>1){
+          tokens.push({text:w,subword:len>1&&w.length<text.length-i+1?false:true});
+          i+=len;matched=true;break;
+        }
+      }
+      if(!matched){
+        // single char
+        tokens.push({text:text[i],subword:false});
+        i++;
+      }
+    }
+    return tokens;
+  }
+
+  function colorForToken(type){
+    if(type==='unk')return 'token token-unk';
+    if(type==='known')return 'token token-known';
+    if(type==='char')return 'token token-char';
+    if(type==='sub')return 'token token-sub';
+    if(type==='oov')return 'token token-oov';
+    return 'token';
+  }
+
+  function process{
+    var text=document.getElementById('inputText').value;
+    if(!text.trim)return;
+
+    // UNK approach: word segmentation
+    var wordTokens = segmentChinese(text);
+    var unkCount=0;
+    var unkHtml='';
+    wordTokens.forEach(function(t){
+      if(t.known){
+        unkHtml+='<span class="'+colorForToken('known')+'">'+t.text+'</span>';
+      }else{
+        unkHtml+='<span class="'+colorForToken('unk')+'">&lt;UNK&gt;</span>';
+        unkCount++;
+      }
+    });
+    document.getElementById('unkTokens').innerHTML=unkHtml;
+    var unkRate=wordTokens.length?(unkCount/wordTokens.length*100).toFixed(1):0;
+    document.getElementById('unkStats').textContent='总词数: '+wordTokens.length+' | OOV词数: '+unkCount+' | OOV率: '+unkRate+'%';
+    document.getElementById('unkOOV').textContent=unkRate+'%';
+
+    // Character level
+    var chars=text.split('');
+    var charHtml='';
+    chars.forEach(function(c){
+      if(c===' ')charHtml+='<span class="token" style="background:#f1f5f9;color:#64748b">␣</span>';
+      else charHtml+='<span class="'+colorForToken('char')+'">'+c+'</span>';
+    });
+    document.getElementById('charTokens').innerHTML=charHtml;
+    document.getElementById('charStats').textContent='总token数: '+chars.length+' | OOV率: 0%（字符级理论上没有OOV）';
+    document.getElementById('charLen').textContent=chars.length;
+
+    // BPE
+    var bpeToks=bpeTokenize(text);
+    var bpeOovCount=0; // BPE almost never has OOV since chars are in vocab
+    var bpeHtml='';
+    bpeToks.forEach(function(t){
+      var isFull = knownWords.has(t.text)||t.text.length>=2;
+      bpeHtml+='<span class="'+(isFull?colorForToken('known'):colorForToken('sub'))+'">'+t.text+'</span>';
+    });
+    document.getElementById('bpeTokens').innerHTML=bpeHtml;
+    var bpeRate=0;
+    document.getElementById('bpeStats').textContent='总token数: '+bpeToks.length+' | OOV词数: '+bpeOovCount+' | OOV率: '+bpeRate+'%（罕见词被拆成子词）';
+    document.getElementById('bpeOOV').textContent=bpeRate+'%';
+
+    var hint=document.getElementById('oovHint');
+    hint.innerHTML='📊 <b>对比总结</b>：UNK方式丢失了 <b>'+unkCount+'</b> 个词的信息（"'+wordTokens.filter(function(t){return !t.known;}).map(function(t){return t.text;}).join('、')+'"都变成了无法区分的UNK）；字符级虽然0 OOV，但序列长度是 <b>'+chars.length+'</b>（比词级别长很多），计算成本高；BPE用 <b>'+bpeToks.length+'</b> 个token覆盖所有内容，既无OOV又控制了序列长度。';
+  }
+
+  document.getElementById('inputText').oninput=process;
+  process;
+});
+</script>
+</body>
+</html>

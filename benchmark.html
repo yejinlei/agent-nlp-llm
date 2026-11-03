@@ -19,8 +19,8 @@
 <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
 <script>
-(function(){
-  function render(){
+(function{
+  function render{
     if(typeof renderMathInElement !== 'function') return false;
     try{
       renderMathInElement(document.body,{
@@ -36,16 +36,16 @@
     }catch(e){console.warn('katex render error',e)}
     return true;
   }
-  function go(){ if(render()) return; setTimeout(go,200); }
-  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',go); else go();
-  window.addEventListener('load',function(){render(); setTimeout(render,500); setTimeout(render,1500)});
+  function go{ if(render) return; setTimeout(go,200); }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',go); else go;
+  window.addEventListener('load',function{render; setTimeout(render,500); setTimeout(render,1500)});
   if(window.MutationObserver){
     var t=null;
-    new MutationObserver(function(){ clearTimeout(t); t=setTimeout(render,200); })
+    new MutationObserver(function{ clearTimeout(t); t=setTimeout(render,200); })
       .observe(document.documentElement,{childList:true,subtree:true});
   }
   window.__katexRender = render;
-})();
+});
 </script>
 </head>
 <body>
@@ -129,10 +129,10 @@
         </label>
         <label>精度
           <select id="precision">
-            <option value="2">FP16（2 字节）</option>
+            <option value="2">F</option>
             <option value="1">INT8（1 字节）</option>
             <option value="0.5">INT4（0.5 字节）</option>
-            <option value="4">FP32（4 字节）</option>
+            <option value="4">F</option>
           </select>
         </label>
         <label>上下文长度（token）
@@ -201,13 +201,13 @@
 
 <script src="js/site.js"></script>
 <script>
-(function(){
+(function{
   // ---- 决策器 ----
   var answers = {};
   document.querySelectorAll('.opt-group').forEach(function(g){
     var q = g.dataset.q;
     g.querySelectorAll('.opt').forEach(function(o){
-      o.onclick = function(){
+      o.onclick = function{
         g.querySelectorAll('.opt').forEach(function(x){ x.classList.remove('on'); });
         o.classList.add('on');
         answers[q] = o.dataset.v;
@@ -215,7 +215,7 @@
     });
   });
 
-  function recommend(){
+  function recommend{
     var a = answers;
     var name, reason, alt;
     if (a.privacy === 'strict' || a.deploy === 'local_small' || a.deploy === 'local_big' || a.deploy === 'cpu') {
@@ -262,21 +262,21 @@
     return { name: name, reason: reason, alt: alt };
   }
 
-  document.getElementById('recoBtn').onclick = function(){
+  document.getElementById('recoBtn').onclick = function{
     var missing = ['deploy','task','privacy','finetune','latency'].filter(function(k){ return !answers[k]; });
     var out = document.getElementById('recoOut');
     if (missing.length) {
       out.innerHTML = '<div class="hint warn">⚠️ 还有 ' + missing.length + ' 个问题没选，请把 5 个维度都选上。</div>';
       return;
     }
-    var r = recommend();
+    var r = recommend;
     out.innerHTML = '<div class="reco"><div style="font-size:.85rem;color:var(--text-3)">推荐方案</div>' +
       '<b class="name">' + r.name + '</b>' +
       '<p style="margin:10px 0;font-size:.95rem"><b>为什么：</b>' + r.reason + '</p>' +
       '<p style="font-size:.9rem;color:var(--text-2)"><b>备选思路：</b>' + r.alt + '</p>' +
       '<p style="font-size:.82rem;color:var(--text-3);margin-top:10px">※ 这是基于经验的启发式建议，最终请务必用自己的测试集实测验证。</p></div>';
   };
-  document.getElementById('recoReset').onclick = function(){
+  document.getElementById('recoReset').onclick = function{
     answers = {};
     document.querySelectorAll('.opt').forEach(function(o){ o.classList.remove('on'); });
     document.getElementById('recoOut').innerHTML = '';
@@ -284,7 +284,7 @@
 
   // ---- 显存估算 ----
   function fmt(gb){ return gb >= 1 ? gb.toFixed(2) + ' GB' : (gb * 1024).toFixed(0) + ' MB'; }
-  function calcMem(){
+  function calcMem{
     var pb = parseFloat(document.getElementById('paramB').value) || 7;
     var bytes = parseFloat(document.getElementById('precision').value) || 2;
     var ctx = parseInt(document.getElementById('ctxLen').value, 10) || 2048;
@@ -293,8 +293,7 @@
     var params = pb * 1e9;
     var wGB = params * bytes / 1e9;
 
-    // KV 缓存粗估：2(KV) × 层数 × 隐藏维 × 2(字节, FP16) × 序列长 × 批次
-    // 用参数量近似隐藏维与层数（经验：hidden ≈ 128·sqrt(参数B)，层数 ≈ 12·log2(参数B)+...）
+    // KV 缓存粗估：2(KV) × 层数 × 隐藏维 × 2(字节, F，层数 ≈ 12·log2(参数B)+...）
     var layers = Math.max(12, Math.round(12 * Math.log2(Math.max(pb, 1)) + 8));
     var hidden = Math.round(128 * Math.sqrt(pb * 1000) / 10) * 10; // 粗略量级
     var kvGB = 2 * layers * hidden * 2 * ctx * bs / 1e9;
@@ -324,8 +323,8 @@
     el.addEventListener('input', calcMem);
     el.addEventListener('change', calcMem);
   });
-  calcMem();
-})();
+  calcMem;
+});
 </script>
 </body>
 </html>
