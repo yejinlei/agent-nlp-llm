@@ -1,0 +1,971 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agent-NLP-LLM · 自然语言技术本体论研究站</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; color:#1e293b; line-height:1.7; background:#f8fafc; }
+a { color:#2563eb; text-decoration:none; }
+
+/* 导航栏 */
+nav { position:fixed; top:0; width:100%; background:rgba(255,255,255,0.95); backdrop-filter:blur(10px); border-bottom:1px solid #e2e8f0; z-index:100; padding:0 2rem; height:64px; display:flex; align-items:center; justify-content:space-between; }
+.logo { font-weight:700; font-size:1.25rem; display:flex; align-items:center; gap:0.5rem; }
+.nav-links { display:flex; gap:1.5rem; align-items:center; }
+.nav-links a { color:#475569; font-weight:500; transition:color 0.2s; font-size:0.95rem; }
+.nav-links a:hover { color:#2563eb; }
+.btn-blue { background:#2563eb; color:white !important; padding:0.5rem 1rem; border-radius:0.5rem; }
+.btn-purple { background:#7c3aed; color:white !important; padding:0.5rem 1rem; border-radius:0.5rem; }
+.github-icon { width:24px; height:24px; fill:#475569; }
+
+/* Hero区域 */
+.hero { background: linear-gradient(135deg, #0c4a6e 0%, #1e40af 50%, #4c1d95 100%); color:white; padding:8rem 2rem 4rem; margin-top:64px; }
+.hero-content { max-width:1200px; margin:0 auto; }
+.hero h1 { font-size:3.5rem; font-weight:800; margin-bottom:1.5rem; line-height:1.2; }
+.hero h1 .gradient { background:linear-gradient(90deg, #7dd3fc, #fdba74); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+.hero p { font-size:1.25rem; color:#bfdbfe; max-width:800px; margin-bottom:2.5rem; line-height:1.8; }
+.hero-buttons { display:flex; gap:1rem; margin-bottom:3rem; flex-wrap:wrap; }
+.hero-btn { padding:1rem 2rem; border-radius:0.75rem; font-size:1.1rem; font-weight:600; border:none; cursor:pointer; transition:transform 0.2s; }
+.hero-btn:hover { transform:translateY(-2px); }
+.btn-nlp { background:#2563eb; color:white; }
+.btn-llm { background:#7c3aed; color:white; }
+.btn-lab { background:transparent; border:2px solid #93c5fd; color:#bfdbfe; }
+.btn-play { background:transparent; border:2px solid #c4b5fd; color:#ddd6fe; }
+.stats { display:grid; grid-template-columns:repeat(4, 1fr); gap:1.5rem; max-width:900px; }
+.stat-card { background:rgba(255,255,255,0.1); backdrop-filter:blur(10px); border:1px solid rgba(255,255,255,0.2); border-radius:0.75rem; padding:1.5rem; }
+.stat-number { font-size:2rem; font-weight:800; color:#fbbf24; margin-bottom:0.5rem; }
+.stat-text { color:#bfdbfe; font-size:0.95rem; }
+
+/* 主体布局 */
+.container { max-width:1200px; margin:0 auto; padding:3rem 2rem; display:flex; gap:3rem; }
+.sidebar { width:260px; flex-shrink:0; position:sticky; top:80px; height:fit-content; }
+.sidebar-title { font-size:0.9rem; color:#64748b; font-weight:600; margin-bottom:1rem; text-transform:uppercase; letter-spacing:0.05em; }
+.sidebar-nav { list-style:none; }
+.sidebar-nav li { margin-bottom:0.25rem; }
+.sidebar-nav a { display:block; padding:0.6rem 1rem; border-radius:0.5rem; color:#475569; font-weight:500; font-size:0.95rem; border-left:3px solid transparent; transition:all 0.2s; }
+.sidebar-nav a.active, .sidebar-nav a:hover { background:#eff6ff; border-left-color:#2563eb; color:#1d4ed8; }
+.sidebar-nav a.purple-active, .sidebar-nav a.purple:hover { background:#f5f3ff; border-left-color:#7c3aed; color:#6d28d9; }
+.main-content { flex:1; min-width:0; }
+.section { margin-bottom:4rem; scroll-margin-top:80px; }
+.section-title { font-size:2rem; font-weight:700; margin-bottom:1.5rem; display:flex; align-items:center; gap:0.75rem; padding-bottom:0.75rem; border-bottom:2px solid #e2e8f0; }
+.section-title .emoji { font-size:1.75rem; }
+
+/* 提示框 */
+.note-box { background:#eff6ff; border-left:4px solid #2563eb; border-radius:0 0.75rem 0.75rem 0; padding:1.25rem 1.5rem; margin:1.5rem 0; }
+.note-box.purple { background:#f5f3ff; border-left-color:#7c3aed; }
+.tip-box { background:#fffbeb; border-left:4px solid #f59e0b; border-radius:0 0.75rem 0.75rem 0; padding:1rem 1.5rem; margin:1.5rem 0; }
+.tip-box::before { content:"💡 "; }
+.method-box { background:#f0fdf4; border-left:4px solid #16a34a; border-radius:0 0.75rem 0.75rem 0; padding:1.25rem 1.5rem; margin:1.5rem 0; }
+
+/* 卡片网格 */
+.grid-2 { display:grid; grid-template-columns:repeat(2, 1fr); gap:1.5rem; margin:1.5rem 0; }
+.grid-3 { display:grid; grid-template-columns:repeat(3, 1fr); gap:1.25rem; margin:1.5rem 0; }
+.grid-4 { display:grid; grid-template-columns:repeat(4, 1fr); gap:1rem; margin:1.5rem 0; }
+.card { background:white; border-radius:0.75rem; padding:1.5rem; border:1px solid #e2e8f0; transition:box-shadow 0.2s; }
+.card:hover { box-shadow:0 10px 25px -5px rgba(0,0,0,0.1); }
+.card h4 { font-size:1.1rem; margin-bottom:0.75rem; color:#1e293b; }
+
+/* 四层闭环 */
+.four-layer { display:grid; grid-template-columns:repeat(4, 1fr); gap:1rem; margin:2rem 0; }
+.layer { background:white; border-radius:0.75rem; padding:1.5rem; border-top:4px solid; text-align:center; }
+.layer:nth-child(1) { border-color:#2563eb; }
+.layer:nth-child(2) { border-color:#0891b2; }
+.layer:nth-child(3) { border-color:#059669; }
+.layer:nth-child(4) { border-color:#d97706; }
+.layer-num { font-size:1.5rem; font-weight:800; margin-bottom:0.5rem; }
+.layer h4 { margin-bottom:0.5rem; }
+
+/* 四步教学法 */
+.four-step { display:grid; grid-template-columns:repeat(4, 1fr); gap:1rem; margin:1.5rem 0; }
+.step { background:#f8fafc; border-radius:0.75rem; padding:1rem; text-align:center; border:2px dashed #cbd5e1; }
+.step-num { display:inline-block; width:2rem; height:2rem; line-height:2rem; border-radius:50%; background:#2563eb; color:white; font-weight:700; margin-bottom:0.5rem; }
+.step h5 { margin-bottom:0.5rem; color:#1e293b; }
+
+/* 家族树 */
+.family-tree { background:#0f172a; color:#94a3b8; padding:2rem; border-radius:0.75rem; font-family: "Courier New", monospace; font-size:0.9rem; line-height:2; overflow-x:auto; margin:1.5rem 0; white-space:pre; }
+
+/* 实验室 */
+.lab-card { background:linear-gradient(135deg, #eff6ff 0%, #f0f9ff 100%); border-radius:1rem; padding:2rem; margin:2rem 0; border:1px solid #bfdbfe; }
+.lab-card.purple { background:linear-gradient(135deg, #f5f3ff 0%, #faf5ff 100%); border-color:#c4b5fd; }
+.lab-card.green { background:linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%); border-color:#86efac; }
+.lab-slider { width:100%; margin:1rem 0; }
+.lab-canvas { width:100%; height:200px; background:white; border-radius:0.5rem; margin:1rem 0; }
+.formula-box { background:#f8fafc; border:1px solid #e2e8f0; border-radius:0.5rem; padding:1.5rem; text-align:center; margin:1rem 0; font-size:1.1rem; }
+.lab-controls { display:flex; gap:1rem; align-items:center; margin:1rem 0; flex-wrap:wrap; }
+.lab-btn { background:#2563eb; color:white; border:none; padding:0.75rem 1.5rem; border-radius:0.5rem; font-weight:600; cursor:pointer; transition:transform 0.2s; }
+.lab-btn:hover { transform:translateY(-1px); }
+.lab-btn.purple { background:#7c3aed; }
+.lab-btn.green { background:#16a34a; }
+input[type="range"] { flex:1; height:6px; border-radius:3px; background:#cbd5e1; outline:none; -webkit-appearance:none; }
+input[type="range"]::-webkit-slider-thumb { -webkit-appearance:none; width:20px; height:20px; border-radius:50%; background:#2563eb; cursor:pointer; }
+input[type="text"] { padding:0.75rem 1rem; border:1px solid #cbd5e1; border-radius:0.5rem; font-size:1rem; }
+.lab-result { background:white; border-radius:0.5rem; padding:1rem; margin-top:1rem; border:1px solid #e2e8f0; }
+
+/* 算法档案 */
+.algo-card { background:white; border-radius:0.75rem; border:1px solid #e2e8f0; overflow:hidden; transition:transform 0.2s; cursor:pointer; }
+.algo-card:hover { transform:translateY(-3px); box-shadow:0 10px 25px -5px rgba(0,0,0,0.1); }
+.algo-header { padding:1rem 1.5rem; color:white; font-weight:700; font-size:1.1rem; display:flex; align-items:center; gap:0.5rem; }
+.algo-header.blue { background:linear-gradient(135deg, #2563eb, #3b82f6); }
+.algo-header.purple { background:linear-gradient(135deg, #7c3aed, #8b5cf6); }
+.algo-body { padding:1.5rem; }
+.algo-year { color:#64748b; font-size:0.9rem; margin-bottom:0.5rem; }
+.algo-desc { color:#475569; font-size:0.95rem; line-height:1.6; }
+
+/* 玩法卡片 */
+.play-card { background:white; border-radius:1rem; padding:1.5rem; border:1px solid #e2e8f0; transition:all 0.2s; cursor:pointer; display:block; }
+.play-card:hover { transform:translateY(-3px); box-shadow:0 15px 30px -5px rgba(0,0,0,0.1); border-color:#c4b5fd; }
+.play-card h4 { font-size:1.05rem; margin-bottom:0.5rem; display:flex; align-items:center; gap:0.5rem; color:#1e293b; }
+.play-card p { color:#64748b; font-size:0.9rem; line-height:1.6; }
+.play-icon { font-size:1.5rem; }
+
+/* 时间线 */
+.timeline { position:relative; padding-left:2rem; margin:2rem 0; }
+.timeline::before { content:""; position:absolute; left:7px; top:0; bottom:0; width:2px; background:#cbd5e1; }
+.timeline-item { position:relative; margin-bottom:2rem; }
+.timeline-item::before { content:""; position:absolute; left:-2rem; top:0.3rem; width:16px; height:16px; border-radius:50%; background:#2563eb; border:3px solid white; box-shadow:0 0 0 2px #cbd5e1; }
+.timeline-item.purple::before { background:#7c3aed; }
+.timeline-year { font-weight:700; color:#2563eb; font-size:1.1rem; margin-bottom:0.25rem; }
+.timeline-item.purple .timeline-year { color:#7c3aed; }
+.timeline-content { color:#475569; line-height:1.7; }
+
+/* 代码块 */
+.code-block { position:relative; background:#1e293b; color:#e2e8f0; border-radius:0.75rem; padding:1.5rem; margin:1.5rem 0; overflow-x:auto; font-family: "Courier New", monospace; font-size:0.9rem; line-height:1.6; }
+.copy-btn { position:absolute; top:0.75rem; right:0.75rem; background:rgba(255,255,255,0.1); border:none; color:#94a3b8; padding:0.4rem 0.75rem; border-radius:0.3rem; cursor:pointer; font-size:0.8rem; }
+.copy-btn:hover { background:rgba(255,255,255,0.2); color:white; }
+
+/* 表格 */
+table { width:100%; border-collapse:collapse; margin:1.5rem 0; background:white; border-radius:0.75rem; overflow:hidden; box-shadow:0 1px 3px rgba(0,0,0,0.1); }
+th { background:#f1f5f9; padding:1rem; text-align:left; font-weight:600; color:#1e293b; }
+td { padding:1rem; border-top:1px solid #e2e8f0; color:#475569; }
+
+/* SVG图示 */
+.diagram { background:white; border-radius:0.75rem; padding:2rem; margin:1.5rem 0; border:1px solid #e2e8f0; text-align:center; overflow-x:auto; }
+.diagram svg { max-width:100%; height:auto; }
+
+/* CTA */
+.cta-grid { display:grid; grid-template-columns:repeat(2, 1fr); gap:2rem; margin-top:3rem; }
+.cta-card { border-radius:1rem; padding:2.5rem; color:white; text-align:center; }
+.cta-card.blue { background:linear-gradient(135deg, #2563eb, #1d4ed8); }
+.cta-card.purple { background:linear-gradient(135deg, #7c3aed, #6d28d9); }
+.cta-card h3 { font-size:1.5rem; margin-bottom:1rem; }
+.cta-card p { margin-bottom:1.5rem; opacity:0.9; }
+.cta-btn { display:inline-block; background:white; padding:0.75rem 1.5rem; border-radius:0.5rem; font-weight:600; color:#1e293b; }
+
+/* 知识库区域 */
+.kb-section { background:linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%); border-radius:1rem; padding:2rem; margin:2rem 0; border:1px solid #e2e8f0; }
+
+/* 响应式 */
+@media (max-width:1024px) { .sidebar { display:none; } .grid-2, .grid-3, .grid-4, .four-layer, .four-step, .stats, .cta-grid { grid-template-columns:1fr; } .hero h1 { font-size:2rem; } }
+</style>
+</head>
+<body>
+
+<!-- 导航栏 -->
+<nav>
+<div class="logo">💬 agent-nlp-llm</div>
+<div class="nav-links">
+<a href="#/">首页</a>
+<a href="#/play">🎨 玩法</a>
+<a href="#/nlp">📝 NLP</a>
+<a href="#/llm">🤖 LLM</a>
+<a href="#/lab" style="color:#2563eb;">🔬 实验室</a>
+<a href="#/papers">📚 论文</a>
+<a href="#/clinic">🕵️ 诊所</a>
+<a href="#/pitfalls">💥 踩坑</a>
+<a href="#/bench">📊 Bench</a>
+<a href="#/universe">🌌 宇宙</a>
+<a href="https://github.com/yejinlei/agent-nlp-llm" target="_blank">
+<svg class="github-icon" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+</a>
+</div>
+</nav>
+
+<!-- Hero区域 -->
+<section class="hero">
+<div class="hero-content">
+<h1>自然语言技术<span class="gradient">本体论</span>研究站</h1>
+<p>像学母语一样系统学NLP——从分词词向量到Transformer，从Scaling Law到RAG/Agent，每个算法都有直觉图示、数学推导、从零手搓代码、可互动Demo。拒绝调包侠，真正知其所以然。</p>
+<div class="hero-buttons">
+<button class="hero-btn btn-nlp" onclick="location.href='#/nlp'">📝 进入 NLP 自然语言处理</button>
+<button class="hero-btn btn-llm" onclick="location.href='#/llm'">🤖 进入 LLM 大语言模型</button>
+<button class="hero-btn btn-lab" onclick="location.href='#/lab'">🔬 NLP互动实验室</button>
+<button class="hero-btn btn-play" onclick="location.href='#/play'">🎮 创意玩法</button>
+</div>
+<div class="stats">
+<div class="stat-card">
+<div class="stat-number">2</div>
+<div class="stat-text">双子站：NLP + LLM</div>
+</div>
+<div class="stat-card">
+<div class="stat-number">8</div>
+<div class="stat-text">大技术分支谱系</div>
+</div>
+<div class="stat-card">
+<div class="stat-number">20+</div>
+<div class="stat-text">可交互实验室Demo</div>
+</div>
+<div class="stat-card">
+<div class="stat-number">30+</div>
+<div class="stat-text">从零手搓算法实现</div>
+</div>
+</div>
+</div>
+</section>
+
+<!-- 主体内容 -->
+<div class="container">
+<!-- 侧边栏 -->
+<aside class="sidebar">
+<div class="sidebar-title">导览</div>
+<ul class="sidebar-nav" id="toc">
+<li><a href="#intro" class="active">🎯 这是什么</a></li>
+<li><a href="#method">🎯 四步教学法</a></li>
+<li><a href="#four-layer">🧱 四层闭环</a></li>
+<li><a href="#family-tree">🌳 全景家族树</a></li>
+<li><a href="#read-path">🧭 双轴阅读</a></li>
+<li><a href="#lab" id="lab-link" class="purple">🧪 互动演示</a></li>
+<li><a href="#algos">📚 精选算法</a></li>
+<li><a href="#timeline">🔗 传承脉络</a></li>
+<li><a href="#play" class="purple">🎨 创意玩法</a></li>
+<li><a href="#kb">📚 知识库工具</a></li>
+<li><a href="#quick-start">🚀 快速开始</a></li>
+</ul>
+</aside>
+
+<main class="main-content">
+
+<section class="section" id="intro">
+<h2 class="section-title"><span class="emoji">🎯</span>这是什么</h2>
+<p>这是一个自然语言处理（NLP & LLM）的<b>本体论研究站</b>。不同于零散教程或论文列表，本站以"知识本体"的方式组织自然语言处理和大语言模型领域的全部核心概念、算法与模型，构建完整可落地的知识体系。</p>
+
+<div class="note-box">
+<p>💡 通俗理解：我们不做"调包侠教程"，每个算法都从最底层从零实现，配直观图示和互动演示，拖两下滑块就能懂原理，复制代码就能跑，让你真正搞懂每一行代码背后的数学，而不是只会调用HuggingFace API。</p>
+</div>
+
+<p>受 agent-cv / agent-yolo / agent-speech 启发，我们相信NLP/LLM的学习也可以：</p>
+<div class="grid-4">
+<div class="card" style="border-top:4px solid #2563eb;">
+<h4>📐 有体系</h4>
+<p style="font-size:0.9rem; color:#64748b;">不是零散知识点，而是完整技术树，知道每个算法解决什么问题、在什么位置、怎么演进来的</p>
+</div>
+<div class="card" style="border-top:4px solid #0891b2;">
+<h4>🧮 看得懂公式</h4>
+<p style="font-size:0.9rem; color:#64748b;">每个符号都有解释，配原理图示和互动Demo，拖滑块就懂数学，不用死记硬背</p>
+</div>
+<div class="card" style="border-top:4px solid #059669;">
+<h4>⚙️ 跑得了代码</h4>
+<p style="font-size:0.9rem; color:#64748b;">每个核心算法都有纯手工从零实现的代码，逐行注释，复制就能跑，不依赖高层封装</p>
+</div>
+<div class="card" style="border-top:4px solid #d97706;">
+<h4>🧠 知其所以然</h4>
+<p style="font-size:0.9rem; color:#64748b;">讲历史、讲直觉、讲坑点、讲工程选型，学完能判断什么场景用什么模型，不会人云亦云</p>
+</div>
+</div>
+</section>
+
+<section class="section" id="method">
+<h2 class="section-title"><span class="emoji">🎯</span>四步教学法 · 每个算法的标准结构</h2>
+<p>所有算法统一按以下四步讲解，拒绝跳跃，零基础也能一路跟上：</p>
+
+<div class="four-step">
+<div class="step">
+<div class="step-num">1</div>
+<h5>🎯 直觉图示</h5>
+<p style="font-size:0.85rem; color:#64748b;">用生活化类比+SVG原理图，一句话讲清核心思想，先建立直觉</p>
+</div>
+<div class="step">
+<div class="step-num">2</div>
+<h5>📐 数学推导</h5>
+<p style="font-size:0.85rem; color:#64748b;">每个符号都解释，公式一步步推，配互动演示调参数看变化</p>
+</div>
+<div class="step">
+<div class="step-num">3</div>
+<h5>💻 从零代码</h5>
+<p style="font-size:0.85rem; color:#64748b;">不用框架封装，纯NumPy/PyTorch手写，逐行注释搞懂每个细节</p>
+</div>
+<div class="step">
+<div class="step-num">4</div>
+<h5>🚀 工程实战</h5>
+<p style="font-size:0.85rem; color:#64748b;">真实场景坑点、性能优化、模型选型、避坑指南，学完就能用</p>
+</div>
+</div>
+
+<div class="method-box">
+<p>✅ 比如讲Self-Attention：先用"开会每个人同时听所有人说话"类比 → 一步步推Q/K/V矩阵乘法公式 → 300行NumPy手写注意力 → 讲工业界FlashAttention优化、长上下文优化、显存占用计算。</p>
+</div>
+</section>
+
+<section class="section" id="four-layer">
+<h2 class="section-title"><span class="emoji">🧱</span>四层闭环学习</h2>
+<p>从入门到精通，不跳步、不速成：</p>
+
+<div class="four-layer">
+<div class="layer">
+<div class="layer-num" style="color:#2563eb;">①</div>
+<h4>📄 概念层</h4>
+<p style="font-size:0.9rem; color:#64748b;">搞懂解决什么问题，核心思想是什么，和其他算法的区别，用通俗类比建立直觉</p>
+</div>
+<div class="layer">
+<div class="layer-num" style="color:#0891b2;">②</div>
+<h4>📐 数学层</h4>
+<p style="font-size:0.9rem; color:#64748b;">理解数学公式推导、每个符号的含义，结合互动Demo看懂计算流程</p>
+</div>
+<div class="layer">
+<div class="layer-num" style="color:#059669;">③</div>
+<h4>💻 算法层</h4>
+<p style="font-size:0.9rem; color:#64748b;">不用高层封装，从零用NumPy/PyTorch手写实现，逐行注释搞懂每个细节</p>
+</div>
+<div class="layer">
+<div class="layer-num" style="color:#d97706;">④</div>
+<h4>🚀 工程层</h4>
+<p style="font-size:0.9rem; color:#64748b;">实战案例、工程坑点、性能优化、硬件选型，学完就能真正落地用</p>
+</div>
+</div>
+</section>
+
+<section class="section" id="family-tree">
+<h2 class="section-title"><span class="emoji">🌳</span>全景技术家族树</h2>
+<p>NLP与LLM完整技术演进树，从规则时代到统计方法，到深度学习，再到今天的大语言模型，所有核心算法都在上面：</p>
+
+<div class="family-tree">
+🤖 NLP & LLM 技术树
+├─ 📜 规则时代 (1950-1990)
+│  ├─ 正则匹配、模板匹配
+│  ├─ 专家系统、有限状态机
+│  └─ 早期机器翻译、ELIZA聊天机器人
+├─ 📊 统计NLP时代 (1990-2013)
+│  ├─ N-gram 语言模型
+│  ├─ HMM 隐马尔可夫 (分词/词性标注/NER)
+│  ├─ CRF 条件随机场 (序列标注)
+│  ├─ TF-IDF / LSA / LDA 主题模型
+│  ├─ SVM/最大熵 文本分类
+│  └─ Word2Vec / GloVe 词向量革命
+├─ 🧠 深度学习NLP时代 (2013-2017)
+│  ├─ RNN / LSTM / GRU 循环网络
+│  ├─ TextCNN 文本卷积
+│  ├─ Seq2Seq 编码器解码器
+│  ├─ Bahdanau Attention 注意力机制
+│  ├─ Memory Network 记忆网络
+│  └─ Transformer (2017 里程碑 《Attention Is All You Need》)
+└─ 🚀 大语言模型时代 (2018-至今)
+   ├─ 预训练范式：BERT(Encoder) / GPT(Decoder) / T5(Encoder-Decoder)
+   ├─ Scaling Law 能力涌现
+   ├─ 对齐技术：SFT → RLHF → DPO/ORPO
+   ├─ 高效微调：LoRA / QLoRA / P-Tuning
+   ├─ Prompt工程：Zero-Shot/Few-Shot/CoT/ToT/ReAct
+   ├─ 知识增强：RAG检索增强生成
+   ├─ 智能体：Agent工具调用、多Agent协作
+   ├─ 长上下文：RoPE/YaRN/NTK插值、RingAttention
+   └─ 部署优化：量化(GPTQ/AWQ/FP8)、推理加速(vLLM/TensorRT-LLM)、端侧部署
+</div>
+</section>
+
+<section class="section" id="read-path">
+<h2 class="section-title"><span class="emoji">🧭</span>双轴阅读方式</h2>
+<div class="grid-2">
+<div class="card" style="border-top:4px solid #2563eb;">
+<h4>📈 <b>纵轴：6级学习路径</b>（推荐零基础按顺序读）</h4>
+<ol style="margin-left:1.2rem; line-height:2; color:#475569;">
+<li><b>L1 文本预处理</b>：分词、正则、数据清洗</li>
+<li><b>L2 统计NLP</b>：N-gram、HMM、CRF、TF-IDF</li>
+<li><b>L3 词向量与深度学习</b>：Word2Vec、RNN/LSTM、TextCNN</li>
+<li><b>L4 Transformer基础</b>：Attention、Encoder、Decoder</li>
+<li><b>L5 大模型核心</b>：预训练、微调、对齐、Scaling Law</li>
+<li><b>L6 应用与部署</b>：Prompt、RAG、Agent、量化、推理加速</li>
+</ol>
+</div>
+<div class="card" style="border-top:4px solid #7c3aed;">
+<h4>↔️ <b>横轴：进入双子站</b>（有基础可以按需跳读）</h4>
+<div style="margin:1rem 0;">
+<a href="#/nlp" style="display:flex; align-items:center; gap:0.75rem; padding:1rem; background:#eff6ff; border-radius:0.5rem; margin-bottom:0.75rem;">
+<span style="font-size:1.5rem;">📝</span>
+<div>
+<b>NLP 自然语言处理</b><br>
+<span style="font-size:0.9rem; color:#64748b;">从分词、词向量到Transformer，覆盖传统NLP全栈技术</span>
+</div>
+</a>
+<a href="#/llm" style="display:flex; align-items:center; gap:0.75rem; padding:1rem; background:#f5f3ff; border-radius:0.5rem;">
+<span style="font-size:1.5rem;">🤖</span>
+<div>
+<b>LLM 大语言模型</b><br>
+<span style="font-size:0.9rem; color:#64748b;">从Scaling Law到微调、RAG、Agent，覆盖大模型全链路</span>
+</div>
+</a>
+</div>
+</div>
+</div>
+</section>
+
+<section class="section" id="lab">
+<h2 class="section-title"><span class="emoji">🧪</span>互动演示：分词 / 注意力 / Scaling Law / BPE</h2>
+<p>不用死记硬背公式，拖一拖滑块、输入句子，直观理解每个算法的原理：</p>
+
+<div class="lab-card">
+<h3>🧩 BPE分词器 · 逐步骤演示</h3>
+<p>拖动合并步数，看BPE如何从字符一步步合并成子词，直观理解大模型分词原理：</p>
+<div class="lab-controls">
+<label>合并步数：<span id="bpe-step-val">0</span> / 20</label>
+<input type="range" min="0" max="20" value="0" class="lab-slider" id="bpe-step">
+</div>
+<div class="lab-result" id="bpe-result"></div>
+<div class="diagram" id="bpe-diag"></div>
+<div class="tip-box">💡 BPE（字节对编码）是今天所有大模型都在用的分词算法：不按词分也不按字分，而是合并最常出现的字符对，完美平衡词表大小和OOV问题。拖滑块看完整过程。</div>
+</div>
+
+<div class="lab-card">
+<h3>🔤 N-gram 语言模型 · 直觉演示</h3>
+<p>调节N值，看上下文窗口大小变化，直观理解马尔可夫假设：</p>
+<div class="lab-controls">
+<label>N值：<span id="ngram-n-val">2</span>-gram</label>
+<input type="range" min="1" max="5" value="2" class="lab-slider" id="ngram-n">
+</div>
+<div class="formula-box" id="ngram-formula"></div>
+<div class="diagram" id="ngram-window-diag"></div>
+<div class="tip-box">💡 N越大，看的上文越长，效果越好，但数据稀疏越严重；工业界传统常用3-gram，大模型本质是N非常大（几千几万）的N-gram，用神经网络建模概率。</div>
+</div>
+
+<div class="lab-card purple">
+<h3>🎯 Self-Attention 热力图 · 权重可视化</h3>
+<p>输入句子，实时计算注意力权重，看模型在每个词位置关注哪些其他词：</p>
+<div class="lab-controls">
+<input type="text" id="attn-input" value="我 爱 自然 语言 处理" style="flex:1; padding:0.75rem; border:1px solid #c4b5fd; border-radius:0.5rem;" placeholder="输入空格分词的句子">
+<button class="lab-btn purple" id="attn-run">运行</button>
+</div>
+<canvas id="attn-canvas" class="lab-canvas" style="height:300px;"></canvas>
+<div class="tip-box">💡 输入带指代的句子比如"小明把他的狗借给小红因为她很喜欢它"，可以直观看到指代消解："他"关注"小明"，"她"关注"小红"，"它"关注"狗"，这就是自注意力的强大之处。</div>
+</div>
+
+<div class="lab-card purple">
+<h3>📈 Scaling Law · 缩放定律</h3>
+<p>拖动参数量滑块，看模型效果变化，直观理解能力涌现：</p>
+<div class="lab-controls">
+<label>参数量：<span id="scale-param-val">1</span>B</label>
+<input type="range" min="0.1" max="100" value="1" step="0.1" class="lab-slider" id="scale-param">
+</div>
+<canvas id="scale-canvas" class="lab-canvas"></canvas>
+<div class="lab-result" id="scale-result"></div>
+<div class="tip-box">💡 可以看到参数量到约10B左右Loss下降明显变快，出现"能力涌现"——突然就会做数学题、会推理了，这也是为什么大家都做大模型的原因：符合Scaling Law，越大越强。</div>
+</div>
+</section>
+
+<section class="section" id="algos">
+<h2 class="section-title"><span class="emoji">📚</span>精选算法档案</h2>
+<p>每个算法点击进入详情，都按「图示→原理→公式→手搓代码→工程坑点」四步结构讲解：</p>
+
+<h3 style="margin:2rem 0 1rem; color:#2563eb;">📝 NLP 核心算法</h3>
+<div class="grid-2">
+<div class="algo-card" onclick="location.href='#/nlp#ngram'">
+<div class="algo-header blue"><span>🔤</span> N-gram 语言模型 <span style="margin-left:auto; opacity:0.8; font-size:0.9rem;">1990s</span></div>
+<div class="algo-body">
+<div class="algo-desc">统计语言模型基石，基于马尔可夫假设，用前面N-1个词预测下一个词。简单高效，统治工业界数十年，今天大模型本质仍是它的终极进化。</div>
+</div>
+</div>
+<div class="algo-card" onclick="location.href='#/nlp#hmm'">
+<div class="algo-header blue"><span>🔗</span> HMM 隐马尔可夫 <span style="margin-left:auto; opacity:0.8; font-size:0.9rem;">1980s</span></div>
+<div class="algo-body">
+<div class="algo-desc">序列标注经典模型，隐含状态序列生成观测序列，配合Viterbi解码解决分词、词性标注、命名实体识别，传统NLP的基石。</div>
+</div>
+</div>
+<div class="algo-card" onclick="location.href='#/nlp#word2vec'">
+<div class="algo-header blue"><span>📊</span> Word2Vec 词向量 <span style="margin-left:auto; opacity:0.8; font-size:0.9rem;">2013</span></div>
+<div class="algo-body">
+<div class="algo-desc">词表示革命，用Skip-gram/CBOW把词映射到低维稠密向量，让词之间有了"语义距离"，国王-男人+女人≈女王，开启NLP深度学习时代。</div>
+</div>
+</div>
+<div class="algo-card" onclick="location.href='#/nlp#attention'">
+<div class="algo-header blue"><span>🎯</span> Self-Attention 自注意力 <span style="margin-left:auto; opacity:0.8; font-size:0.9rem;">2017</span></div>
+<div class="algo-body">
+<div class="algo-desc">Transformer核心，Q/K/V机制让模型并行关注序列中所有位置，彻底解决RNN长距离依赖问题，所有现代大模型的核心基础。</div>
+</div>
+</div>
+</div>
+
+<h3 style="margin:2rem 0 1rem; color:#7c3aed;">🤖 LLM 核心算法</h3>
+<div class="grid-2">
+<div class="algo-card" onclick="location.href='#/llm#transformer'">
+<div class="algo-header purple"><span>🧱</span> Transformer Decoder <span style="margin-left:auto; opacity:0.8; font-size:0.9rem;">2018</span></div>
+<div class="algo-body">
+<div class="algo-desc">GPT系列基础架构，因果自回归注意力+位置编码，逐词生成文本，所有现代大模型都是Decoder-only架构。</div>
+</div>
+</div>
+<div class="algo-card" onclick="location.href='#/llm#scaling'">
+<div class="algo-header purple"><span>📏</span> Scaling Law 缩放定律 <span style="margin-left:auto; opacity:0.8; font-size:0.9rem;">2020</span></div>
+<div class="algo-body">
+<div class="algo-desc">OpenAI发现模型性能和参数量、数据量、计算量呈幂律关系，只要堆算力就能持续提升性能，这是大模型时代的理论基础。</div>
+</div>
+</div>
+<div class="algo-card" onclick="location.href='#/llm#lora'">
+<div class="algo-header purple"><span>⚡</span> LoRA 低秩适应 <span style="margin-left:auto; opacity:0.8; font-size:0.9rem;">2021</span></div>
+<div class="algo-body">
+<div class="algo-desc">参数高效微调开山之作，冻结原模型只训练低秩矩阵，显存需求降低1000倍，让平民也能微调大模型。</div>
+</div>
+</div>
+<div class="algo-card" onclick="location.href='#/llm#rlhf'">
+<div class="algo-header purple"><span>🎯</span> RLHF 人类反馈强化学习 <span style="margin-left:auto; opacity:0.8; font-size:0.9rem;">2022</span></div>
+<div class="algo-body">
+<div class="algo-desc">ChatGPT背后的对齐技术，用人类偏好训练奖励模型，再用PPO优化大模型，让输出符合人类价值观。DPO是它的简化替代。</div>
+</div>
+</div>
+</div>
+</section>
+
+<section class="section" id="timeline">
+<h2 class="section-title"><span class="emoji">🔗</span>传统 → 深度学习传承脉络</h2>
+<div class="timeline">
+<div class="timeline-item">
+<div class="timeline-year">1950</div>
+<div class="timeline-content">图灵测试提出，人工智能正式诞生，最早的机器翻译尝试基于规则，ELIZA聊天机器人出现</div>
+</div>
+<div class="timeline-item">
+<div class="timeline-year">1980s-1990s</div>
+<div class="timeline-content">统计NLP兴起，N-gram语言模型、HMM隐马尔可夫模型广泛应用于语音识别、分词、词性标注</div>
+</div>
+<div class="timeline-item">
+<div class="timeline-year">2001</div>
+<div class="timeline-content">CRF条件随机场提出，成为序列标注任务（分词/NER/词性标注）的标配方法，打败HMM</div>
+</div>
+<div class="timeline-item">
+<div class="timeline-year">2013</div>
+<div class="timeline-content">Word2Vec诞生，词向量技术普及，NLP进入深度学习时代，RNN/LSTM成为主流</div>
+</div>
+<div class="timeline-item">
+<div class="timeline-year">2014-2016</div>
+<div class="timeline-content">Seq2Seq+Bahdanau注意力提出，解决机器翻译长序列对齐问题，注意力机制开始兴起</div>
+</div>
+<div class="timeline-item">
+<div class="timeline-year">2017</div>
+<div class="timeline-content"><b>Transformer 论文《Attention Is All You Need》发表</b>，自注意力成为核心，NLP进入Transformer时代</div>
+</div>
+<div class="timeline-item purple">
+<div class="timeline-year">2018</div>
+<div class="timeline-content">GPT-1、BERT发布，预训练+微调范式确立，NLP进入大模型预训练时代</div>
+</div>
+<div class="timeline-item purple">
+<div class="timeline-year">2020</div>
+<div class="timeline-content">GPT-3发布，175B参数，Few-Shot能力展现，Scaling Law验证，大模型效果开始涌现</div>
+</div>
+<div class="timeline-item purple">
+<div class="timeline-year">2022</div>
+<div class="timeline-content">ChatGPT发布，RLHF对齐成熟，大模型进入大众视野，百模大战开始</div>
+</div>
+<div class="timeline-item purple">
+<div class="timeline-year">2023</div>
+<div class="timeline-content">LoRA/QLoRA普及，开源大模型爆发（LLaMA/Qwen/DeepSeek），RAG/Agent技术落地</div>
+</div>
+<div class="timeline-item purple">
+<div class="timeline-year">2024-2026</div>
+<div class="timeline-content">推理大模型o1、MoE架构、端侧部署、多模态融合、Agent能力快速演进</div>
+</div>
+</div>
+</section>
+
+<section class="section" id="play">
+<h2 class="section-title"><span class="emoji">🎨</span>创意互动玩法</h2>
+<p>在玩中学，12个互动沙盒，动手玩一遍比看10遍书记得牢：</p>
+
+<div class="grid-3">
+<a class="play-card" href="#/lab">
+<h4><span class="play-icon">🔬</span> NLP基础实验室</h4>
+<p>分词/词性标注/NER实时可视化，BPE分词过程逐步骤演示，一键看各种分词器效果差异</p>
+</a>
+<a class="play-card" href="#/lab#attention">
+<h4><span class="play-icon">🧠</span> 注意力可视化沙盒</h4>
+<p>实时可视化Self-Attention/Cross-Attention权重热力图，拖滑块看头数、层数怎么影响注意力</p>
+</a>
+<a class="play-card" href="#/lab#word2vec">
+<h4><span class="play-icon">🎮</span> 词向量类比游戏</h4>
+<p>国王-男人+女人=？实时算词向量类比，可视化词空间，看语义线性关系到底有多神奇</p>
+</a>
+<a class="play-card" href="#/lab#prompt">
+<h4><span class="play-icon">🎭</span> Prompt工程沙盒</h4>
+<p>Zero-Shot/Few-Shot/CoT/ReAct各种提示词效果实时对比，一键生成最优Prompt模板</p>
+</a>
+<a class="play-card" href="#/lab#rag">
+<h4><span class="play-icon">📚</span> RAG全流程可视化</h4>
+<p>文档分块→Embedding→向量检索→重排→生成，每一步都可视化，直观看懂RAG怎么解决幻觉</p>
+</a>
+<a class="play-card" href="#/lab#agent">
+<h4><span class="play-icon">🤖</span> Agent思考过程可视化</h4>
+<p>实时看ReAct思考→工具调用→观察→回答完整链路，直观看懂Agent到底是怎么工作的</p>
+</a>
+<a class="play-card" href="#/clinic">
+<h4><span class="play-icon">🕵️</span> 大模型错误诊所</h4>
+<p>10个真实工业病例游戏化诊断——当大模型医生，给幻觉/复读/答非所问开药方</p>
+</a>
+<a class="play-card" href="#/pitfalls">
+<h4><span class="play-icon">💥</span> Prompt踩坑博物馆</h4>
+<p>10个真实翻车案例（指令冲突/注入/位置偏见/长文本遗忘）配证据+修复方案</p>
+</a>
+<a class="play-card" href="#/bench">
+<h4><span class="play-icon">📊</span> 模型选购Benchmark</h4>
+<p>Llama/Qwen/DeepSeek/Mistral/GPT等参数量/显存/MMLU/速度/协议对比+决策树，选模型不纠结</p>
+</a>
+<a class="play-card" href="#/universe">
+<h4><span class="play-icon">🌌</span> 技术宇宙+时间轴</h4>
+<p>50节点可拖动力导向图+70年NLP/LLM双轨翻转时间轴，拖动看技术演进关系</p>
+</a>
+<a class="play-card" href="#/papers">
+<h4><span class="play-icon">📖</span> 10篇必读论文精读</h4>
+<p>问题→架构SVG→公式→消融→误区→手搓代码：Transformer/BERT/GPT/Scaling Law/LoRA/RLHF等</p>
+</a>
+<a class="play-card" href="#/illusion">
+<h4><span class="play-icon">🎭</span> 语言错觉实验室</h4>
+<p>语义错觉、框架效应、锚定效应、萨丕尔-沃尔夫假说互动演示——你的大脑怎么被语言"欺骗"</p>
+</a>
+</div>
+</section>
+
+<section class="section kb-section" id="kb">
+<h2 class="section-title"><span class="emoji">📚</span>知识库 · 工具区</h2>
+<p>除了教程，我们还准备了这些实用工具帮你真正落地：</p>
+
+<div class="grid-2">
+<div>
+<a href="#/universe" style="text-decoration:none; color:inherit;">
+<div class="card" style="margin-bottom:1rem;">
+<h4>🌌 技术宇宙 + 时间轴</h4>
+<p style="color:#64748b; font-size:0.95rem;">50节点可拖动力导向图 + 70年NLP/LLM双轨翻转时间轴，一眼看清所有技术的演进关系和来龙去脉</p>
+</div>
+</a>
+<a href="#/papers" style="text-decoration:none; color:inherit;">
+<div class="card" style="margin-bottom:1rem;">
+<h4>📖 10篇必读论文精读</h4>
+<p style="color:#64748b; font-size:0.95rem;">问题→架构SVG→公式→消融→误区→手搓代码：Transformer/BERT/GPT-3/Scaling Law/LoRA/RLHF/DPO/RAG/VIT/Whisper</p>
+</div>
+</a>
+<a href="#/clinic" style="text-decoration:none; color:inherit;">
+<div class="card">
+<h4>🕵️ LLM错误诊断诊所</h4>
+<p style="color:#64748b; font-size:0.95rem;">10个真实工业病例游戏化诊断——当AI医生，给幻觉/复读/答非所问/逻辑错误/上下文遗忘开药方</p>
+</div>
+</a>
+</div>
+<div>
+<a href="#/pitfalls" style="text-decoration:none; color:inherit;">
+<div class="card" style="margin-bottom:1rem;">
+<h4>💥 踩坑博物馆</h4>
+<p style="color:#64748b; font-size:0.95rem;">10个真实故障案例（Prompt注入/分词截断/位置偏见/长上下文失效/量化崩溃/分布式训练坑）配复现代码+修复方案</p>
+</div>
+</a>
+<a href="#/bench" style="text-decoration:none; color:inherit;">
+<div class="card" style="margin-bottom:1rem;">
+<h4>📊 模型选购 Benchmark</h4>
+<p style="color:#64748b; font-size:0.95rem;">Llama3/Qwen2/DeepSeek/Mistral/GPT-4o/Claude等参数量/显存/MMLU/GSM8K/速度/协议对比+选型决策树</p>
+</div>
+</a>
+<a href="https://github.com/yejinlei/agent-nlp-llm" target="_blank" style="text-decoration:none; color:inherit;">
+<div class="card">
+<h4>⭐ GitHub 源码</h4>
+<p style="color:#64748b; font-size:0.95rem;">全站开源 MIT 协议，所有手搓代码、Demo、教程都在仓库里，欢迎 star/PR/issue</p>
+</div>
+</a>
+</div>
+</div>
+
+<div style="margin-top:2rem; display:grid; grid-template-columns:1fr 1fr; gap:1.5rem;">
+<a href="#/nlp" style="text-decoration:none; color:inherit;">
+<div class="card" style="border-left:4px solid #2563eb;">
+<h4>📝 NLP 完整教程</h4>
+<p style="color:#64748b; font-size:0.95rem;">从分词/HMM/CRF到Word2Vec/LSTM/Transformer，按「图示→原理→公式→手搓代码」四步结构，系统学完传统NLP</p>
+</div>
+</a>
+<a href="#/llm" style="text-decoration:none; color:inherit;">
+<div class="card" style="border-left:4px solid #7c3aed;">
+<h4>🤖 LLM 完整教程</h4>
+<p style="color:#64748b; font-size:0.95rem;">从Transformer Decoder/预训练/SFT/RLHF到LoRA/RAG/Agent/量化部署，同样四步教学法，从零到大模型全栈</p>
+</div>
+</a>
+</div>
+</section>
+
+<section class="section" id="quick-start">
+<h2 class="section-title"><span class="emoji">🚀</span>5 分钟快速开始</h2>
+<p>推荐从NLP基础开始学习，每个算法都有手搓代码，复制就能跑，不需要复杂依赖：</p>
+
+<div class="grid-3" style="margin-bottom:2rem;">
+<button class="lab-btn" style="padding:1.25rem; font-size:1rem;" onclick="location.href='#/nlp#ngram'">📝 NLP：从零手搓N-gram</button>
+<button class="lab-btn purple" style="padding:1.25rem; font-size:1rem;" onclick="location.href='#/llm#attention'">🤖 LLM：手写Self-Attention</button>
+<button class="lab-btn green" style="padding:1.25rem; font-size:1rem;" onclick="location.href='#/lab'">🧪 先玩互动实验室</button>
+</div>
+
+<div class="code-block">
+<button class="copy-btn" onclick="copyCode(this)">复制</button>
+<pre># 环境准备，只需要两个库，不需要GPU也能跑
+pip install numpy torch
+# 推荐学习顺序：
+# 1. 先玩互动实验室，拖滑块建立直觉
+# 2. 学NLP基础：分词→N-gram→HMM→Word2Vec→LSTM→Attention→Transformer
+# 3. 再学LLM：Decoder→预训练→SFT→LoRA→RLHF→Prompt→RAG→Agent→部署
+# 4. 每个算法跑一遍手搓代码，再玩Demo加深理解</pre>
+</div>
+
+<div class="cta-grid">
+<a href="#/nlp" style="text-decoration:none;">
+<div class="cta-card blue">
+<h3>📝 进入 NLP 子站开始学习</h3>
+<p>从统计语言模型到Transformer，打好NLP基础，每个算法都有手搓代码</p>
+<span class="cta-btn">开始学习NLP →</span>
+</div>
+</a>
+<a href="#/llm" style="text-decoration:none;">
+<div class="cta-card purple">
+<h3>🤖 进入 LLM 子站开始学习</h3>
+<p>从Scaling Law到RAG/Agent，掌握大模型全栈技术，学完就能做项目</p>
+<span class="cta-btn">开始学习LLM →</span>
+</div>
+</a>
+</div>
+</section>
+
+</main>
+</div>
+
+<script>
+// 路由
+function route() {
+  const hash = location.hash || '#/';
+  if (hash === '#/nlp' || hash.startsWith('#/nlp')) {
+    if (!hash.includes('#')) location.href = 'nlp/index.html';
+  }
+  else if (hash === '#/llm' || hash.startsWith('#/llm')) {
+    if (!hash.includes('#')) location.href = 'llm/index.html';
+  }
+}
+window.addEventListener('hashchange', route);
+
+// 公式渲染
+document.addEventListener('DOMContentLoaded', function() {
+  renderMathInElement(document.body, { delimiters: [{left: "$$", right: "$$", display: true}, {left: "$", right: "$", display: false}] });
+  
+  // BPE分词演示
+  const bpeSlider = document.getElementById('bpe-step');
+  const bpeVal = document.getElementById('bpe-step-val');
+  const bpeResult = document.getElementById('bpe-result');
+  const bpeDiag = document.getElementById('bpe-diag');
+  const corpus = ['abab','abab','abc','ac','ab'];
+  function updateBPE() {
+    const step = parseInt(bpeSlider.value);
+    bpeVal.textContent = step;
+    let vocab = new Set();
+    corpus.forEach(w => w.split('').forEach(c => vocab.add(c)));
+    let tokens = corpus.map(w => w.split(''));
+    let merges = [];
+    
+    for(let s=0; s<step; s++) {
+      // 统计pair频率
+      let pairs = {};
+      tokens.forEach(tok => {
+        for(let i=0; i<tok.length-1; i++) {
+          let pair = tok[i]+tok[i+1];
+          pairs[pair] = (pairs[pair]||0)+1;
+        }
+      });
+      // 找最高频
+      let best = null, maxCnt = -1;
+      for(let p in pairs) {
+        if(pairs[p] > maxCnt) { maxCnt = pairs[p]; best = p; }
+      }
+      if(!best) break;
+      merges.push(best);
+      vocab.add(best);
+      // 合并
+      tokens = tokens.map(tok => {
+        let newTok = [];
+        for(let i=0; i<tok.length; i++) {
+          if(i<tok.length-1 && tok[i]+tok[i+1] === best) {
+            newTok.push(best);
+            i++;
+          } else newTok.push(tok[i]);
+        }
+        return newTok;
+      });
+    }
+    
+    bpeResult.innerHTML = `<b>已学习合并规则：</b>${merges.length>0?merges.join(' → '):'无（初始字符级）'}<br><b>当前词表大小：</b>${vocab.size} <br><b>分结果：</b>${tokens.map(t=>t.join(' ')).join(' | ')}`;
+    
+    // 画示意图
+    let svg = '<svg width="600" height="120" viewBox="0 0 600 120">';
+    let words = corpus;
+    words.forEach((w, wi) => {
+      let toks = tokens[wi];
+      let x = 20, y = 20 + wi*25;
+      toks.forEach(t => {
+        let w = t.length * 14 + 16;
+        let fill = t.length>1 ? '#7c3aed' : '#3b82f6';
+        svg += `<rect x="${x}" y="${y}" width="${w}" height="20" rx="4" fill="${fill}"/>`;
+        svg += `<text x="${x+w/2}" y="${y+14}" text-anchor="middle" fill="white" font-size="12">${t}</text>`;
+        x += w + 4;
+      });
+    });
+    svg += '</svg>';
+    bpeDiag.innerHTML = svg;
+  }
+  bpeSlider.addEventListener('input', updateBPE);
+  updateBPE();
+
+  // N-gram滑块
+  const nSlider = document.getElementById('ngram-n');
+  const nVal = document.getElementById('ngram-n-val');
+  const nFormula = document.getElementById('ngram-formula');
+  const nDiag = document.getElementById('ngram-window-diag');
+  function updateNgram() {
+    const n = parseInt(nSlider.value);
+    nVal.textContent = n;
+    let formula = `$$ P(w_i | w_1 ... w_{i-1}) \\approx P(w_i | w_{i-${n-1}} ... w_{i-1}) $$`;
+    nFormula.innerHTML = formula;
+    renderMathInElement(nFormula, {delimiters:[{left:"$$",right:"$$",display:true}]});
+    // 画窗口示意图
+    let words = ['我','今天','去','超市','买','了','一','瓶','可','乐'];
+    let svg = '<svg width="600" height="80" viewBox="0 0 600 80">';
+    let start = Math.max(0, 5 - n + 1);
+    for(let i=0; i<words.length; i++) {
+      let x = i * 60;
+      let fill = (i >= start && i <5) ? '#3b82f6' : (i===5 ? '#f59e0b' : '#e2e8f0');
+      let color = (i >= start && i <5 || i===5) ? 'white' : '#64748b';
+      svg += `<rect x="${x}" y="20" width="50" height="40" rx="4" fill="${fill}"/>`;
+      svg += `<text x="${x+25}" y="45" text-anchor="middle" fill="${color}" font-size="14">${words[i]}</text>`;
+    }
+    svg += '<text x="325" y="75" text-anchor="middle" fill="#f59e0b" font-size="12">预测目标词</text>';
+    svg += '</svg>';
+    nDiag.innerHTML = svg;
+  }
+  nSlider.addEventListener('input', updateNgram);
+  updateNgram();
+
+  // 注意力热力图
+  const attnCanvas = document.getElementById('attn-canvas');
+  const attnInput = document.getElementById('attn-input');
+  const attnBtn = document.getElementById('attn-run');
+  function drawAttention() {
+    const text = attnInput.value.trim();
+    const chars = text.split(/\s+/).filter(c=>c);
+    const n = chars.length;
+    if(n===0) return;
+    const ctx = attnCanvas.getContext('2d');
+    const cellSize = Math.min(30, Math.min(480 / n, 40));
+    attnCanvas.width = n * cellSize + 60;
+    attnCanvas.height = n * cellSize + 40;
+    ctx.clearRect(0,0,attnCanvas.width, attnCanvas.height);
+    // 模拟注意力权重（简化版本，相似度+指代规则）
+    for(let i=0; i<n; i++) {
+      for(let j=0; j<n; j++) {
+        let sim = 0.08 + Math.random()*0.25;
+        // 自注意力高一点
+        if(i===j) sim = 0.4 + Math.random()*0.2;
+        // 邻近词高一点
+        if(Math.abs(i-j) <= 2 && i!==j) sim += 0.15;
+        // 简化因果mask：不能看未来
+        if(j > i) sim *= 0.15;
+        // 指代规则（简化）
+        if(['他','她','它'].includes(chars[i])) {
+          for(let k=0; k<i; k++) {
+            if(['小明','小红','狗','我','你'].includes(chars[k])) sim = Math.max(sim, 0.6 + Math.random()*0.2);
+          }
+        }
+        sim = Math.min(0.95, Math.max(0.05, sim));
+        ctx.fillStyle = `rgba(124, 58, 237, ${sim})`;
+        ctx.fillRect(40 + j*cellSize, i*cellSize, cellSize-1, cellSize-1);
+      }
+      ctx.fillStyle = '#475569';
+      ctx.font = '11px sans-serif';
+      ctx.textAlign = 'right';
+      ctx.fillText(chars[i], 35, i*cellSize + cellSize/2 + 4);
+      ctx.textAlign = 'center';
+      ctx.fillText(chars[i], 40 + i*cellSize + cellSize/2, n*cellSize + 20);
+    }
+  }
+  attnBtn.addEventListener('click', drawAttention);
+  window.addEventListener('resize', drawAttention);
+  drawAttention();
+
+  // Scaling Law曲线
+  const scaleCanvas = document.getElementById('scale-canvas');
+  const scaleSlider = document.getElementById('scale-param');
+  const scaleVal = document.getElementById('scale-param-val');
+  const scaleResult = document.getElementById('scale-result');
+  function drawScale() {
+    const param = parseFloat(scaleSlider.value);
+    scaleVal.textContent = param.toFixed(1);
+    const ctx = scaleCanvas.getContext('2d');
+    const w = scaleCanvas.width = scaleCanvas.offsetWidth;
+    const h = scaleCanvas.height = 200;
+    ctx.clearRect(0,0,w,h);
+    // 坐标轴
+    ctx.strokeStyle = '#cbd5e1';
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(40, h-30); ctx.lineTo(w-20, h-30); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(40, 20); ctx.lineTo(40, h-30); ctx.stroke();
+    ctx.fillStyle = '#64748b'; ctx.font = '11px sans-serif';
+    ctx.fillText('Loss', 10, 25);
+    ctx.fillText('参数量(B)', w-60, h-10);
+    // 曲线 L ~ 8/(N^0.3) 幂律
+    ctx.strokeStyle = '#7c3aed';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    for(let i=0; i<w-60; i++) {
+      let p = 0.1 + i/(w-60)*100;
+      let l = 8 / Math.pow(p, 0.3);
+      let x = 40 + i;
+      let y = h-30 - (l/10)*(h-50);
+      if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+    }
+    ctx.stroke();
+    // 当前点
+    let l = 8 / Math.pow(param, 0.3);
+    let x = 40 + ((param - 0.1)/99.9)*(w-60);
+    let y = h-30 - (l/10)*(h-50);
+    ctx.fillStyle = '#ef4444';
+    ctx.beginPath(); ctx.arc(x,y,7,0,Math.PI*2); ctx.fill();
+    // 涌现阈值 10B
+    let x10 = 40 + ((10-0.1)/99.9)*(w-60);
+    ctx.strokeStyle = '#f59e0b';
+    ctx.setLineDash([5,5]);
+    ctx.beginPath(); ctx.moveTo(x10, 20); ctx.lineTo(x10, h-30); ctx.stroke();
+    ctx.fillStyle = '#f59e0b';
+    ctx.font = '12px sans-serif';
+    ctx.fillText('~10B 能力涌现阈值', x10+5, 35);
+    ctx.setLineDash([]);
+    // 结果
+    let cap = param < 1 ? '只能做简单任务，没有推理能力，类似补全' : 
+              param < 10 ? '有基础语言理解能力，推理能力弱，容易胡说' :
+              param < 50 ? '涌现思维链能力，能做复杂推理、数学、代码' : '接近人类水平，多任务通用能力强，涌现多模态能力';
+    scaleResult.innerHTML = `<b>当前参数量：${param.toFixed(1)}B</b><br>测试Loss：${l.toFixed(2)}<br>能力阶段：${cap}`;
+  }
+  scaleSlider.addEventListener('input', drawScale);
+  window.addEventListener('resize', drawScale);
+  drawScale();
+});
+
+// 复制代码
+function copyCode(btn) {
+  const code = btn.nextElementSibling.textContent;
+  navigator.clipboard.writeText(code);
+  btn.textContent = '已复制';
+  setTimeout(()=>btn.textContent='复制', 2000);
+}
+
+// 侧边栏高亮
+const sections = document.querySelectorAll('.section');
+const tocLinks = document.querySelectorAll('#toc a');
+window.addEventListener('scroll', () => {
+  let current = '';
+  sections.forEach(sec => {
+    const top = sec.offsetTop;
+    if(scrollY >= top - 120) current = sec.id;
+  });
+  tocLinks.forEach(link => {
+    link.classList.remove('active', 'purple-active');
+    const href = link.getAttribute('href').substring(1);
+    if(href === current) {
+      if(link.classList.contains('purple')) link.classList.add('purple-active');
+      else link.classList.add('active');
+    }
+  });
+});
+</script>
+</body>
+</html>
