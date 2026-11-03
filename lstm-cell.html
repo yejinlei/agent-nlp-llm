@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>🧊 LSTM 细胞内部 · agent-nlp-llm</title>
+<link rel="stylesheet" href="css/site.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+</head><body>
+<nav class="nav-blur">
+  <div class="nav-inner">
+    <a href="index.html" class="nav-brand"><span class="brand-bubble">💬</span>agent-nlp-llm</a>
+    <div class="nav-links">
+      <a href="index.html" class="nav-link">🏠&nbsp;首页</a>
+      <a href="nlp/index.html" class="nav-link">📝&nbsp;NLP</a>
+      <a href="llm/index.html" class="nav-link">🤖&nbsp;LLM</a>
+      <a href="lab.html" class="nav-link">🧪&nbsp;实验室</a>
+      <a href="papers.html" class="nav-link">📚&nbsp;论文</a>
+      <a href="clinic.html" class="nav-link">🕵️&nbsp;诊所</a>
+      <a href="pitfalls.html" class="nav-link">💥&nbsp;踩坑</a>
+      <a href="benchmark.html" class="nav-link">📊&nbsp;选型</a>
+      <a href="universe.html" class="nav-link">🌌&nbsp;宇宙</a>
+      <a href="https://github.com/yejinlei/agent-nlp-llm" target="_blank" class="nav-link nav-gh" title="GitHub"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 .5C5.73.5.5 5.73.5 12c0 5.08 3.29 9.39 7.86 10.91.58.1.79-.25.79-.56v-2c-3.2.7-3.88-1.37-3.88-1.37-.52-1.33-1.28-1.69-1.28-1.69-1.05-.72.08-.7.08-.7 1.16.08 1.77 1.2 1.77 1.2 1.03 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.56-.29-5.25-1.28-5.25-5.7 0-1.26.45-2.29 1.19-3.1-.12-.29-.52-1.47.11-3.06 0 0 .97-.31 3.18 1.18a11 11 0 0 1 5.79 0c2.21-1.49 3.18-1.18 3.18-1.18.63 1.59.23 2.77.11 3.06.74.81 1.19 1.84 1.19 3.1 0 4.43-2.69 5.41-5.26 5.69.41.36.77 1.05.77 2.13v3.15c0 .31.21.67.8.56A11.5 11.5 0 0 0 23.5 12C23.5 5.73 18.27.5 12 .5z"/></svg></a>
+    </div>
+  </div>
+</nav>
+<main class="container" style="padding-top:90px">
+
+<h1><span class="chip pink">🧊</span>LSTM 细胞内部结构图</h1>
+<p class="lead">把一个 LSTM 细胞"切开"看内部：三个门（遗忘/输入/输出）如何围绕一条<b>细胞状态传送带 C</b> 协作，为什么它能"记住"很久之前的信息。</p>
+
+<div class="step-card"><h3>🧊 LSTM 细胞解剖图（点击门查看作用）</h3>
+<canvas id="cellCanvas" width="900" height="480" style="width:100%;max-width:900px;background:#fff;border-radius:12px;border:1px solid #e2e8f0"></canvas>
+<div id="cellInfo" class="insight" style="margin-top:10px">👆 点击图里任意一个"门"（红色/蓝色/绿色矩形）查看详细作用。LSTM 最关键的创新就是那条<b>水平穿过细胞的传送带 C</b>——信息在上面流过，只靠"门"做少量线性变换，梯度可以几乎无损地回传很多步。</div>
+<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:16px">
+  <div class="play-card"><h4 style="color:#dc2626">🚪 遗忘门 f</h4>控制"保留多少旧记忆"。f=1 完全记住，f=0 完全忘掉。看到主语变了就把旧主语"忘掉"。</div>
+  <div class="play-card"><h4 style="color:#2563eb">🚪 输入门 i</h4>控制"写入多少新信息"。决定哪些新信息"值得记住"，由 sigmoid 选位置、tanh 造内容。</div>
+  <div class="play-card"><h4 style="color:#16a34a">🚪 输出门 o</h4>控制"输出多少给下一步"。并不是所有记忆都要在当前时刻暴露，o 决定"现在说哪部分"。</div>
+</div>
+</div>
+
+<script>
+const cc=document.getElementById('cellCanvas'),cx=cc.getContext('2d');
+const gates=[
+  {id:'forget',x:180,y:120,w:100,h:60,color:'#dc2626',label:'遗忘门 f',desc:'<b>🚪 遗忘门 f_t = σ(W_f·[h_{t-1},x_t]+b_f)</b><br><br>看当前输入 x_t 和上一步输出 h_{t-1}，输出一个 0~1 的向量，乘在旧的细胞状态 C_{t-1} 上：<br><br>C 上"要忘掉的位置"对应 f→0；"要保留的位置"对应 f→1。<br><br>典型场景：看完新主语，把旧主语的记忆"擦掉"。'},
+  {id:'input',x:380,y:120,w:100,h:60,color:'#2563eb',label:'输入门 i',desc:'<b>🚪 输入门 i_t = σ(W_i·[h_{t-1},x_t]+b_i)</b><br><b>📝 候选 C̃_t = tanh(W_c·[h_{t-1},x_t]+b_c)</b><br><br>i_t 决定"哪些位置要写新值"，C̃_t 提供"新值的候选内容"。两者相乘得到"要写入的新信息"。<br><br>典型场景：遇到一个新主角，把它的性别/单复数写入 C。'},
+  {id:'update',x:280,y:280,w:220,h:60,color:'#f59e0b',label:'更新 C_t',desc:'<b>🔄 C_t = f_t ⊙ C_{t-1} + i_t ⊙ C̃_t</b><br><br>这是传送带的核心更新公式：<br>• 旧记忆 × 遗忘门：选择性保留<br>• 新信息 × 输入门：选择性写入<br>• 相加得到新记忆<br><br>注意这里只有<b>逐元素乘法 + 加法</b>，没有非线性激活套在 C 上——这就是梯度能"无损"回传的原因！'},
+  {id:'output',x:580,y:120,w:100,h:60,color:'#16a34a',label:'输出门 o',desc:'<b>🚪 输出门 o_t = σ(W_o·[h_{t-1},x_t]+b_o)</b><br><b>📤 h_t = o_t ⊙ tanh(C_t)</b><br><br>o_t 决定 C 的"哪些部分现在输出"，tanh(C_t) 把记忆压到 -1~1，再乘 o_t 做门控。<br><br>典型场景：主语是单数还是复数，只有在生成动词时才"输出"，平时保持隐藏。'}
+];
+let selected=null;
+
+function drawCell(){
+  cx.clearRect(0,0,cc.width,cc.height);
+  // C 传送带（顶部水平粗线）
+  cx.strokeStyle='#fbbf24';cx.lineWidth=8;cx.lineCap='round';
+  cx.beginPath();cx.moveTo(80,60);cx.lineTo(820,60);cx.stroke();
+  cx.fillStyle='#92400e';cx.font='bold 15px sans-serif';cx.textAlign='center';
+  cx.fillText('细胞状态传送带 C_t（长期记忆，加法流动，梯度近乎无损）',450,40);
+  // h 短支路（底部）
+  cx.strokeStyle='#60a5fa';cx.lineWidth=3;cx.setLineDash([6,4]);
+  cx.beginPath();cx.moveTo(80,420);cx.lineTo(820,420);cx.stroke();cx.setLineDash([]);
+  cx.fillStyle='#1e40af';cx.fillText('隐藏状态 h_t（短期工作记忆，给下一时间步和输出）',450,450);
+  // x_t 输入
+  cx.fillStyle='#8b5cf6';cx.beginPath();cx.arc(80,240,24,0,Math.PI*2);cx.fill();
+  cx.fillStyle='#fff';cx.font='bold 18px sans-serif';cx.fillText('x_t',80,246);
+  cx.fillStyle='#6c5ce7';cx.font='13px sans-serif';cx.fillText('当前输入',80,280);
+  // h_{t-1} 输入
+  cx.fillStyle='#06b6d4';cx.beginPath();cx.arc(80,360,24,0,Math.PI*2);cx.fill();
+  cx.fillStyle='#fff';cx.fillText('hₜ₋₁',80,366);
+  cx.fillStyle='#0891b2';cx.fillText('上一步输出',80,400);
+  // 连线：x, h -> gates
+  cx.strokeStyle='#94a3b8';cx.lineWidth=1.5;
+  gates.slice(0,3).forEach(g=>{
+    cx.beginPath();cx.moveTo(104,240);cx.lineTo(g.x,240);cx.lineTo(g.x,g.y+g.h);cx.stroke();
+    cx.beginPath();cx.moveTo(104,360);cx.lineTo(g.x,360);cx.lineTo(g.x,g.y+g.h);cx.stroke();
+  });
+  // 门
+  gates.forEach(g=>{
+    cx.fillStyle=g.color+'22';cx.strokeStyle=g.color;cx.lineWidth=selected===g.id?4:2;
+    cx.fillRect(g.x,g.y,g.w,g.h);cx.strokeRect(g.x,g.y,g.w,g.h);
+    cx.fillStyle=g.color;cx.font='bold 14px sans-serif';cx.textAlign='center';
+    cx.fillText(g.label,g.x+g.w/2,g.y+g.h/2+5);
+  });
+  // 连线：gate -> C
+  cx.strokeStyle='#dc2626';cx.lineWidth=2;
+  cx.beginPath();cx.moveTo(230,180);cx.lineTo(230,60);cx.stroke(); // forget -> C
+  cx.strokeStyle='#2563eb';cx.beginPath();cx.moveTo(430,180);cx.lineTo(390,280);cx.stroke(); // input -> update
+  cx.strokeStyle='#16a34a';cx.beginPath();cx.moveTo(630,180);cx.lineTo(630,60);cx.stroke(); // output->C ->h
+  cx.beginPath();cx.moveTo(630,60);cx.lineTo(630,420);cx.stroke(); // C->o->h
+  // C 输出
+  cx.fillStyle='#fbbf24';cx.beginPath();cx.arc(820,60,16,0,Math.PI*2);cx.fill();
+  cx.fillStyle='#92400e';cx.font='bold 12px sans-serif';cx.fillText('C_t',820,85);
+  // h 输出
+  cx.fillStyle='#60a5fa';cx.beginPath();cx.arc(820,420,16,0,Math.PI*2);cx.fill();
+  cx.fillStyle='#1e40af';cx.fillText('h_t',820,445);
+  // 乘号、加号圆圈
+  const ops=[{x:230,y:60,s:'×',c:'#dc2626'},{x:390,y:280,s:'×',c:'#2563eb'},{x:390,y:60,s:'+',c:'#f59e0b'},{x:630,y:60,s:'×',c:'#16a34a'}];
+  ops.forEach(o=>{
+    cx.fillStyle='#fff';cx.strokeStyle=o.c;cx.lineWidth=2;cx.beginPath();cx.arc(o.x,o.y,14,0,Math.PI*2);cx.fill();cx.stroke();
+    cx.fillStyle=o.c;cx.font='bold 16px sans-serif';cx.textAlign='center';cx.fillText(o.s,o.x,o.y+5);
+  });
+}
+cc.addEventListener('click',e=>{
+  const r=cc.getBoundingClientRect(),x=(e.clientX-r.left)*(cc.width/r.width),y=(e.clientY-r.top)*(cc.height/r.height);
+  selected=null;
+  gates.forEach(g=>{if(x>=g.x&&x<=g.x+g.w&&y>=g.y&&y<=g.y+g.h){selected=g.id;document.getElementById('cellInfo').innerHTML=g.desc;}});
+  drawCell();
+});
+drawCell();
+</script>
+
+</main>
+<script src="js/site.js"></script>
+</body></html>

@@ -98,6 +98,8 @@ h4 { margin-top: 20px; margin-bottom: 12px; color: #1e40af; }
   <h4 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3 px-3">NLP 目录</h4>
   <a href="#intro" class="active">🎯 NLP 是什么</a>
   <a href="#preprocess">🔪 预处理四步</a>
+  <a href="#onehot">1️⃣ One-Hot</a>
+  <a href="#tfidf">2️⃣ TF-IDF</a>
   <a href="#ngram">🔤 N-gram 语言模型</a>
   <a href="#hmm">🔗 HMM 隐马尔可夫</a>
   <a href="#viterbi">🧭 Viterbi 解码</a>
@@ -163,7 +165,48 @@ print(list(jieba.cut(text)))  # ['我', '爱', '自然语言', '处理']</code><
     <p class="text-gray-600 mb-4">去掉"的、了、吗、啊、the、a、is"这类没有实际语义的高频虚词，减少噪声和计算量。但在某些任务（如句法分析、对话系统）中不能随便去停用词。</p>
 
     <h4>4️⃣ 词表示</h4>
-    <p class="text-gray-600 mb-4">把词转换成计算机能处理的数字向量：从最早的One-Hot，到TF-IDF，再到Word2Vec词向量，演进了几十年。</p>
+    <p class="text-gray-600 mb-4">把词转换成计算机能处理的数字向量：从最早的One-Hot，到TF-IDF，再到Word2Vec词向量，演进了几十年。三种方法各有适用场景，下面逐个讲透，边看边玩。</p>
+
+    <h5 style="font-size:1.15rem;font-weight:700;color:#1e293b;margin-top:1.5rem" id="onehot">① One-Hot 独热编码</h5>
+    <p class="text-gray-700 mb-3">最简单直接：词表有V个词，每个词对应一个V维向量，只有自己的位置是1，其他全是0。</p>
+    <div class="demo-box">
+      <div style="display:flex;gap:12px;margin-bottom:12px;align-items:center;flex-wrap:wrap">
+        <label style="font-size:14px;color:#475569">输入句子：</label>
+        <input id="oh-sent" type="text" value="我 爱 自然语言处理" style="flex:1;min-width:200px;padding:6px 10px;border:1px solid #e2e8f0;border-radius:6px;font-size:14px;font-family:inherit">
+        <button onclick="renderOneHot()" style="padding:6px 14px;background:#3b82f6;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:14px">生成矩阵</button>
+      </div>
+      <p style="font-size:13px;color:#64748b;margin-bottom:8px">👇 每个词 = 一行向量，只有自己的那一列是1（橙色高亮），其余全是0。</p>
+      <canvas id="oh-canvas" width="720" height="180" style="width:100%;max-width:720px;border:1px solid #e2e8f0;border-radius:8px;background:#fafafa"></canvas>
+      <div style="margin-top:12px;padding:12px;background:#eff6ff;border-radius:8px;font-size:14px;color:#1e40af">
+        <strong>致命问题：</strong>任意两个词的点积都是0，"猫"和"狗"跟"猫"和"桌子"一样远——语义完全丢失。拖下面的滑块点任意两个词，验证余弦相似度恒等于0。
+      </div>
+      <div style="margin-top:12px;display:flex;gap:16px;flex-wrap:wrap;align-items:center;font-size:14px">
+        <label>词A：<select id="oh-a" onchange="showOhSim()"></select></label>
+        <label>词B：<select id="oh-b" onchange="showOhSim()"></select></label>
+        <span id="oh-sim" style="font-weight:600;color:#ef4444"></span>
+      </div>
+    </div>
+
+    <h5 style="font-size:1.15rem;font-weight:700;color:#1e293b;margin-top:1.5rem" id="tfidf">② TF-IDF 词频-逆文档频率</h5>
+    <p class="text-gray-700 mb-3">给每个词一个"重要度"权重：<strong>在本文档出现越多、在全部文档越罕见，权重就越高</strong>。公式：</p>
+    <div class="formula-block" style="margin:12px 0">
+      $$\text{TF-IDF}(w,d) = \text{TF}(w,d) \times \text{IDF}(w),\quad \text{IDF}(w) = \log\frac{N}{\text{DF}(w)+1}$$
+    </div>
+    <div class="demo-box">
+      <p style="font-size:14px;color:#475569;margin-bottom:8px">👇 真实语料：4个文档，点任意文档看TF-IDF热力图；拖动右下角按钮自动排序，找出每个文档的关键词。</p>
+      <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap">
+        <button onclick="showTfidf(0)" class="tf-btn" data-doc="0" style="padding:6px 12px;border:1px solid #e2e8f0;border-radius:6px;cursor:pointer;background:#f8fafc;font-size:13px">📄 文档1（NLP简介）</button>
+        <button onclick="showTfidf(1)" class="tf-btn" data-doc="1" style="padding:6px 12px;border:1px solid #e2e8f0;border-radius:6px;cursor:pointer;background:#f8fafc;font-size:13px">📄 文档2（深度学习）</button>
+        <button onclick="showTfidf(2)" class="tf-btn" data-doc="2" style="padding:6px 12px;border:1px solid #e2e8f0;border-radius:6px;cursor:pointer;background:#f8fafc;font-size:13px">📄 文档3（大模型）</button>
+        <button onclick="showTfidf(3)" class="tf-btn" data-doc="3" style="padding:6px 12px;border:1px solid #e2e8f0;border-radius:6px;cursor:pointer;background:#f8fafc;font-size:13px">📄 文档4（计算机视觉）</button>
+        <button onclick="sortTfidf()" style="padding:6px 12px;border:1px solid #8b5cf6;border-radius:6px;cursor:pointer;background:#f5f3ff;color:#7c3aed;font-size:13px;margin-left:auto">🔽 按权重排序</button>
+      </div>
+      <canvas id="tf-canvas" width="760" height="260" style="width:100%;max-width:760px;border:1px solid #e2e8f0;border-radius:8px;background:#fafafa"></canvas>
+      <div id="tf-keywords" style="margin-top:10px;font-size:14px;color:#334155"></div>
+      <div style="margin-top:12px;padding:12px;background:#fef3c7;border-radius:8px;font-size:14px;color:#92400e">
+        <strong>还不够好：</strong>"的""是""了"被IDF压下去，但TF-IDF仍然是词袋模型——不考虑词序、不考虑上下文，"我爱你"和"你爱我"向量完全相同。语义相似度问题依然没解决，这才有了Word2Vec。
+      </div>
+    </div>
   </section>
 
   <!-- N-gram -->
@@ -541,6 +584,111 @@ print("预测结果:", "正面" if prediction == 1 else "负面")</code></pre>
   </section>
 </div>
 
+<script>
+// ========== One-Hot 互动 ==========
+let ohWords = [], ohV = 0;
+function renderOneHot() {
+  const sent = document.getElementById('oh-sent').value.trim();
+  ohWords = sent.split(/\s+/).filter(Boolean);
+  const vocab = [...new Set(ohWords)];
+  ohV = vocab.length;
+  const cv = document.getElementById('oh-canvas');
+  const ctx = cv.getContext('2d');
+  const cw = cv.width, ch = cv.height;
+  const padL = 80, padT = 36, cellW = Math.min(40, (cw - padL - 20) / ohV), cellH = Math.min(36, (ch - padT - 20) / ohWords.length);
+  cv.width = cw; cv.height = ch;
+  ctx.fillStyle = '#fafafa'; ctx.fillRect(0,0,cw,ch);
+  // 词表标题（列）
+  ctx.font = '11px sans-serif'; ctx.textAlign='center'; ctx.fillStyle='#334155';
+  vocab.forEach((w,i) => ctx.fillText(w.length>4?w.slice(0,4)+'..':w, padL+i*cellW+cellW/2, 22));
+  // 每行词
+  ctx.textAlign='right';
+  ohWords.forEach((w,r)=>{
+    ctx.fillStyle = '#334155';
+    ctx.fillText(w, padL-8, padT+r*cellH+cellH*0.65);
+    vocab.forEach((v,c)=>{
+      const x=padL+c*cellW, y=padT+r*cellH;
+      ctx.fillStyle = (v===w)?'#f97316':'#ffffff';
+      ctx.fillRect(x,y,cellW-2,cellH-2);
+      ctx.strokeStyle='#e2e8f0'; ctx.strokeRect(x,y,cellW-2,cellH-2);
+      ctx.fillStyle=(v===w)?'#fff':'#94a3b8'; ctx.textAlign='center';
+      ctx.fillText(v===w?'1':'0', x+cellW/2-1, y+cellH*0.65);
+    });
+  });
+  // 下拉框
+  const sa=document.getElementById('oh-a'), sb=document.getElementById('oh-b');
+  sa.innerHTML=sb.innerHTML='';
+  vocab.forEach(w=>{ sa.innerHTML+=`<option>${w}</option>`; sb.innerHTML+=`<option>${w}</option>`; });
+  if(vocab.length>=2) sb.selectedIndex=1;
+  showOhSim();
+}
+function showOhSim(){
+  const a=document.getElementById('oh-a').value, b=document.getElementById('oh-b').value;
+  const sim = (a===b)?1:0;
+  const color = sim===1?'#10b981':'#ef4444';
+  document.getElementById('oh-sim').innerHTML = `cos("${a}", "${b}") = <span style="color:${color};font-size:18px">${sim}</span>  ${sim===0?'❌ 完全正交，无相似度':'✅ 是同一个词'}`;
+}
+
+// ========== TF-IDF 互动 ==========
+const docs = [
+  "自然语言处理 是 人工智能 的 一个 分支 研究 让 计算机 理解 人类 语言",
+  "深度学习 是 机器学习 的 一个 分支 使用 神经网络 建模 数据 特征",
+  "大语言模型 是 基于 Transformer 架构 的 大规模 预训练 语言 模型 拥有 强大 的 生成 能力",
+  "计算机视觉 是 人工智能 的 一个 分支 研究 让 计算机 理解 图像 和 视频"
+];
+const docNames = ["文档1","文档2","文档3","文档4"];
+let tfidfMatrix=[], allWords=[];
+function calcTfidf(){
+  const toks = docs.map(d=>d.split(/\s+/));
+  allWords = [...new Set(toks.flat())].sort();
+  const V = allWords.length, N=docs.length;
+  const df = new Array(V).fill(0);
+  const tf = toks.map(t=>{ const f=new Array(V).fill(0); t.forEach(w=>{const i=allWords.indexOf(w); f[i]++;}); f.forEach((v,i)=>{if(v>0)df[i]++;}); return f.map(x=>x/t.length); });
+  const idf = df.map(x=>Math.log(N/(x+1))+1);
+  tfidfMatrix = tf.map(f=>f.map((v,i)=>v*idf[i]));
+}
+let currentDoc=0, sorted=false;
+function showTfidf(idx){
+  currentDoc=idx; sorted=false;
+  document.querySelectorAll('.tf-btn').forEach(b=>b.style.background='#f8fafc');
+  document.querySelector(`.tf-btn[data-doc="${idx}"]`).style.background='#dbeafe';
+  drawTfidf();
+}
+function sortTfidf(){ sorted=true; drawTfidf(); }
+function drawTfidf(){
+  const cv=document.getElementById('tf-canvas');
+  const ctx=cv.getContext('2d');
+  const cw=cv.width, ch=cv.height;
+  cv.width=cw; cv.height=ch;
+  ctx.fillStyle='#fafafa'; ctx.fillRect(0,0,cw,ch);
+  const vec = tfidfMatrix[currentDoc];
+  let items = allWords.map((w,i)=>({w,v:vec[i]})).filter(x=>x.v>0);
+  if(sorted) items.sort((a,b)=>b.v-a.v);
+  items = items.slice(0, 18);
+  const maxV = Math.max(...items.map(x=>x.v));
+  const barH=22, gap=8, padL=80, padT=30;
+  ctx.font='12px sans-serif';
+  items.forEach((it,i)=>{
+    const y = padT+i*(barH+gap);
+    ctx.fillStyle='#334155'; ctx.textAlign='right';
+    ctx.fillText(it.w, padL-8, y+barH*0.7);
+    const w = Math.max(2, (it.v/maxV)*(cw-padL-100));
+    const hue = 220 - (it.v/maxV)*220;
+    ctx.fillStyle = `hsl(${hue},80%,60%)`;
+    ctx.beginPath(); ctx.roundRect(padL,y,w,barH,4); ctx.fill();
+    ctx.fillStyle='#1e293b'; ctx.textAlign='left';
+    ctx.fillText(it.v.toFixed(3), padL+w+6, y+barH*0.7);
+  });
+  // Top3关键词
+  const top3 = [...items].sort((a,b)=>b.v-a.v).slice(0,3);
+  document.getElementById('tf-keywords').innerHTML = `<strong>🎯 本文档关键词（Top3）：</strong>` + top3.map(t=>`<span style="display:inline-block;margin:0 4px;padding:2px 10px;background:#8b5cf6;color:#fff;border-radius:12px;font-size:13px">${t.w} (${t.v.toFixed(2)})</span>`).join('');
+}
+window.addEventListener('load', function(){
+  renderOneHot();
+  calcTfidf();
+  showTfidf(0);
+});
+</script>
 <script src="../js/site.js"></script>
 </body>
 </html>

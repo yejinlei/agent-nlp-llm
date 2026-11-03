@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>🔗 N-gram 马尔可夫链 · agent-nlp-llm</title>
+<link rel="stylesheet" href="css/site.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+</head><body>
+<nav class="nav-blur">
+  <div class="nav-inner">
+    <a href="index.html" class="nav-brand"><span class="brand-bubble">💬</span>agent-nlp-llm</a>
+    <div class="nav-links">
+      <a href="index.html" class="nav-link">🏠&nbsp;首页</a>
+      <a href="nlp/index.html" class="nav-link">📝&nbsp;NLP</a>
+      <a href="llm/index.html" class="nav-link">🤖&nbsp;LLM</a>
+      <a href="lab.html" class="nav-link">🧪&nbsp;实验室</a>
+      <a href="papers.html" class="nav-link">📚&nbsp;论文</a>
+      <a href="clinic.html" class="nav-link">🕵️&nbsp;诊所</a>
+      <a href="pitfalls.html" class="nav-link">💥&nbsp;踩坑</a>
+      <a href="benchmark.html" class="nav-link">📊&nbsp;选型</a>
+      <a href="universe.html" class="nav-link">🌌&nbsp;宇宙</a>
+      <a href="https://github.com/yejinlei/agent-nlp-llm" target="_blank" class="nav-link nav-gh" title="GitHub"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 .5C5.73.5.5 5.73.5 12c0 5.08 3.29 9.39 7.86 10.91.58.1.79-.25.79-.56v-2c-3.2.7-3.88-1.37-3.88-1.37-.52-1.33-1.28-1.69-1.28-1.69-1.05-.72.08-.7.08-.7 1.16.08 1.77 1.2 1.77 1.2 1.03 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.56-.29-5.25-1.28-5.25-5.7 0-1.26.45-2.29 1.19-3.1-.12-.29-.52-1.47.11-3.06 0 0 .97-.31 3.18 1.18a11 11 0 0 1 5.79 0c2.21-1.49 3.18-1.18 3.18-1.18.63 1.59.23 2.77.11 3.06.74.81 1.19 1.84 1.19 3.1 0 4.43-2.69 5.41-5.26 5.69.41.36.77 1.05.77 2.13v3.15c0 .31.21.67.8.56A11.5 11.5 0 0 0 23.5 12C23.5 5.73 18.27.5 12 .5z"/></svg></a>
+    </div>
+  </div>
+</nav>
+<main class="container" style="padding-top:90px">
+
+<h1><span class="chip blue">abc</span>N-gram 马尔可夫链可视化</h1>
+<p class="lead">一句话讲清马尔可夫假设：每个词只依赖前面的 N-1 个词。拖动 N 值，看上下文窗口怎么变、下一节点的概率分布有什么不同。</p>
+
+<div class="step-card"><h3>🔗 马尔可夫链动画</h3>
+<p>下面是一句话里的预测过程。<b>红色窗口</b>是"当前看到的上下文"，橙色是"正在预测的下一个词"。拖动 N 看窗口大小变化：</p>
+<div class="demo-box">
+  <div style="margin-bottom:12px"><label>N（上下文长度）：<input type="range" id="nVal" min="1" max="5" value="2" style="width:200px"></label>
+  <span id="nLabel" style="font-weight:700;color:#2563eb;font-size:18px;margin-left:10px">Bigram (N=2)</span></div>
+  <div id="chainArea" style="display:flex;flex-wrap:wrap;gap:8px;margin:20px 0"></div>
+  <div id="predictBox" class="insight" style="margin-top:10px"></div>
+  <button id="stepBtn" class="btn-primary" style="margin-top:12px">▶ 下一步预测</button>
+  <button id="autoBtn" class="btn-secondary" style="margin-top:12px">⏩ 自动播放</button>
+</div>
+<div class="insight">
+💡 <b>直觉</b>：N=1（Unigram）不看上下文，每个词独立；N=2 只看前 1 个词；N=3 看前 2 个词。N 越大，"需要见过"的组合数指数级增长——这就是"数据稀疏"的根源。
+</div>
+</div>
+
+<div class="step-card"><h3>📊 N 越大，稀疏越严重（真实数据）</h3>
+<p>假设词表 |V|=10000。理论上可能出现的 N-gram 组合数：</p>
+<canvas id="sparseChart" width="700" height="280" style="width:100%;max-width:700px;background:#fafafa;border-radius:12px"></canvas>
+<div class="insight">这就是为什么传统 N-gram 很少用 N≥5：组合数爆炸，语料再多也覆盖不全。大模型用神经网络"把稀疏的高维表压缩进稠密向量"，缓解但没彻底解决这个问题。</div>
+</div>
+
+<script>
+const SENT = ["我","今天","想去","北京","天安门","看","升旗"];
+const BIGRAM_PROB = {
+  "我":     {"今天":0.6,"明天":0.2,"是":0.1,"不":0.1},
+  "今天":   {"想去":0.4,"天气":0.3,"我":0.1,"吃":0.2},
+  "想去":   {"北京":0.5,"上海":0.2,"吃饭":0.2,"玩":0.1},
+  "北京":   {"天安门":0.7,"烤鸭":0.15,"大学":0.1,"的":0.05},
+  "天安门": {"看":0.4,"广场":0.3,"升旗":0.2,"的":0.1},
+  "看":     {"升旗":0.5,"电影":0.2,"书":0.2,"风景":0.1},
+  "升旗":   {"":1.0}
+};
+let pos = 0, n = 2, timer = null;
+
+const nNames = {1:"Unigram",2:"Bigram",3:"Trigram",4:"4-gram",5:"5-gram"};
+function render(){
+  document.getElementById('nLabel').textContent = nNames[n]+' (N='+n+')';
+  const area = document.getElementById('chainArea'); area.innerHTML='';
+  const ctxStart = Math.max(0, pos-(n-1));
+  SENT.forEach((w,i)=>{
+    const d = document.createElement('div');
+    let cls = 'word-chip';
+    if(i<ctxStart) cls += ' passed';
+    if(i>=ctxStart && i<pos) cls += ' ctx';
+    if(i===pos) cls += ' cur';
+    if(i>pos) cls += ' future';
+    d.className = cls; d.textContent = w; area.appendChild(d);
+  });
+  // 预测框
+  const ctxW = SENT.slice(ctxStart, pos);
+  const key = ctxW.length?ctxW[ctxW.length-1]:"我";
+  const probs = BIGRAM_PROB[key]||{"":1};
+  const sorted = Object.entries(probs).sort((a,b)=>b[1]-a[1]).slice(0,4);
+  let html = '<b>当前上下文：</b>'+(ctxW.join(' → ')||'(开头)')+'<br><b>预测下一词概率：</b><div style="margin-top:6px;display:flex;gap:10px;flex-wrap:wrap">';
+  sorted.forEach(([w,p])=>{
+    const ww = w==='(结尾)'?'<结束>':(w||'<结束>');
+    html += '<div style="background:#fff;padding:6px 12px;border-radius:8px;border:2px solid #f97316;font-size:15px">'+ww+'：'+(p*100).toFixed(0)+'%</div>';
+  });
+  html += '</div>';
+  document.getElementById('predictBox').innerHTML = html;
+}
+document.getElementById('nVal').oninput = e=>{n=+e.target.value;pos=Math.min(pos,SENT.length);render();};
+document.getElementById('stepBtn').onclick = ()=>{pos=Math.min(pos+1,SENT.length);render();};
+document.getElementById('autoBtn').onclick = ()=>{
+  if(timer){clearInterval(timer);timer=null;document.getElementById('autoBtn').textContent='⏩ 自动播放';return;}
+  pos=0;render();
+  document.getElementById('autoBtn').textContent='⏸ 暂停';
+  timer=setInterval(()=>{if(pos>=SENT.length){clearInterval(timer);timer=null;document.getElementById('autoBtn').textContent='⏩ 自动播放';return;}pos++;render();},1200);
+};
+render();
+
+// 稀疏度图
+(function(){
+  const c=document.getElementById('sparseChart'),ctx=c.getContext('2d');
+  const V=10000,data=[V,V*V,V*V*V,V*V*V*V,V*V*V*V*V];
+  const labels=['N=1','N=2','N=3','N=4','N=5'];
+  const W=c.width,H=c.height,pad=60;
+  ctx.font='14px sans-serif';
+  const maxV=Math.log10(data[data.length-1]);
+  for(let i=0;i<data.length;i++){
+    const x=pad+i*((W-2*pad)/data.length)+20;
+    const bw=60;
+    const log=Math.log10(data[i]);
+    const bh=(log/maxV)*(H-2*pad);
+    const y=H-pad-bh;
+    const grad=ctx.createLinearGradient(0,y,0,H-pad);
+    const colors=[['#93c5fd','#2563eb'],['#60a5fa','#1d4ed8'],['#818cf8','#5b21b6'],['#f472b6','#be185d'],['#fb7185','#9f1239']];
+    grad.addColorStop(0,colors[i][0]);grad.addColorStop(1,colors[i][1]);
+    ctx.fillStyle=grad;
+    ctx.fillRect(x-bw/2,y,bw,bh);
+    ctx.fillStyle='#1e293b';ctx.textAlign='center';
+    ctx.fillText(labels[i],x,H-pad+20);
+    ctx.fillText('10^'+log.toFixed(0),x,y-8);
+  }
+  ctx.fillStyle='#64748b';ctx.textAlign='left';
+  ctx.fillText('理论 N-gram 组合数（对数坐标）',pad,30);
+})();
+</script>
+<style>.word-chip{padding:10px 16px;border-radius:10px;font-size:18px;font-weight:600;border:2px solid #e2e8f0;background:#fff;transition:.3s}.word-chip.passed{background:#f1f5f9;color:#94a3b8;border-color:#cbd5e1}.word-chip.ctx{background:#dbeafe;border-color:#3b82f6;color:#1e40af;transform:translateY(-3px)}.word-chip.cur{background:#fed7aa;border-color:#f97316;color:#9a3412;animation:pulse 1s infinite;transform:translateY(-6px);box-shadow:0 6px 16px rgba(249,115,22,.3)}.word-chip.future{background:#fafafa;color:#cbd5e1;border-style:dashed}@keyframes pulse{0%,100%{box-shadow:0 6px 16px rgba(249,115,22,.3)}50%{box-shadow:0 6px 28px rgba(249,115,22,.6)}}</style>
+
+</main>
+<script src="js/site.js"></script>
+</body></html>
