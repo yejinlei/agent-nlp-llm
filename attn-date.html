@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Attention 日期翻译实验室 · agent-nlp-llm</title>
+<link rel="stylesheet" href="css/site.css">
+<style>
+.lab{display:grid;grid-template-columns:340px 1fr;gap:24px;margin-top:24px}
+.ctrl{background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:20px}
+.canvas{background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:20px}
+button{padding:8px 12px;border:1px solid #cbd5e1;border-radius:6px;background:#fff;cursor:pointer;margin:4px;font-size:12px}
+button.active{background:#6366f1;color:#fff;border-color:#6366f1}
+input.inp{width:100%;padding:10px;border:1px solid #cbd5e1;border-radius:8px;font-size:16px;letter-spacing:2px;text-align:center}
+.pred-box{padding:14px;background:#ecfdf5;border:2px solid #10b981;border-radius:10px;text-align:center;margin:12px 0}
+.pred-box .arrow{font-size:20px;color:#6366f1;margin:0 10px}
+.pred-box .out{font-family:monospace;font-size:22px;font-weight:bold;color:#047857;letter-spacing:3px}
+.heatmap-wrap{overflow:auto;margin-top:12px}
+.heatmap{border-collapse:collapse;font-family:monospace;font-size:13px}
+.heatmap th,.heatmap td{border:1px solid #e2e8f0;padding:8px 10px;text-align:center;min-width:40px}
+.heatmap th.src{background:#f1f5f9;color:#475569;font-weight:normal}
+.heatmap th.tgt{background:#eef2ff;color:#3730a3}
+.heatmap td.val{font-size:11px;color:#475569}
+.explain{margin-top:16px;padding:14px;background:#f8fafc;border-radius:8px;font-size:13px;line-height:1.8}
+@media(max-width:900px){.lab{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<nav class="navbar">
+  <div class="nav-inner">
+    <a href="index.html" class="nav-logo">💬 agent-nlp-llm</a>
+    <button class="nav-toggle" onclick="document.querySelector('.nav-links').classList.toggle('open')" aria-label="菜单">☰</button>
+    <div class="nav-links">
+      <a href="index.html" class="nav-link">🏠 首页</a>
+      <a href="playground.html" class="nav-link">🎨 玩法</a>
+      <a href="nlp/index.html" class="nav-link">📝 NLP</a>
+      <a href="llm/index.html" class="nav-link">🤖 LLM</a>
+      <a href="bpe.html" class="nav-link">🔤 分词器</a>
+      <a href="embedding.html" class="nav-link">🧭 词向量</a>
+      <a href="word2vec.html" class="nav-link">🧠 word2vec</a>
+      <a href="cbow.html" class="nav-link">🧩 CBOW推理</a>
+      <a href="rnn.html" class="nav-link">🔁 RNN/LSTM</a>
+      <a href="lstm-gate.html" class="nav-link">🚪 LSTM门控</a>
+      <a href="neg-sample.html" class="nav-link">🎲 负采样</a>
+      <a href="sigmoid.html" class="nav-link">∫ 激活函数</a>
+      <a href="attention.html" class="nav-link">🎯 注意力</a>
+      <a href="seq2seq-add.html" class="nav-link">➕ 加法实验</a>
+      <a href="attn-date.html" class="nav-link active">📅 日期翻译</a>
+      <a href="lora.html" class="nav-link">🪢 LoRA</a>
+      <a href="papers.html" class="nav-link">📚 论文</a>
+      <a href="clinic.html" class="nav-link">🕵️ 诊所</a>
+      <a href="pitfalls.html" class="nav-link">💥 踩坑</a>
+      <a href="benchmark.html" class="nav-link">📊 选型</a>
+      <a href="universe.html" class="nav-link">🌌 宇宙</a>
+      <a href="https://github.com/yejinlei/agent-nlp-llm" target="_blank" rel="noopener" class="nav-gh" aria-label="GitHub">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+      </a>
+    </div>
+  </div>
+</nav>
+
+<main class="container">
+  <section class="hero-mini"><h1>📅 Attention 日期翻译实验室</h1>
+    <p class="lead">对应《深度学习入门2》第8.3节「日期格式转换问题」+ 8.3.3「Attention 的可视化」。把"September 25, 2024"转成"2024-09-25"，这是 seq2seq+Attention 的经典任务。可视化每个输出字符"重点看"输入的哪个字符——这就是书2图8-19的"对齐"。</p>
+  </section>
+
+  <div class="lab">
+    <div class="ctrl">
+      <h3 style="margin:0 0 10px 0;font-size:15px">📆 输入日期</h3>
+      <input class="inp" id="src" value="september 25, 2024">
+      <div style="margin-top:10px;font-size:12px;color:#64748b">快速示例：</div>
+      <div>
+        <button data-s="january 1, 2020">jan 1, 2020</button>
+        <button data-s="march 14, 2023">mar 14, 2023</button>
+        <button data-s="july 4, 1776">jul 4, 1776</button>
+        <button data-s="december 31, 1999">dec 31, 1999</button>
+        <button data-s="february 29, 2024">feb 29, 2024</button>
+        <button data-s="november 11, 2018">nov 11, 2018</button>
+      </div>
+
+      <div style="margin-top:20px"><b>🎯 可视化什么：</b></div>
+      <div style="font-size:13px;color:#475569;line-height:1.8;margin-top:6px">
+        每行是输出字符（如 "2"、"0"、"-"），每列是输入字符；<br>
+        颜色越红表示"生成这个输出时，模型对该输入字符放的注意力权重越大"。<br><br>
+        <b>期望模式</b>：<br>
+        · 输出 "2024" → 看输入末尾的 "2024"<br>
+        · 输出 "09" → 看输入开头的月份<br>
+        · 输出 "25" → 看输入中间的日期数字<br>
+        · 输出 "-" → 看空格或逗号
+      </div>
+    </div>
+
+    <div class="canvas">
+      <div class="pred-box">
+        <span id="srcShow" style="font-family:monospace;color:#2563eb">september 25, 2024</span>
+        <span class="arrow">→</span>
+        <span class="out" id="tgtShow">—</span>
+      </div>
+
+      <h3 style="margin:16px 0 8px 0;font-size:14px">🔥 注意力权重热力图（书2 图8-19 可交互版）</h3>
+      <div class="heatmap-wrap" id="hmWrap"></div>
+
+      <div class="explain">
+        <b>📖 书里说</b>（书2 P353 8.3.3 Attention 的可视化）：在翻译日期时，注意力权重能"明确显示各个时刻正在关注哪个字符"。这是 Attention 最大的优点——<b>可解释性</b>，你能清楚看到模型在做什么。对比普通 seq2seq 必须把所有信息塞进一个固定长度的向量，Attention 让解码器在每个时刻"回看"输入序列中最相关的部分。
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer class="site-footer"><p>基于《深度学习入门2》ch08 Attention-seq2seq 日期格式转换案例实现</p></footer>
+
+<script>
+// 简化的"基于规则模拟"的 Attention 对齐（忠实复现书2图8-19 的对角线对齐模式）
+const MONTHS={january:'01',february:'02',march:'03',april:'04',may:'05',june:'06',july:'07',august:'08',september:'09',october:'10',november:'11',december:'12',
+              jan:'01',feb:'02',mar:'03',apr:'04',jun:'06',jul:'07',aug:'08',sep:'09',oct:'10',nov:'11',dec:'12'};
+
+function parseDate(s){
+  s=s.trim().toLowerCase().replace(/[.,]/g,' ');
+  const toks=s.split(/\s+/).filter(x=>x);
+  let mo='',da='',yr='';
+  toks.forEach(t=>{
+    if(MONTHS[t])mo=MONTHS[t];
+    else if(/^\d{1,2}$/.test(t)&&!da)da=t.padStart(2,'0');
+    else if(/^\d{4}$/.test(t))yr=t;
+  });
+  if(!mo||!da||!yr)return null;
+  return yr+'-'+mo+'-'+da;
+}
+
+function charAlignment(src,tgt){
+  // 构造一个 (tgt_len x src_len) 的注意力矩阵，模拟书2 图8-19 的"对角对齐"
+  const S=src.length,T=tgt.length;
+  const A=Array.from({length:T},()=>Array(S).fill(0));
+  // 找到关键段的位置
+  const srcL=src.toLowerCase();
+  const moIdx=Object.keys(MONTHS).filter(k=>srcL.startsWith(k)||srcL.includes(' '+k)).map(k=>srcL.indexOf(k))[0]??0;
+  const moName=Object.keys(MONTHS).find(k=>srcL.startsWith(k))||'';
+  const moLen=moName.length;
+  const numMatch=src.match(/(\d{1,2})\s*(?:,|\s)\s*(\d{4})/);
+  let daIdx=srcL.search(/\d/);
+  let yrIdx=src.length-4;
+  if(numMatch){daIdx=srcL.indexOf(numMatch[1]);yrIdx=srcL.lastIndexOf(numMatch[2]);}
+
+  // 给每个输出字符分配焦点
+  for(let t=0;t<T;t++){
+    let focus=[];
+    if(t<=3){// 年份位置 0-3
+      focus=[yrIdx+t-yrIdx+0,yrIdx+t-yrIdx+1,yrIdx+t-yrIdx+2,yrIdx+t-yrIdx+3];
+      focus.forEach(p=>{if(p>=0&&p<S)A[t][p]=0.25;});
+    }else if(t===4){// '-'
+      A[t][yrIdx-1]=0.6;A[t][daIdx+2]=0.2;
+    }else if(t===5||t===6){// 月
+      const off=t-5;
+      if(moIdx+off<S)A[t][moIdx+off]=0.5;
+      if(moIdx+off+1<S)A[t][moIdx+off+1]=0.25;
+    }else if(t===7){// '-'
+      A[t][daIdx-1]=0.4;A[t][daIdx+2]=0.4;
+    }else{// 日 t=8,9
+      const off=t-8;
+      if(daIdx+off>=0&&daIdx+off<S)A[t][daIdx+off]=0.5;
+      if(daIdx+off+1<S&&daIdx+off+1<yrIdx)A[t][daIdx+off+1]=0.25;
+    }
+  }
+  // softmax 每一行
+  for(let t=0;t<T;t++){
+    const row=A[t];
+    const m=Math.max(...row);if(m===0){for(let k=0;k<S;k++)row[k]=1/S;continue;}
+    const e=row.map(v=>Math.exp((v-m)*5));
+    const s=e.reduce((a,b)=>a+b,0);
+    for(let k=0;k<S;k++)row[k]=e[k]/s;
+  }
+  return A;
+}
+
+function render(){
+  const src=document.getElementById('src').value;
+  const tgt=parseDate(src);
+  document.getElementById('srcShow').textContent=src;
+  if(!tgt){
+    document.getElementById('tgtShow').textContent='（无法解析）';
+    document.getElementById('hmWrap').innerHTML='<div style="color:#dc2626;padding:20px">请输入类似 "September 25, 2024" 格式的日期</div>';
+    return;
+  }
+  document.getElementById('tgtShow').textContent=tgt;
+  const A=charAlignment(src,tgt);
+  // 表格
+  const T=tgt.length,S=src.length;
+  let html='<table class="heatmap"><thead><tr><th></th>';
+  for(let s=0;s<S;s++){const ch=src[s]===' '?'␣':src[s];html+=`<th class="src">${ch}</th>`;}
+  html+='</tr></thead><tbody>';
+  for(let t=0;t<T;t++){
+    html+=`<tr><th class="tgt">${tgt[t]}</th>`;
+    for(let s=0;s<S;s++){
+      const w=A[t][s];
+      // 颜色：白->黄->橙->红
+      const r=255,g=Math.floor(255-w*230),b=Math.floor(255-w*255);
+      html+=`<td class="val" style="background:rgb(${r},${g},${b})">${w.toFixed(2)}</td>`;
+    }
+    html+='</tr>';
+  }
+  html+='</tbody></table>';
+  document.getElementById('hmWrap').innerHTML=html;
+}
+
+document.getElementById('src').addEventListener('input',render);
+document.querySelectorAll('button[data-s]').forEach(b=>{
+  b.onclick=()=>{document.getElementById('src').value=b.dataset.s;render();};
+});
+render();
+</script>
+</body>
+</html>

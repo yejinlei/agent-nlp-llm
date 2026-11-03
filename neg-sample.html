@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>负采样互动实验室 · agent-nlp-llm</title>
+<link rel="stylesheet" href="css/site.css">
+<style>
+.lab{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:24px}
+.card{background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:20px}
+.card h3{margin:0 0 12px 0;font-size:16px;display:flex;align-items:center;gap:8px}
+.compare{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:16px 0}
+.panel{border-radius:10px;padding:14px}
+.panel.old{background:#fef2f2;border:1px solid #fecaca}
+.panel.new{background:#f0fdf4;border:1px solid #bbf7d0}
+.vocab-grid{display:flex;flex-wrap:wrap;gap:4px;margin:12px 0;max-height:180px;overflow:auto;padding:6px;background:#f8fafc;border-radius:6px}
+.w-chip{padding:3px 8px;border-radius:4px;font-size:12px;background:#e2e8f0;color:#475569;transition:all .2s}
+.w-chip.pos{background:#22c55e;color:#fff;font-weight:bold}
+.w-chip.neg{background:#ef4444;color:#fff}
+.w-chip.target{outline:3px solid #f59e0b;outline-offset:1px}
+.slider-row{margin:10px 0}
+.slider-row label{font-size:13px;color:#475569;display:flex;justify-content:space-between;margin-bottom:4px}
+.result-row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px dashed #e2e8f0;font-size:13px}
+.result-row:last-child{border-bottom:none}
+.big-num{font-size:22px;font-weight:bold;font-family:monospace}
+#sigmoidViz{height:120px;margin-top:10px;position:relative;background:#fafafa;border-radius:6px}
+input[type=range]{width:100%}
+@media(max-width:800px){.lab{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<nav class="navbar">
+  <div class="nav-inner">
+    <a href="index.html" class="nav-logo">💬 agent-nlp-llm</a>
+    <button class="nav-toggle" onclick="document.querySelector('.nav-links').classList.toggle('open')" aria-label="菜单">☰</button>
+    <div class="nav-links">
+      <a href="index.html" class="nav-link">🏠 首页</a>
+      <a href="playground.html" class="nav-link">🎨 玩法</a>
+      <a href="nlp/index.html" class="nav-link">📝 NLP</a>
+      <a href="llm/index.html" class="nav-link">🤖 LLM</a>
+      <a href="bpe.html" class="nav-link">🔤 分词器</a>
+      <a href="embedding.html" class="nav-link">🧭 词向量</a>
+      <a href="word2vec.html" class="nav-link">🧠 word2vec</a>
+      <a href="cbow.html" class="nav-link">🧩 CBOW推理</a>
+      <a href="rnn.html" class="nav-link">🔁 RNN/LSTM</a>
+      <a href="lstm-gate.html" class="nav-link">🚪 LSTM门控</a>
+      <a href="neg-sample.html" class="nav-link active">🎲 负采样</a>
+      <a href="sigmoid.html" class="nav-link">∫ 激活函数</a>
+      <a href="attention.html" class="nav-link">🎯 注意力</a>
+      <a href="seq2seq-add.html" class="nav-link">➕ 加法实验</a>
+      <a href="attn-date.html" class="nav-link">📅 日期翻译</a>
+      <a href="lora.html" class="nav-link">🪢 LoRA</a>
+      <a href="papers.html" class="nav-link">📚 论文</a>
+      <a href="clinic.html" class="nav-link">🕵️ 诊所</a>
+      <a href="pitfalls.html" class="nav-link">💥 踩坑</a>
+      <a href="benchmark.html" class="nav-link">📊 选型</a>
+      <a href="universe.html" class="nav-link">🌌 宇宙</a>
+      <a href="https://github.com/yejinlei/agent-nlp-llm" target="_blank" rel="noopener" class="nav-gh" aria-label="GitHub">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+      </a>
+    </div>
+  </div>
+</nav>
+
+<main class="container">
+  <section class="hero-mini"><h1>🎲 负采样互动实验室</h1>
+    <p class="lead">对应《深度学习入门2》第4章「word2vec 的高速化」。原始 Softmax 要遍历全部词表计算百万级分类，负采样把它偷换成"1个正例 + K个负例"的二分类问题。拖动滑块看计算量对比。</p>
+  </section>
+
+  <div class="lab">
+    <div class="card">
+      <h3>⚙️ 参数</h3>
+      <div class="slider-row"><label>词表大小 V <b id="vv">10,000</b></label><input type="range" id="vs" min="100" max="100000" step="100" value="10000"></div>
+      <div class="slider-row"><label>负样本数 K <b id="kv">5</b></label><input type="range" id="ks" min="1" max="30" step="1" value="5"></div>
+      <div class="slider-row"><label>嵌入维度 H <b id="hv">100</b></label><input type="range" id="hs" min="20" max="500" step="10" value="100"></div>
+      <div class="slider-row"><label>采样分布的 0.75 次方指数 <b id="pv">0.75</b></label><input type="range" id="ps" min="0" max="1" step="0.05" value="0.75"></div>
+
+      <h3 style="margin-top:20px">🎯 抽一次样看看</h3>
+      <div style="font-size:13px;color:#475569">上下文：<b id="ctxWord">[说, 小]</b> → 正例（目标词）：<b style="color:#16a34a" id="posWord">你</b></div>
+      <div class="vocab-grid" id="grid"></div>
+      <button id="sampleBtn" style="width:100%;padding:10px;background:#6366f1;color:#fff;border:none;border-radius:8px;cursor:pointer;margin-top:8px">🎲 重新采样</button>
+      <div style="font-size:12px;color:#64748b;margin-top:6px">采样按词频^0.75加权（书2 第4.2.4 节），稀有词被抽中的概率被提高。</div>
+    </div>
+
+    <div class="card">
+      <h3>📊 计算量对比</h3>
+      <div class="compare">
+        <div class="panel old">
+          <div style="font-size:13px;color:#991b1b;font-weight:bold">原始 Softmax</div>
+          <div class="result-row"><span>输出层神经元</span><b id="o1" class="big-num" style="color:#dc2626"></b></div>
+          <div class="result-row"><span>每次迭代计算量</span><b id="o2" style="color:#dc2626;font-family:monospace"></b></div>
+          <div class="result-row"><span>分类任务</span><b style="color:#dc2626">V 类多分类</b></div>
+        </div>
+        <div class="panel new">
+          <div style="font-size:13px;color:#166534;font-weight:bold">负采样</div>
+          <div class="result-row"><span>输出层神经元</span><b id="n1" class="big-num" style="color:#16a34a"></b></div>
+          <div class="result-row"><span>每次迭代计算量</span><b id="n2" style="color:#16a34a;font-family:monospace"></b></div>
+          <div class="result-row"><span>分类任务</span><b style="color:#16a34a">1+K 个二分类</b></div>
+        </div>
+      </div>
+      <div class="pred-box" style="background:#ecfeff;border-color:#06b6d4;border-radius:10px;padding:14px;text-align:center">
+        <div style="font-size:13px;color:#0e7490">加速倍数 =</div>
+        <div class="big-num" id="speedup" style="color:#0891b2"></div>
+      </div>
+
+      <h3 style="margin-top:20px">🔬 Sigmoid 二分类器</h3>
+      <div style="font-size:13px;color:#475569;margin-bottom:6px">每个正/负例用独立的 sigmoid 打分（书2 式4.5）：P(+) = σ(h·vₒ)</div>
+      <canvas id="cv" width="500" height="130" style="width:100%;border-radius:6px;background:#fafbfc"></canvas>
+      <div id="sigLegend" style="font-size:12px;color:#64748b;margin-top:6px"></div>
+    </div>
+  </div>
+
+  <section class="insight" style="margin-top:24px"><h3>📖 书里的原话总结</h3>
+    <ul><li>书2 P143："在负采样中，准确地说，<b>将多分类问题转化成了二分类问题</b>。"即每个词"是不是目标词"的二分类。</li>
+    <li>书2 P151：采样概率 P(w_i)^0.75 是为了防止"稀有词被完全忽略"——直接按词频采样时 'a/the' 这类词会霸占负样本。</li>
+    <li>书2 P148：K 通常取 5~20。K 越大效果越好但计算越慢；小语料 K 取 5~10，大语料取 2~5。</li></ul>
+  </section>
+</main>
+
+<footer class="site-footer"><p>基于《深度学习入门2》ch04 Negative Sampling 实现</p></footer>
+
+<script>
+const DEMO_VOCAB=['的','了','是','我','你','他','在','有','和','不','这','说','人','就','都','一','个','上','也','到','说','要','去','你','会','着','没有','看','好','自己','这','那','小','猫','狗','今天','学习','深度','学习','神经','网络','词','向量','模型','训练','梯度','反向','传播','算法','计算','嵌入','矩阵','函数','损失','优化','学习率','epoch','batch','数据','样本','正例','负例','sigmoid','softmax','交叉熵','参数','权重','偏置','激活','输出','输入','隐藏层','语言','自然','处理','NLP','智能','人工','大模型','GPT','transformer','注意力','编码','解码','序列','时间','步','记忆','状态','遗忘','门','输入门','输出门','cell'] ;
+const FREQ=DEMO_VOCAB.map((_,i)=>Math.exp(-i/25)*(0.5+Math.random())); // 模拟词频递减
+let V=10000,K=5,H=100,pow=0.75;
+
+function fmt(n){if(n>=1e9)return(n/1e9).toFixed(2)+'G';if(n>=1e6)return(n/1e6).toFixed(2)+'M';if(n>=1e3)return(n/1e3).toFixed(1)+'K';return n}
+
+function sampleNegs(K,power){
+  // 按 freq^power 的分布采样 K 个不重复负例
+  const probs=FREQ.map(f=>Math.pow(f,power));
+  const sum=probs.reduce((a,b)=>a+b,0);
+  const picks=new Set();picks.add(3); // 正例索引 = "你"
+  while(picks.size<K+1){
+    let r=Math.random()*sum,acc=0;
+    for(let i=0;i<DEMO_VOCAB.length;i++){acc+=probs[i];if(acc>=r){picks.add(i);break;}}
+  }
+  return[...picks];
+}
+
+function draw(){
+  document.getElementById('vv').textContent=fmt(V);
+  document.getElementById('kv').textContent=K;
+  document.getElementById('hv').textContent=H;
+  document.getElementById('pv').textContent=pow.toFixed(2);
+  document.getElementById('o1').textContent=fmt(V);
+  document.getElementById('n1').textContent=1+K;
+  document.getElementById('o2').textContent=fmt(V*H)+' FLOPs';
+  document.getElementById('n2').textContent=fmt((1+K)*H)+' FLOPs';
+  document.getElementById('speedup').textContent=(V/(1+K)).toFixed(0)+'×';
+  // grid
+  const picks=sampleNegs(K,pow);
+  const grid=document.getElementById('grid');
+  grid.innerHTML=DEMO_VOCAB.slice(0,80).map((w,i)=>{
+    let cls='w-chip';
+    if(i===3)cls+=' pos target';
+    else if(picks.includes(i))cls+=' neg';
+    return `<span class="${cls}">${w}</span>`;
+  }).join('');
+  // sigmoid viz
+  drawSigmoid(picks);
+}
+
+function drawSigmoid(picks){
+  const cv=document.getElementById('cv'),ctx=cv.getContext('2d');
+  const W=cv.width,H=cv.height;
+  ctx.clearRect(0,0,W,H);
+  // 轴
+  ctx.strokeStyle='#e2e8f0';ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(30,H-20);ctx.lineTo(W-10,H-20);ctx.moveTo(30,10);ctx.lineTo(30,H-20);ctx.stroke();
+  // 画 sigmoid
+  ctx.strokeStyle='#6366f1';ctx.lineWidth=2;ctx.beginPath();
+  for(let px=30;px<W-10;px++){const x=(px-30)/(W-40)*8-4;const y=1/(1+Math.exp(-x));const py=H-20-y*(H-30);if(px===30)ctx.moveTo(px,py);else ctx.lineTo(px,py);}
+  ctx.stroke();
+  // 0.5 线
+  ctx.strokeStyle='#cbd5e1';ctx.setLineDash([4,4]);ctx.beginPath();ctx.moveTo(30,H/2);ctx.lineTo(W-10,H/2);ctx.stroke();ctx.setLineDash([]);
+  // 画点：正例高分、负例低分
+  const dots=[{x:2.5+Math.random()*1,label:'正例',c:'#22c55e',target:1}];
+  picks.slice(1).forEach((_,i)=>dots.push({x:-3+Math.random()*2,label:'负'+(i+1),c:'#ef4444',target:0}));
+  dots.forEach(d=>{
+    const y=1/(1+Math.exp(-d.x));
+    const px=30+(d.x+4)/8*(W-40);const py=H-20-y*(H-30);
+    ctx.fillStyle=d.c;ctx.beginPath();ctx.arc(px,py,5,0,Math.PI*2);ctx.fill();
+  });
+  ctx.fillStyle='#475569';ctx.font='11px sans-serif';
+  ctx.fillText('σ(h·v)=1  →  是目标词',W-160,18);
+  ctx.fillText('σ(h·v)=0  →  不是',W-120,H-6);
+}
+
+['vs','ks','hs','ps'].forEach(id=>{
+  document.getElementById(id).oninput=e=>{
+    if(id==='vs')V=+e.target.value;
+    if(id==='ks')K=+e.target.value;
+    if(id==='hs')H=+e.target.value;
+    if(id==='ps')pow=+e.target.value;
+    draw();
+  };
+});
+document.getElementById('sampleBtn').onclick=draw;
+draw();
+</script>
+</body>
+</html>

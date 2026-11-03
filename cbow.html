@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CBOW 推理实验室 · agent-nlp-llm</title>
+<link rel="stylesheet" href="css/site.css">
+<style>
+.lab{display:grid;grid-template-columns:320px 1fr;gap:24px;margin-top:24px}
+.ctrl{background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:20px}
+.canvas{background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:16px}
+.sentence-input{width:100%;padding:10px;border:1px solid #cbd5e1;border-radius:8px;font-size:14px}
+.ctx-row{margin:14px 0}
+.ctx-row label{font-size:13px;color:#475569;display:block;margin-bottom:6px}
+.ctx-row select{width:100%;padding:8px;border:1px solid #cbd5e1;border-radius:6px}
+.vocab-chip{display:inline-block;padding:4px 8px;margin:2px;background:#e0e7ff;border-radius:4px;font-size:12px;color:#3730a3;cursor:pointer}
+.cbow-viz{display:flex;align-items:center;justify-content:space-around;margin:24px 0;flex-wrap:wrap;gap:8px}
+.layer{display:flex;flex-direction:column;gap:6px;align-items:center;min-width:90px}
+.node{width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:bold;color:#fff;transition:all .3s}
+.node.inp{background:#6366f1}
+.node.hid{background:#10b981;width:42px;height:42px;font-size:11px}
+.node.out{background:#f59e0b;width:56px;height:36px;border-radius:18px;font-size:11px}
+.edge{position:absolute;background:#94a3b8;height:2px;transform-origin:0 50%;z-index:-1}
+.pred-box{background:#f0fdf4;border:2px solid #22c55e;border-radius:12px;padding:16px;text-align:center;margin-top:16px}
+.pred-top{font-size:28px;font-weight:bold;color:#15803d}
+.prob-bar{height:22px;background:#f1f5f9;border-radius:11px;margin:6px 0;position:relative;overflow:hidden}
+.prob-fill{height:100%;background:linear-gradient(90deg,#22c55e,#84cc16);border-radius:11px;transition:width .4s}
+@media(max-width:900px){.lab{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<nav class="navbar">
+  <div class="nav-inner">
+    <a href="index.html" class="nav-logo">💬 agent-nlp-llm</a>
+    <button class="nav-toggle" onclick="document.querySelector('.nav-links').classList.toggle('open')" aria-label="菜单">☰</button>
+    <div class="nav-links">
+      <a href="index.html" class="nav-link">🏠 首页</a>
+      <a href="playground.html" class="nav-link">🎨 玩法</a>
+      <a href="nlp/index.html" class="nav-link">📝 NLP</a>
+      <a href="llm/index.html" class="nav-link">🤖 LLM</a>
+      <a href="bpe.html" class="nav-link">🔤 分词器</a>
+      <a href="embedding.html" class="nav-link">🧭 词向量</a>
+      <a href="word2vec.html" class="nav-link">🧠 word2vec</a>
+      <a href="cbow.html" class="nav-link active">🧩 CBOW推理</a>
+      <a href="rnn.html" class="nav-link">🔁 RNN/LSTM</a>
+      <a href="lstm-gate.html" class="nav-link">🚪 LSTM门控</a>
+      <a href="neg-sample.html" class="nav-link">🎲 负采样</a>
+      <a href="sigmoid.html" class="nav-link">∫ 激活函数</a>
+      <a href="attention.html" class="nav-link">🎯 注意力</a>
+      <a href="seq2seq-add.html" class="nav-link">➕ 加法实验</a>
+      <a href="attn-date.html" class="nav-link">📅 日期翻译</a>
+      <a href="lora.html" class="nav-link">🪢 LoRA</a>
+      <a href="papers.html" class="nav-link">📚 论文</a>
+      <a href="clinic.html" class="nav-link">🕵️ 诊所</a>
+      <a href="pitfalls.html" class="nav-link">💥 踩坑</a>
+      <a href="benchmark.html" class="nav-link">📊 选型</a>
+      <a href="universe.html" class="nav-link">🌌 宇宙</a>
+      <a href="https://github.com/yejinlei/agent-nlp-llm" target="_blank" rel="noopener" class="nav-gh" aria-label="GitHub">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+      </a>
+    </div>
+  </div>
+</nav>
+
+<main class="container">
+  <section class="hero-mini">
+    <h1>🧩 CBOW 推理互动实验室</h1>
+    <p class="lead">对应《深度学习入门2》第3章 3.2 节「简单的 word2vec」。CBOW 模型根据上下文词（前后各一个）预测中间的词——拖动选择上下文，实时看嵌入层→中间层→输出层的完整推理过程。</p>
+  </section>
+
+  <div class="lab">
+    <div class="ctrl">
+      <label style="font-size:13px;color:#475569">输入句子（空格分词）</label>
+      <textarea id="sent" class="sentence-input" rows="3">你 说 我 猜 这是 一个 简单 的 语言 模型 可以 学习 词 向量</textarea>
+      <button id="trainBtn" style="margin-top:10px;width:100%;padding:10px;background:#6366f1;color:#fff;border:none;border-radius:8px;cursor:pointer">🎓 训练 CBOW（300 轮）</button>
+      <div style="font-size:12px;color:#64748b;margin-top:8px">点击训练后，模型会在你输入的语料上学习词向量；再选择两个上下文词，就能预测中间词。</div>
+      <div id="trainInfo" style="margin-top:8px;font-size:12px;color:#16a34a"></div>
+
+      <div class="ctx-row" style="margin-top:18px">
+        <label>左上下文词 w(t-1)</label>
+        <select id="leftCtx"></select>
+      </div>
+      <div class="ctx-row">
+        <label>右上下文词 w(t+1)</label>
+        <select id="rightCtx"></select>
+      </div>
+    </div>
+
+    <div class="canvas">
+      <div id="cbowViz" class="cbow-viz">
+        <div class="layer" id="inLayer"><div style="font-size:12px;color:#64748b;margin-bottom:6px">输入层</div></div>
+        <div style="font-size:24px;color:#94a3b8">→</div>
+        <div class="layer" id="hidLayer"><div style="font-size:12px;color:#64748b;margin-bottom:6px">中间层(平均)</div></div>
+        <div style="font-size:24px;color:#94a3b8">→</div>
+        <div class="layer" id="outLayer"><div style="font-size:12px;color:#64748b;margin-bottom:6px">输出层(softmax)</div></div>
+      </div>
+
+      <div class="pred-box">
+        <div style="font-size:13px;color:#64748b;margin-bottom:6px">CBOW 预测中间词 w(t) =</div>
+        <div class="pred-top" id="predWord">—（先点击训练）</div>
+      </div>
+
+      <div id="probList" style="margin-top:20px"></div>
+
+      <div class="insight" style="margin-top:20px">
+        <h4>📖 书里怎么说</h4>
+        <p style="font-size:13px;line-height:1.7">书2 第3.2.1 节 CBOW 模型的推理：输入层是上下文的 one-hot 向量（窗口大小=1时是2个），经过输入侧 MatMul（权重 W_in）得到分布式表示，中间层对各上下文的向量取<strong>平均</strong>，再经输出侧 MatMul（权重 W_out）得到每个词的得分，最后通过 Softmax 转成概率。训练的目标就是让正确词的概率最大。</p>
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer class="site-footer"><p>基于《深度学习入门2：自制框架》ch03 CBOW 实现</p></footer>
+
+<script>
+// ====== CBOW 模型的 JavaScript 从零实现 ======
+let W_in, W_out, vocab=[], w2i={}, hidden=5, trained=false;
+
+function softmax(a){const m=Math.max(...a);const e=a.map(x=>Math.exp(x-m));const s=e.reduce((a,b)=>a+b,0);return e.map(x=>x/s);}
+
+function buildVocab(tokens){
+  vocab=[...new Set(tokens)];
+  w2i={};vocab.forEach((w,i)=>w2i[w]=i);
+}
+
+function makePairs(tokens,win=1){
+  const X=[],Y=[];
+  for(let i=win;i<tokens.length-win;i++){
+    const ctx=[];
+    for(let k=-win;k<=win;k++)if(k!==0)ctx.push(w2i[tokens[i+k]]);
+    X.push(ctx);Y.push(w2i[tokens[i]]);
+  }
+  return{X,Y};
+}
+
+function initParams(V,H){
+  W_in=Array.from({length:V},()=>Array.from({length:H},()=>(Math.random()-.5)*.5));
+  W_out=Array.from({length:H},()=>Array.from({length:V},()=>(Math.random()-.5)*.5));
+}
+
+function forward(ctxIds){
+  // ctxIds: [leftId, rightId]
+  const h=Array(hidden).fill(0);
+  ctxIds.forEach(id=>{for(let i=0;i<hidden;i++)h[i]+=W_in[id][i];});
+  for(let i=0;i<hidden;i++)h[i]/=ctxIds.length;
+  const s=Array(vocab.length).fill(0);
+  for(let v=0;v<vocab.length;v++)for(let i=0;i<hidden;i++)s[v]+=h[i]*W_out[i][v];
+  const p=softmax(s);
+  return{h,s,p};
+}
+
+function trainStep(ctxIds,tgtId,lr=.1){
+  const{h,p}=forward(ctxIds);
+  // dout = p - onehot(tgt)
+  const dout=p.slice();dout[tgtId]-=1;
+  // dW_out = h^T · dout, dh = dout · W_out^T
+  const dW_out=Array.from({length:hidden},()=>Array(vocab.length).fill(0));
+  const dh=Array(hidden).fill(0);
+  for(let i=0;i<hidden;i++)for(let v=0;v<vocab.length;v++){dW_out[i][v]=h[i]*dout[v];dh[i]+=dout[v]*W_out[i][v];}
+  for(let i=0;i<hidden;i++)dh[i]/=ctxIds.length; // mean back
+  // update W_out
+  for(let i=0;i<hidden;i++)for(let v=0;v<vocab.length;v++)W_out[i][v]-=lr*dW_out[i][v];
+  // update W_in for each ctx
+  ctxIds.forEach(id=>{for(let i=0;i<hidden;i++)W_in[id][i]-=lr*dh[i];});
+  // loss
+  return -Math.log(p[tgtId]+1e-9);
+}
+
+function train(){
+  const tokens=document.getElementById('sent').value.trim().split(/\s+/);
+  buildVocab(tokens);
+  const{X,Y}=makePairs(tokens);
+  if(X.length===0){document.getElementById('trainInfo').textContent='句子太短，需要至少3个词。';return;}
+  initParams(vocab.length,hidden);
+  let loss=0;
+  for(let ep=0;ep<300;ep++){
+    loss=0;
+    for(let i=0;i<X.length;i++)loss+=trainStep(X[i],Y[i],0.1);
+  }
+  trained=true;
+  document.getElementById('trainInfo').textContent=`✅ 训练完成，词表 ${vocab.length} 个词，最终平均 loss=${(loss/X.length).toFixed(3)}`;
+  refreshSelects(tokens);
+  predict();
+}
+
+function refreshSelects(tokens){
+  ['leftCtx','rightCtx'].forEach(id=>{
+    const sel=document.getElementById(id);
+    sel.innerHTML='';
+    [...new Set(tokens)].forEach(w=>{const o=document.createElement('option');o.value=w;o.textContent=w;sel.appendChild(o);});
+  });
+}
+
+function predict(){
+  if(!trained)return;
+  const lw=document.getElementById('leftCtx').value;
+  const rw=document.getElementById('rightCtx').value;
+  const li=w2i[lw],ri=w2i[rw];
+  const{h,p}=forward([li,ri]);
+  // 可视化
+  drawViz(lw,rw,h,p);
+  // top-k
+  const order=p.map((v,i)=>({w:vocab[i],v:i,p:v})).sort((a,b)=>b.p-a.p);
+  document.getElementById('predWord').textContent=order[0].w;
+  document.getElementById('predWord').style.color='#15803d';
+  const list=document.getElementById('probList');
+  list.innerHTML='<div style="font-size:13px;color:#475569;margin-bottom:8px"><b>Top-5 候选词概率：</b></div>'+
+    order.slice(0,5).map(o=>`<div style="margin:4px 0;font-size:13px;display:flex;align-items:center;gap:8px">
+      <span style="width:80px;text-align:right">${o.w}</span>
+      <div class="prob-bar" style="flex:1"><div class="prob-fill" style="width:${(o.p*100).toFixed(1)}%"></div></div>
+      <span style="width:50px;font-family:monospace;color:#64748b">${(o.p*100).toFixed(1)}%</span>
+    </div>`).join('');
+}
+
+function drawViz(lw,rw,h,p){
+  // 简化：只展示输入两个词 → 中间层(5个神经元) → top3输出
+  const inL=document.getElementById('inLayer');
+  const hidL=document.getElementById('hidLayer');
+  const outL=document.getElementById('outLayer');
+  inL.innerHTML='<div style="font-size:12px;color:#64748b;margin-bottom:6px">输入层</div>'+
+    `<div class="node inp">${lw}</div><div class="node inp" style="background:#8b5cf6">${rw}</div>`;
+  hidL.innerHTML='<div style="font-size:12px;color:#64748b;margin-bottom:6px">中间层(5维)</div>'+
+    h.map(v=>`<div class="node hid" style="background:hsl(${150-v*300},60%,50%);opacity:${Math.min(1,.5+Math.abs(v))}">${v.toFixed(2)}</div>`).join('');
+  const order=p.map((v,i)=>({w:vocab[i],p:v})).sort((a,b)=>b.p-a.p).slice(0,3);
+  outL.innerHTML='<div style="font-size:12px;color:#64748b;margin-bottom:6px">输出层(top3)</div>'+
+    order.map(o=>`<div class="node out" style="background:hsl(${40-o.p*40},90%,55%);width:${60+o.p*40}px">${o.w}<br><span style="font-size:10px">${(o.p*100).toFixed(0)}%</span></div>`).join('');
+}
+
+document.getElementById('trainBtn').onclick=train;
+document.getElementById('leftCtx').onchange=predict;
+document.getElementById('rightCtx').onchange=predict;
+// 默认演示：触发一次训练
+window.addEventListener('load',()=>setTimeout(train,200));
+</script>
+</body>
+</html>

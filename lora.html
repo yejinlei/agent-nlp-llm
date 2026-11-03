@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>LoRA 低秩适配实验室 · agent-nlp-llm</title>
+<link rel="stylesheet" href="css/site.css">
+<style>
+.lab{display:grid;grid-template-columns:320px 1fr;gap:24px;margin-top:24px}
+.ctrl{background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:20px}
+.canvas{background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:20px}
+.slider-row{margin:12px 0}
+.slider-row label{font-size:13px;color:#475569;display:flex;justify-content:space-between}
+.slider-row input[type=range]{width:100%}
+.metric-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:16px 0}
+.m{background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:14px;text-align:center}
+.m .n{font-size:24px;font-weight:bold;font-family:monospace}
+.m .l{font-size:11px;color:#64748b;margin-top:4px}
+.m.ft .n{color:#dc2626}.m.lora .n{color:#10b981}.m.ratio .n{color:#6366f1}
+canvas{width:100%;border-radius:6px;background:#fafbfc;margin-top:12px}
+.lora-formula{background:#f1f5f9;border-radius:8px;padding:14px;font-family:monospace;font-size:14px;line-height:2;color:#334155}
+.lora-formula .b{color:#2563eb}.lora-formula .a{color:#d97706}.lora-formula .del{color:#10b981}
+.toggle{display:flex;gap:6px;margin:10px 0}
+.toggle button{flex:1;padding:8px;border:1px solid #cbd5e1;border-radius:6px;background:#fff;cursor:pointer;font-size:13px}
+.toggle button.active{background:#6366f1;color:#fff;border-color:#6366f1}
+@media(max-width:900px){.lab{grid-template-columns:1fr}.metric-cards{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<nav class="navbar">
+  <div class="nav-inner">
+    <a href="index.html" class="nav-logo">💬 agent-nlp-llm</a>
+    <button class="nav-toggle" onclick="document.querySelector('.nav-links').classList.toggle('open')" aria-label="菜单">☰</button>
+    <div class="nav-links">
+      <a href="index.html" class="nav-link">🏠 首页</a>
+      <a href="playground.html" class="nav-link">🎨 玩法</a>
+      <a href="nlp/index.html" class="nav-link">📝 NLP</a>
+      <a href="llm/index.html" class="nav-link">🤖 LLM</a>
+      <a href="bpe.html" class="nav-link">🔤 分词器</a>
+      <a href="embedding.html" class="nav-link">🧭 词向量</a>
+      <a href="word2vec.html" class="nav-link">🧠 word2vec</a>
+      <a href="cbow.html" class="nav-link">🧩 CBOW推理</a>
+      <a href="rnn.html" class="nav-link">🔁 RNN/LSTM</a>
+      <a href="lstm-gate.html" class="nav-link">🚪 LSTM门控</a>
+      <a href="neg-sample.html" class="nav-link">🎲 负采样</a>
+      <a href="sigmoid.html" class="nav-link">∫ 激活函数</a>
+      <a href="attention.html" class="nav-link">🎯 注意力</a>
+      <a href="seq2seq-add.html" class="nav-link">➕ 加法实验</a>
+      <a href="attn-date.html" class="nav-link">📅 日期翻译</a>
+      <a href="lora.html" class="nav-link active">🪢 LoRA</a>
+      <a href="papers.html" class="nav-link">📚 论文</a>
+      <a href="clinic.html" class="nav-link">🕵️ 诊所</a>
+      <a href="pitfalls.html" class="nav-link">💥 踩坑</a>
+      <a href="benchmark.html" class="nav-link">📊 选型</a>
+      <a href="universe.html" class="nav-link">🌌 宇宙</a>
+      <a href="https://github.com/yejinlei/agent-nlp-llm" target="_blank" rel="noopener" class="nav-gh" aria-label="GitHub">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+      </a>
+    </div>
+  </div>
+</nav>
+
+<main class="container">
+  <section class="hero-mini"><h1>🪢 LoRA 低秩适配实验室</h1>
+    <p class="lead">对应《Build a Large Language Model From Scratch》附录E「使用 LoRA 进行参数高效微调」。核心思想：冻结预训练权重 W₀，只训练两个小矩阵 B·A（秩为 r），让 h = W₀x + (α/r)·BAx。拖动滑块看 r 与 α 如何影响参数量和近似精度。</p>
+  </section>
+
+  <div class="lab">
+    <div class="ctrl">
+      <h3 style="margin:0 0 10px 0;font-size:15px">⚙️ 参数</h3>
+      <div class="slider-row"><label>权重形状 d × d <b id="dv">4096</b></label><input type="range" id="dim" min="256" max="8192" step="256" value="4096"></div>
+      <div class="slider-row"><label>LoRA 秩 r <b id="rv">8</b></label><input type="range" id="rank" min="1" max="64" step="1" value="8"></div>
+      <div class="slider-row"><label>缩放 α <b id="av">16</b></label><input type="range" id="alpha" min="1" max="64" step="1" value="16"></div>
+      <div class="slider-row"><label>目标 ΔW 的秩 <b id="tv">满秩</b></label><input type="range" id="trank" min="1" max="64" step="1" value="64"></div>
+
+      <div class="lora-formula" style="margin-top:18px">
+        <b>LoRA 公式（书1 附录E 式E.1）：</b><br>
+        W = W₀ + <span class="del">ΔW</span> = W₀ + <span class="b">B</span><sub>d×r</sub> · <span class="a">A</span><sub>r×d</sub> · (α/r)<br>
+        · 前向时：<span class="del">ΔW</span>x = B(Ax) · α/r<br>
+        · 推理时可合并到 W₀，零额外开销
+      </div>
+
+      <div style="font-size:12px;color:#64748b;margin-top:10px;line-height:1.6">
+        <b>直觉</b>：大模型做下游任务时，权重变化 ΔW 其实是"低秩"的（主要信息集中在少数方向上）。LoRA 不用学 d×d=1600万 参数，只学 2·d·r 个参数。
+      </div>
+    </div>
+
+    <div class="canvas">
+      <div class="metric-cards">
+        <div class="m ft"><div class="n" id="ftP">—</div><div class="l">全参微调参数</div></div>
+        <div class="m lora"><div class="n" id="lrP">—</div><div class="l">LoRA 训练参数</div></div>
+        <div class="m ratio"><div class="n" id="ratio">—</div><div class="l">压缩比（越小越省）</div></div>
+      </div>
+
+      <h3 style="margin:8px 0 4px;font-size:14px">🎨 矩阵 ΔW 可视化（32×32 切片）</h3>
+      <div style="font-size:12px;color:#64748b">左：真实（满秩）ΔW；右：LoRA 近似 BA·α/r。当目标 ΔW 本身秩低、r 足够时，两者非常接近。</div>
+      <canvas id="cv" width="800" height="320"></canvas>
+
+      <div style="margin-top:14px;font-size:13px" id="errBox"></div>
+
+      <div class="insight" style="margin-top:16px"><h4>📖 书1 附录E 的关键点</h4>
+        <ul style="font-size:13px;line-height:1.8">
+          <li><b>r 的选择</b>：经验值 r=4~64，r 太小表达能力不足，r 太大失去参数效率。书1 提到 r=8 或 r=16 在多数任务已足够。</li>
+          <li><b>α 缩放</b>：α/r 让我们在改变 r 时不必重新调学习率，常用 α=2r（即缩放因子为 2）。</li>
+          <li><b>只在注意力投影（Wq/Wv）上用 LoRA</b>是常见做法，MLP 层通常冻结，进一步省参数。</li>
+          <li><b>推理合并</b>：训练完后 ΔW = BA·α/r 可以直接加到 W₀ 上，推理和原模型完全一样快——这是 LoRA 相比 Adapter 的最大优势。</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer class="site-footer"><p>基于《Build a Large Language Model From Scratch》附录E LoRA 实现</p></footer>
+
+<script>
+const cv=document.getElementById('cv'),ctx=cv.getContext('2d');
+const CELL=9,PAD=30,GAP=60;
+const N=32; // 可视化的切片大小
+
+function randn(){let u=0,v=0;while(u===0)u=Math.random();while(v===0)v=Math.random();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);}
+
+// 生成一个"真实"的低秩 ΔW 切片，秩 = tRank
+function makeTrueDelta(tRank){
+  const U=Array.from({length:N},()=>Array.from({length:tRank},()=>randn()*.5));
+  const V=Array.from({length:tRank},()=>Array.from({length:N},()=>randn()*.5));
+  const D=Array.from({length:N},()=>Array(N).fill(0));
+  for(let i=0;i<N;i++)for(let j=0;j<N;j++)for(let k=0;k<tRank;k++)D[i][j]+=U[i][k]*V[k][j]/Math.sqrt(tRank);
+  return D;
+}
+// 用 rank=r 的 LoRA 拟合：返回 B*A*alpha/r 及 A,B
+function loraApprox(D,r,alpha){
+  // 简化：用随机初始化 + 少量梯度步拟合（这里用"最优秩-r近似"=前r个主方向，用幂迭代粗糙近似）
+  // 为浏览器性能，用简单的 SVD 近似：对 D 做 top-r SVD
+  const copy=D.map(row=>row.slice());
+  const B=Array.from({length:N},()=>Array(r).fill(0));
+  const A=Array.from({length:r},()=>Array(N).fill(0));
+  for(let k=0;k<r;k++){
+    // 幂迭代求最大奇异值对应向量
+    let u=Array.from({length:N},()=>Math.random()-.5);
+    let v=Array(N).fill(0);
+    for(let it=0;it<20;it++){
+      // v = D^T u
+      for(let j=0;j<N;j++){v[j]=0;for(let i=0;i<N;i++)v[j]+=copy[i][j]*u[i];}
+      // normalize v
+      const nv=Math.sqrt(v.reduce((s,x)=>s+x*x,0))||1;v=v.map(x=>x/nv);
+      // u = D v
+      for(let i=0;i<N;i++){u[i]=0;for(let j=0;j<N;j++)u[i]+=copy[i][j]*v[j];}
+      const nu=Math.sqrt(u.reduce((s,x)=>s+x*x,0))||1;u=u.map(x=>x/nu);
+    }
+    // sigma
+    let sigma=0;for(let i=0;i<N;i++)for(let j=0;j<N;j++)sigma+=u[i]*copy[i][j]*v[j];
+    // assign
+    for(let i=0;i<N;i++)B[i][k]=u[i]*sigma;
+    for(let j=0;j<N;j++)A[k][j]=v[j];
+    // deflate
+    for(let i=0;i<N;i++)for(let j=0;j<N;j++)copy[i][j]-=sigma*u[i]*v[j];
+  }
+  // 构造近似 W = B*A * alpha/r
+  const scale=alpha/r;
+  const W=Array.from({length:N},()=>Array(N).fill(0));
+  for(let i=0;i<N;i++)for(let j=0;j<N;j++)for(let k=0;k<r;k++)W[i][j]+=B[i][k]*A[k][j]*scale;
+  return{W,B,A};
+}
+
+function drawMat(mat,ox,oy,title){
+  ctx.fillStyle='#334155';ctx.font='13px sans-serif';
+  ctx.fillText(title,ox,oy-8);
+  // 找最大绝对值
+  let mx=0;mat.forEach(r=>r.forEach(v=>{if(Math.abs(v)>mx)mx=Math.abs(v);}));
+  for(let i=0;i<N;i++)for(let j=0;j<N;j++){
+    const v=mat[i][j]/(mx||1);
+    // 蓝白红
+    let r,g,b;
+    if(v>=0){r=Math.floor(255-v*200);g=Math.floor(255-v*120);b=255;}
+    else{r=255;g=Math.floor(255+v*120);b=Math.floor(255+v*200);}
+    ctx.fillStyle=`rgb(${r},${g},${b})`;
+    ctx.fillRect(ox+j*CELL,oy+i*CELL,CELL-1,CELL-1);
+  }
+  ctx.strokeStyle='#94a3b8';ctx.strokeRect(ox,oy,N*CELL,N*CELL);
+}
+
+function draw(){
+  const d=+document.getElementById('dim').value;
+  const r=+document.getElementById('rank').value;
+  const a=+document.getElementById('alpha').value;
+  const tr=+document.getElementById('trank').value;
+  document.getElementById('dv').textContent=d;
+  document.getElementById('rv').textContent=r;
+  document.getElementById('av').textContent=a;
+  document.getElementById('tv').textContent=tr>=64?'满秩':tr;
+
+  const ft=d*d;
+  const lr=2*d*r;
+  document.getElementById('ftP').textContent=ft>=1e6?(ft/1e6).toFixed(1)+'M':ft;
+  document.getElementById('lrP').textContent=lr>=1e6?(lr/1e6).toFixed(2)+'M':lr;
+  document.getElementById('ratio').textContent=(ft/lr).toFixed(0)+'×';
+
+  const D=makeTrueDelta(tr);
+  const{W:approx}=loraApprox(D,r,a);
+  // 误差
+  let err=0,norm=0;
+  for(let i=0;i<N;i++)for(let j=0;j<N;j++){err+=(D[i][j]-approx[i][j])**2;norm+=D[i][j]**2;}
+  const rel=Math.sqrt(err/(norm+1e-9));
+  document.getElementById('errBox').innerHTML=rel<0.1?
+    `<span style="color:#16a34a">✅ LoRA 近似相对误差 ${(rel*100).toFixed(1)}% —— r=${r} 足够表达目标 ΔW 的低秩结构。</span>`:
+    rel<0.3?`<span style="color:#d97706">⚠️ 误差 ${(rel*100).toFixed(1)}% —— r=${r} 偏小或 α 不合适，信息有所丢失。</span>`:
+    `<span style="color:#dc2626">❌ 误差 ${(rel*100).toFixed(1)}% —— r=${r} 远小于目标 ΔW 的秩，欠拟合严重，需增大 r 或全参微调。</span>`;
+
+  // 画
+  ctx.clearRect(0,0,cv.width,cv.height);
+  drawMat(D,PAD,PAD,`真实 ΔW (秩≈${tr})`);
+  drawMat(approx,PAD+N*CELL+GAP,PAD,`LoRA 近似 BA·α/r (r=${r}, α=${a})`);
+
+  // 图例
+  const lx=PAD,ly=PAD+N*CELL+20;
+  ctx.fillStyle='#334155';ctx.font='11px sans-serif';ctx.fillText('负',lx,ly+10);
+  for(let k=0;k<40;k++){
+    const v=k/19.5-1;let r1,g1,b1;
+    if(v>=0){r1=Math.floor(255-v*200);g1=Math.floor(255-v*120);b1=255;}
+    else{r1=255;g1=Math.floor(255+v*120);b1=Math.floor(255+v*200);}
+    ctx.fillStyle=`rgb(${r1},${g1},${b1})`;ctx.fillRect(lx+20+k*6,ly,6,10);
+  }
+  ctx.fillStyle='#334155';ctx.fillText('正',lx+20+40*6+5,ly+10);
+}
+
+['dim','rank','alpha','trank'].forEach(id=>document.getElementById(id).oninput=draw);
+draw();
+</script>
+</body>
+</html>

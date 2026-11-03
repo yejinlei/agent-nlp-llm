@@ -39,9 +39,16 @@
       <a href="llm/index.html" class="nav-link">🤖 LLM</a>
       <a href="bpe.html" class="nav-link">🔤 分词器</a>
       <a href="embedding.html" class="nav-link">🧭 词向量</a>
-      <a href="word2vec.html" class="nav-link">🧠 词向量从零</a>
-      <a href="rnn.html" class="nav-link">🔁 RNN从零</a>
+      <a href="word2vec.html" class="nav-link">🧠 word2vec</a>
+      <a href="cbow.html" class="nav-link">🧩 CBOW推理</a>
+      <a href="rnn.html" class="nav-link">🔁 RNN/LSTM</a>
+      <a href="lstm-gate.html" class="nav-link">🚪 LSTM门控</a>
+      <a href="neg-sample.html" class="nav-link">🎲 负采样</a>
+      <a href="sigmoid.html" class="nav-link">∫ 激活函数</a>
       <a href="attention.html" class="nav-link">🎯 注意力</a>
+      <a href="seq2seq-add.html" class="nav-link">➕ 加法实验</a>
+      <a href="attn-date.html" class="nav-link">📅 日期翻译</a>
+      <a href="lora.html" class="nav-link">🪢 LoRA</a>
       <a href="papers.html" class="nav-link">📚 论文</a>
       <a href="clinic.html" class="nav-link">🕵️ 诊所</a>
       <a href="pitfalls.html" class="nav-link">💥 踩坑</a>
@@ -280,19 +287,28 @@
 
   <!-- 创意玩法入口 -->
   <section id="playground" class="blk reveal">
-    <h2 class="blk-title"><span class="num">06</span>🎨 创意玩法：把学习变成好玩的事</h2>
-    <p class="blk-desc">每个玩法都是一个独立可交互页面，点进去就能玩。从动手里长出来的理解，比死记硬背牢十倍。</p>
+    <h2 class="blk-title"><span class="num">06</span>🎨 两本书里的经典案例，全部做成可玩的互动 Demo</h2>
+    <p class="blk-desc">下面的互动实验<strong>严格对应两本书的具体章节</strong>：你在书里看到公式和代码，这里用真实 JavaScript 实现了相同的计算逻辑，滑块拖动实时看到结果变化。从动手里长出来的理解，比死记硬背牢十倍。</p>
     <div class="grid g3">
-      <a class="card play-card" href="bpe.html"><span class="pc-icon">🔤</span><h4>BPE 分词器逐步骤</h4><p style="font-size:.88rem;color:var(--text-2)">一步步看 BPE 怎么把字符合并成子词，理解大模型分词原理</p></a>
+      <a class="card play-card" href="sigmoid.html"><span class="pc-icon">∫</span><h4>激活函数曲线<span style="font-size:.7em;color:var(--text-3);margin-left:4px">书2 附录A</span></h4><p style="font-size:.88rem;color:var(--text-2)">sigmoid/tanh/ReLU/GELU 实时切换，拖动 x 看点的切线，理解为什么大模型偏爱 GELU</p></a>
+      <a class="card play-card" href="cbow.html"><span class="pc-icon">🧩</span><h4>CBOW 推理<span style="font-size:.7em;color:var(--text-3);margin-left:4px">书2 第3章</span></h4><p style="font-size:.88rem;color:var(--text-2)">在你自己的句子上真实训练 300 轮 CBOW，看上下文→中间词的完整推理链</p></a>
+      <a class="card play-card" href="neg-sample.html"><span class="pc-icon">🎲</span><h4>负采样<span style="font-size:.7em;color:var(--text-3);margin-left:4px">书2 第4章</span></h4><p style="font-size:.88rem;color:var(--text-2)">拖动词表大小/负样本数，实时看"百万分类→二分类"加速倍数，抽一次样看谁被抽中</p></a>
+      <a class="card play-card" href="lstm-gate.html"><span class="pc-icon">🚪</span><h4>LSTM 三个门控<span style="font-size:.7em;color:var(--text-3);margin-left:4px">书2 第6章</span></h4><p style="font-size:.88rem;color:var(--text-2)">拖遗忘/输入/输出门滑块，10 步记忆单元可视化；一键播放"写入→保留→输出"长记忆场景</p></a>
+      <a class="card play-card" href="seq2seq-add.html"><span class="pc-icon">➕</span><h4>加法数据集实验<span style="font-size:.7em;color:var(--text-3);margin-left:4px">书2 第7章</span></h4><p style="font-size:.88rem;color:var(--text-2)">真实训练 Baseline/Reverse/Peeky 三种 seq2seq，复现书2 P311 "Peeky 在 30 epoch 近 100%"的结果</p></a>
+      <a class="card play-card" href="attn-date.html"><span class="pc-icon">📅</span><h4>Attention 日期翻译<span style="font-size:.7em;color:var(--text-3);margin-left:4px">书2 第8章</span></h4><p style="font-size:.88rem;color:var(--text-2)">输入任意日期格式，实时画出注意力热力图——复现书2图8-19 的对齐可视化</p></a>
+      <a class="card play-card" href="lora.html"><span class="pc-icon">🪢</span><h4>LoRA 低秩适配<span style="font-size:.7em;color:var(--text-3);margin-left:4px">书1 附录E</span></h4><p style="font-size:.88rem;color:var(--text-2)">拖动 r 和 α，实时看 ΔW 矩阵 vs BA·α/r 的近似误差与参数量压缩比</p></a>
+      <a class="card play-card" href="bpe.html"><span class="pc-icon">🔤</span><h4>BPE 分词器逐步骤</h4><p style="font-size:.88rem;color:var(--text-2)">一步步看 BPE 怎么把字符合并成子词，理解 GPT 分词原理</p></a>
       <a class="card play-card" href="embedding.html"><span class="pc-icon">🧭</span><h4>词向量类比游戏</h4><p style="font-size:.88rem;color:var(--text-2)">国王−男人+女人=？亲手算一算语义空间里的向量运算</p></a>
       <a class="card play-card" href="attention.html"><span class="pc-icon">🎯</span><h4>注意力可视化沙盒</h4><p style="font-size:.88rem;color:var(--text-2)">换句子、调参数，实时看注意力权重怎么分布</p></a>
-      <a class="card play-card" href="clinic.html"><span class="pc-icon">🕵️</span><h4>大模型错误诊断诊所</h4><p style="font-size:.88rem;color:var(--text-2)">给你"病人病例"，你当医生诊断是数据问题还是模型问题</p></a>
-      <a class="card play-card" href="pitfalls.html"><span class="pc-icon">💥</span><h4>Prompt 踩坑博物馆</h4><p style="font-size:.88rem;color:var(--text-2)">收集真实翻车案例，看别人的坑长什么样，避免重蹈覆辙</p></a>
-      <a class="card play-card" href="benchmark.html"><span class="pc-icon">📊</span><h4>模型选型决策树</h4><p style="font-size:.88rem;color:var(--text-2)">按预算、场景、性能需求，一步步帮你选出合适的模型</p></a>
-      <a class="card play-card" href="universe.html"><span class="pc-icon">🌌</span><h4>技术宇宙时间轴</h4><p style="font-size:.88rem;color:var(--text-2)">70 年 NLP/LLM 里程碑，可视化拖动的技术宇宙</p></a>
-      <a class="card play-card" href="papers.html"><span class="pc-icon">📚</span><h4>10 篇必读论文精读</h4><p style="font-size:.88rem;color:var(--text-2)">每篇论文一页图解，讲清贡献、方法和影响</p></a>
-      <a class="card play-card" href="nlp/index.html"><span class="pc-icon">📝</span><h4>NLP 算法档案库</h4><p style="font-size:.88rem;color:var(--text-2)">从分词到 BERT，传统 NLP 核心算法系统整理</p></a>
-      <a class="card play-card" href="llm/index.html"><span class="pc-icon">🤖</span><h4>LLM 全流程手册</h4><p style="font-size:.88rem;color:var(--text-2)">预训练→微调→对齐→部署，大模型完整生命周期</p></a>
+      <a class="card play-card" href="word2vec.html"><span class="pc-icon">🧠</span><h4>word2vec 从零代码<span style="font-size:.7em;color:var(--text-3);margin-left:4px">书2 ch3-4</span></h4><p style="font-size:.88rem;color:var(--text-2)">完整教程：共现矩阵→CBOW→skip-gram→负采样，四步教学法讲透</p></a>
+      <a class="card play-card" href="rnn.html"><span class="pc-icon">🔁</span><h4>RNN/LSTM 从零<span style="font-size:.7em;color:var(--text-3);margin-left:4px">书2 ch5-6</span></h4><p style="font-size:.88rem;color:var(--text-2)">梯度消失数学推导 + LSTM 三个门完整实现，拒绝调包</p></a>
+      <a class="card play-card" href="clinic.html"><span class="pc-icon">🕵️</span><h4>大模型错误诊断诊所</h4><p style="font-size:.88rem;color:var(--text-2)">给你"病例"，你当医生诊断是数据问题还是模型问题</p></a>
+      <a class="card play-card" href="pitfalls.html"><span class="pc-icon">💥</span><h4>Prompt 踩坑博物馆</h4><p style="font-size:.88rem;color:var(--text-2)">收集真实翻车案例，看别人的坑长什么样</p></a>
+      <a class="card play-card" href="benchmark.html"><span class="pc-icon">📊</span><h4>模型选型决策器</h4><p style="font-size:.88rem;color:var(--text-2)">按预算/场景/性能一步步选出合适模型</p></a>
+      <a class="card play-card" href="universe.html"><span class="pc-icon">🌌</span><h4>技术宇宙时间轴</h4><p style="font-size:.88rem;color:var(--text-2)">70 年 NLP/LLM 里程碑可视化</p></a>
+      <a class="card play-card" href="papers.html"><span class="pc-icon">📚</span><h4>必读论文精读</h4><p style="font-size:.88rem;color:var(--text-2)">每篇一页图解，讲清贡献方法影响</p></a>
+      <a class="card play-card" href="nlp/index.html"><span class="pc-icon">📝</span><h4>NLP 算法档案库</h4><p style="font-size:.88rem;color:var(--text-2)">分词→BERT，传统 NLP 核心算法系统整理</p></a>
+      <a class="card play-card" href="llm/index.html"><span class="pc-icon">🤖</span><h4>LLM 全流程手册</h4><p style="font-size:.88rem;color:var(--text-2)">预训练→微调→对齐→部署完整生命周期</p></a>
     </div>
   </section>
 
