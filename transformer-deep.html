@@ -3,8 +3,18 @@
 <title>🧠 Transformer 深度专题 · 从直觉到从零实现 · agent-nlp-llm</title>
 <link rel="stylesheet" href="css/site.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
-<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
-<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<script>
+(function(){
+  function render(){ if(typeof renderMathInElement!=='function') return false;
+    try{ renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'\\[',right:'\\]',display:true},{left:'\\(',right:'\\)',display:false},{left:'$',right:'$',display:false}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false}); }catch(e){}
+    return true; }
+  function go(){ if(render()) return; setTimeout(go,200); }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',go()); else go();
+  window.addEventListener('load',function(){render(); setTimeout(render,600); setTimeout(render,1600)});
+})();
+</script>
 <style>
 .td-hero{background:linear-gradient(135deg,#eef4ff 0%,#f5f0ff 45%,#fff7ed 100%);border-radius:20px;padding:26px 24px;border:1px solid #e6e9f2;position:relative;overflow:hidden}
 .td-hero::after{content:"";position:absolute;right:-40px;top:-40px;width:200px;height:200px;background:radial-gradient(circle,rgba(124,58,237,.16),transparent 70%);border-radius:50%}
