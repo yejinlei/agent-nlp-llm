@@ -25,8 +25,8 @@
 <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
 <script>
-(function{
-  function render{
+(function(){
+  function render(){
     if(typeof renderMathInElement !== 'function') return false;
     try{
       renderMathInElement(document.body,{
@@ -42,12 +42,12 @@
     }catch(e){console.warn('katex render error',e)}
     return true;
   }
-  function go{ if(render) return; setTimeout(go,200); }
-  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',go); else go;
-  window.addEventListener('load',function{render; setTimeout(render,500); setTimeout(render,1500)});
+  function go(){ if(render) return; setTimeout(go,200); }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',go()); else go();
+  window.addEventListener('load',function(){render(); setTimeout(render,500); setTimeout(render,1500)});
   if(window.MutationObserver){
     var t=null;
-    new MutationObserver(function{ clearTimeout(t); t=setTimeout(render,200); })
+    new MutationObserver(function(){ clearTimeout(t); t=setTimeout(render,200); })
       .observe(document.documentElement,{childList:true,subtree:true});
   }
   window.__katexRender = render;
@@ -404,13 +404,13 @@ python -c <span class="s">"import torch, jieba, transformers; print('ready:', to
 <script src="js/site.js"></script>
 <script>
 /* ---- Demo 1: N-gram ---- */
-(function{
+(function(){
   var tokens = ['小猫','追','老鼠','因为','它','饿','了'];
   var range = document.getElementById('ngramRange');
   var nEl = document.getElementById('ngramN');
   var out = document.getElementById('ngramOut');
   var hint = document.getElementById('ngramHint');
-  function render{
+  function render(){
     var n = parseInt(range.value, 10);
     nEl.textContent = n;
     var html = '';
@@ -429,12 +429,12 @@ python -c <span class="s">"import torch, jieba, transformers; print('ready:', to
     hint.textContent = tips[n] || '';
     hint.className = n >= 4 ? 'hint warn' : 'hint';
   }
-  range.addEventListener('input', render);
-  render;
+  range.addEventListener('input', render());
+  render();
 });
 
 /* ---- Demo 2: Self-Attention ---- */
-(function{
+(function(){
   var tokens = ['小猫','追','老鼠','因为','它','饿','了'];
   var matrix = [
     [.45,.20,.15,.05,.05,.05,.05],
@@ -457,7 +457,7 @@ python -c <span class="s">"import torch, jieba, transformers; print('ready:', to
     el.textContent = t;
     el.className = 'demo-cell';
     el.style.cssText = 'background:#eef3ff;color:#2c4a8c;cursor:pointer';
-    el.onclick = function{ show(i); };
+    el.onclick = function(){ show(i); };
     box.appendChild(el);
   });
   function show(row){
@@ -485,12 +485,12 @@ python -c <span class="s">"import torch, jieba, transformers; print('ready:', to
 });
 
 /* ---- Demo 3: 词向量类比 ---- */
-(function{
+(function(){
   var map = {
     '国王':[0.8,0.9],'男人':[0.3,0.5],'女人':[-0.3,0.5],'北京':[0.7,-0.8],
     '中国':[0.5,-0.7],'法国':[-0.6,-0.7],'猫':[-0.2,0.8],'小狗':[-0.4,0.7],'老虎':[-0.6,0.9]
   };
-  document.getElementById('vecGo').onclick = function{
+  document.getElementById('vecGo').onclick = function(){
     var a = document.getElementById('vecA').value,
         b = document.getElementById('vecB').value,
         c = document.getElementById('vecC').value;

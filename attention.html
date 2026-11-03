@@ -17,8 +17,8 @@
 <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
 <script>
-(function{
-  function render{
+(function(){
+  function render(){
     if(typeof renderMathInElement !== 'function') return false;
     try{
       renderMathInElement(document.body,{
@@ -34,12 +34,12 @@
     }catch(e){console.warn('katex render error',e)}
     return true;
   }
-  function go{ if(render) return; setTimeout(go,200); }
-  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',go); else go;
-  window.addEventListener('load',function{render; setTimeout(render,500); setTimeout(render,1500)});
+  function go(){ if(render) return; setTimeout(go,200); }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',go()); else go();
+  window.addEventListener('load',function(){render(); setTimeout(render,500); setTimeout(render,1500)});
   if(window.MutationObserver){
     var t=null;
-    new MutationObserver(function{ clearTimeout(t); t=setTimeout(render,200); })
+    new MutationObserver(function(){ clearTimeout(t); t=setTimeout(render,200); })
       .observe(document.documentElement,{childList:true,subtree:true});
   }
   window.__katexRender = render;
@@ -207,7 +207,7 @@ out, attn = <span class="f">scaled_dot_product_attention</span>(q, k, v, mask)
 
 <script src="js/site.js"></script>
 <script>
-(function{
+(function(){
   var toks = [], mat = [];
 
   // 用词与词的“语义关联度”启发式生成一个稳定的伪注意力矩阵
@@ -251,7 +251,7 @@ out, attn = <span class="f">scaled_dot_product_attention</span>(q, k, v, mask)
     return 'background:rgba(59,111,224,' + a.toFixed(2) + ');color:' + (a > 0.45 ? '#fff' : '#2c4a8c');
   }
 
-  function render{
+  function render(){
     var host = document.getElementById('attnHeat');
     var html = '<table class="heat"><tr><th style="font-size:.65rem">词＼看</th>';
     toks.forEach(function(t){ html += '<th>' + t + '</th>'; });
@@ -266,7 +266,7 @@ out, attn = <span class="f">scaled_dot_product_attention</span>(q, k, v, mask)
     html += '</table>';
     host.innerHTML = html;
     Array.prototype.forEach.call(host.querySelectorAll('td'), function(td){
-      td.onclick = function{
+      td.onclick = function(){
         var i = +td.dataset.i, j = +td.dataset.j;
         var v = mat[i][j];
         var lvl = v > 0.4 ? '很强' : (v > 0.2 ? '中等' : '较弱');
@@ -277,13 +277,13 @@ out, attn = <span class="f">scaled_dot_product_attention</span>(q, k, v, mask)
     });
   }
 
-  function run{
-    var raw = document.getElementById('attnText').value.trim;
+  function run(){
+    var raw = document.getElementById('attnText').value.trim();
     toks = raw.split(/[\s,，、]+/).filter(function(x){ return x.length; });
     if (toks.length < 2){ toks = ['小猫','追','老鼠']; }
     var temp = parseFloat(document.getElementById('attnTemp').value);
     buildMatrix(temp);
-    render;
+    render();
     var t = document.getElementById('attnTemp').value;
     document.getElementById('attnExp').textContent = '温度 = ' + t + '：' +
       (temp < 1 ? '分布更"尖锐"，模型只盯着少数几个词看，容易忽略其他信息。' :
@@ -293,7 +293,7 @@ out, attn = <span class="f">scaled_dot_product_attention</span>(q, k, v, mask)
 
   document.getElementById('attnGo').onclick = run;
   document.getElementById('attnTemp').oninput = run;
-  run;
+  run();
 });
 </script>
 </body>

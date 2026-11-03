@@ -24,9 +24,9 @@
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
 <script>
-document.addEventListener('DOMContentLoaded', function{
-  function r{try{renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false});}catch(e){}}
-  if(document.readyState==='complete')r;else window.addEventListener('load',r);
+document.addEventListener('DOMContentLoaded', function(){
+  function r(){try{renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false});}catch(e){}}
+  if(document.readyState==='complete')r();else window.addEventListener('load',r());
   setTimeout(r,300);setTimeout(r,1000);
 });
 </script>
@@ -121,7 +121,7 @@ document.addEventListener('DOMContentLoaded', function{
 <footer class="site"><p>💬 agent-nlp-llm · 自然语言技术本体论研究站</p></footer>
 <script src="js/site.js"></script>
 <script>
-(function{
+(function(){
   // Simulated vocabulary for UNK approach: common Chinese words
   var knownWords = new Set([
     '今天','用','写','代码','真是','那个','的','效果','比','我','自己','强','太多','了',
@@ -213,9 +213,9 @@ document.addEventListener('DOMContentLoaded', function{
     return 'token';
   }
 
-  function process{
+  function process(){
     var text=document.getElementById('inputText').value;
-    if(!text.trim)return;
+    if(!text.trim())return;
 
     // UNK approach: word segmentation
     var wordTokens = segmentChinese(text);
@@ -263,7 +263,7 @@ document.addEventListener('DOMContentLoaded', function{
   }
 
   document.getElementById('inputText').oninput=process;
-  process;
+  process();
 });
 </script>
 </body>

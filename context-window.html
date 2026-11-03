@@ -105,11 +105,11 @@ canvas{background:#0f172a;border-radius:8px;border:1px solid var(--border);width
 </footer>
 <script>
 const $=id=>document.getElementById(id);
-function render{
+function render(){
   const L=+$('L').value,stride=+$('stride').value;
   $('lVal').textContent=L;$('sVal').textContent=stride;
   const text=$('text').value;
-  const toks=$('tokMode').value==='word'?text.trim.split(/\s+/):[...text];
+  const toks=$('tokMode').value==='word'?text.trim().split(/\s+/):[...text];
   // 建词表
   const vocab={};toks.forEach(t=>{if(!(t in vocab))vocab[t]=Object.keys(vocab).length});
   const ids=toks.map(t=>vocab[t]);
@@ -158,8 +158,8 @@ function render{
     </div>`;
   }
 }
-['L','stride','tokMode'].forEach(id=>$(id).addEventListener('input',render));
-$('text').addEventListener('input',render);
+['L','stride','tokMode'].forEach(id=>$(id).addEventListener('input',render()));
+$('text').addEventListener('input',render());
 </script>
 <script src="js/site.js"></script>
 <script src="js/math.js"></script>

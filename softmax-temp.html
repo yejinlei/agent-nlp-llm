@@ -20,9 +20,9 @@ canvas { display:block; max-width:100%; background:#fff; border:1px solid var(--
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
 <script>
-document.addEventListener('DOMContentLoaded', function{
-  function r{try{renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false});}catch(e){}}
-  if(document.readyState==='complete')r;else window.addEventListener('load',r);
+document.addEventListener('DOMContentLoaded', function(){
+  function r(){try{renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false});}catch(e){}}
+  if(document.readyState==='complete')r();else window.addEventListener('load',r());
   setTimeout(r,300);setTimeout(r,1000);
 });
 </script>
@@ -117,7 +117,7 @@ document.addEventListener('DOMContentLoaded', function{
 <footer class="site"><p>💬 agent-nlp-llm · 自然语言技术本体论研究站</p></footer>
 <script src="js/site.js"></script>
 <script>
-(function{
+(function(){
   var labels = ['猫','狗','鱼','鸟','树','车','书','电脑'];
   var defaultLogits = [3.2, 2.8, 1.5, 1.1, 0.3, -0.5, -1.2, -2.0];
   var logits = defaultLogits.slice;
@@ -127,7 +127,7 @@ document.addEventListener('DOMContentLoaded', function{
   var canvas = document.getElementById('barCanvas');
   var ctx = canvas.getContext('2d');
 
-  function buildInputs {
+  function buildInputs(){
     var host = document.getElementById('logitInputs');
     host.innerHTML = '';
     labels.forEach(function(lb, i){
@@ -140,9 +140,9 @@ document.addEventListener('DOMContentLoaded', function{
       inp.type = 'number'; inp.step = '0.1'; inp.value = logits[i];
       inp.className = 'logit-input';
       inp.dataset.idx = i;
-      inp.oninput = function{
+      inp.oninput = function(){
         logits[i] = parseFloat(this.value)||0;
-        update;
+        update();
       };
       wrap.appendChild(label); wrap.appendChild(inp);
       host.appendChild(wrap);
@@ -174,13 +174,13 @@ document.addEventListener('DOMContentLoaded', function{
 
     // axes
     ctx.strokeStyle='#e2e8f0'; ctx.lineWidth=1;
-    ctx.beginPath; ctx.moveTo(pad.l,pad.t); ctx.lineTo(pad.l,pad.t+ch); ctx.lineTo(pad.l+cw,pad.t+ch); ctx.stroke;
+    ctx.beginPath(); ctx.moveTo(pad.l,pad.t); ctx.lineTo(pad.l,pad.t+ch); ctx.lineTo(pad.l+cw,pad.t+ch); ctx.stroke();
 
     // grid
     ctx.strokeStyle='#f1f5f9'; ctx.fillStyle='#94a3b8'; ctx.font='11px sans-serif'; ctx.textAlign='right';
     for(var g=0;g<=5;g++){
       var gy=pad.t+ch-ch*g/5;
-      ctx.beginPath; ctx.moveTo(pad.l,gy); ctx.lineTo(pad.l+cw,gy); ctx.stroke;
+      ctx.beginPath(); ctx.moveTo(pad.l,gy); ctx.lineTo(pad.l+cw,gy); ctx.stroke();
       ctx.fillText((g/5).toFixed(1), pad.l-6, gy+4);
     }
 
@@ -197,14 +197,14 @@ document.addEventListener('DOMContentLoaded', function{
       grd.addColorStop(0, colors[i%colors.length]);
       grd.addColorStop(1, colors[i%colors.length]+'88');
       ctx.fillStyle=grd;
-      ctx.beginPath;
+      ctx.beginPath();
       var r=6;
       ctx.moveTo(x+r,y); ctx.lineTo(x+bw-r,y);
       ctx.quadraticCurveTo(x+bw,y,x+bw,y+r);
       ctx.lineTo(x+bw,pad.t+ch); ctx.lineTo(x,pad.t+ch);
       ctx.lineTo(x,y+r); ctx.quadraticCurveTo(x,y,x+r,y);
-      ctx.closePath;
-      ctx.fill;
+      ctx.closePath();
+      ctx.fill();
       // label
       ctx.fillStyle='#475569'; ctx.textAlign='center'; ctx.font='13px sans-serif';
       ctx.fillText(labels[i], x+bw/2, pad.t+ch+18);
@@ -232,7 +232,7 @@ document.addEventListener('DOMContentLoaded', function{
     host.innerHTML=html;
   }
 
-  function update{
+  function update(){
     var tau = parseFloat(tempSlider.value);
     document.getElementById('tempVal').textContent = tau.toFixed(1);
     document.querySelectorAll('.preset-btn').forEach(function(b){
@@ -256,20 +256,20 @@ document.addEventListener('DOMContentLoaded', function{
 
   tempSlider.oninput = update;
   document.querySelectorAll('.preset-btn').forEach(function(b){
-    b.onclick = function{ tempSlider.value = b.dataset.temp; update; };
+    b.onclick = function(){ tempSlider.value = b.dataset.temp; update(); };
   });
-  document.getElementById('resetBtn').onclick = function{
+  document.getElementById('resetBtn').onclick = function(){
     logits = defaultLogits.slice;
-    buildInputs; update;
+    buildInputs(); update();
   };
-  document.getElementById('randomBtn').onclick = function{
-    logits = logits.map(function{return (Math.random*6-3);});
+  document.getElementById('randomBtn').onclick = function(){
+    logits = logits.map(function(){return (Math.random()*6-3);});
     logits.sort(function(a,b){return b-a;});
-    buildInputs; update;
+    buildInputs(); update();
   };
 
-  buildInputs;
-  update;
+  buildInputs();
+  update();
 });
 </script>
 </body>

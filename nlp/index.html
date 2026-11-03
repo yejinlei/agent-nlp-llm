@@ -61,7 +61,7 @@ h4 { margin-top: 20px; margin-bottom: 12px; color: #1e40af; }
     return true;
   }
   function go(){ if(render()) return; setTimeout(go,200); }
-  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',go); else go();
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',go()); else go();
   window.addEventListener('load',function(){render(); setTimeout(render,500); setTimeout(render,1500)});
   if(window.MutationObserver){
     var t=null;
@@ -399,6 +399,22 @@ def most_similar(query_id, word_vecs, word_to_id, top=5):
         <a href="../rnn.html" class="btn-primary" style="white-space:nowrap">进入 RNN 从零 →</a>
       </div>
     </div>
+    <div class="demo-box" style="margin:16px 0">
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:10px">
+        <div><label style="font-size:13px;color:#475569">遗忘门 f<sub>t</sub>：保留旧记忆<br><span style="font-size:11px;color:#94a3b8">1=全留，0=全忘</span></label>
+          <input id="f-gate" type="range" min="0" max="100" value="60" style="width:100%" oninput="showLstm()"></div>
+        <div><label style="font-size:13px;color:#475569">输入门 i<sub>t</sub>：写入新信息</label>
+          <input id="i-gate" type="range" min="0" max="100" value="70" style="width:100%" oninput="showLstm()"></div>
+        <div><label style="font-size:13px;color:#475569">候选 g<sub>t</sub>：新信息强度</label>
+          <input id="g-gate" type="range" min="0" max="100" value="50" style="width:100%" oninput="showLstm()"></div>
+        <div><label style="font-size:13px;color:#475569">输出门 o<sub>t</sub>：对外暴露</label>
+          <input id="o-gate" type="range" min="0" max="100" value="65" style="width:100%" oninput="showLstm()"></div>
+      </div>
+      <canvas id="lstm-cell-canvas" width="720" height="180" style="width:100%;max-width:720px;border:1px solid #e2e8f0;border-radius:8px;background:#fafafa"></canvas>
+      <div id="lstm-explain" style="margin-top:8px;font-size:13px;color:#334155"></div>
+      <div style="font-size:12px;color:#64748b;margin-top:6px">💡 拖动滑块观察：遗忘门低 → 旧记忆被清空（梯度消失）；高 → 长期信息通过加法旁路保留。</div>
+    </div>
+
 
     <p class="text-gray-700 mb-4">RNN循环神经网络天然适合处理序列数据，但存在严重的<strong>梯度消失/梯度爆炸</strong>问题，无法捕捉长距离依赖。1997年提出的LSTM通过门控机制解决了这个问题，成为2013-2017年NLP的主力模型。</p>
     
@@ -459,6 +475,16 @@ def most_similar(query_id, word_vecs, word_to_id, top=5):
   <!-- Attention -->
   <section id="attention">
     <h2 class="text-3xl font-bold">🎯 注意力机制</h2>
+    <div class="demo-box" style="margin:12px 0">
+      <p style="font-size:14px;color:#475569;margin-bottom:8px">👇 输入一句话，点"计算自注意力"：每个词会对其他词分配注意力权重，颜色越深 = 权重越大。</p>
+      <div style="display:flex;gap:10px;margin-bottom:10px;flex-wrap:wrap">
+        <input id="attn-sent" type="text" value="The animal did not cross the street because it was tired" style="flex:1;min-width:280px;padding:6px 10px;border:1px solid #e2e8f0;border-radius:6px;font-size:14px;font-family:inherit">
+        <button onclick="calcSelfAttn()" style="padding:6px 14px;background:#3b82f6;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:14px">🔍 计算注意力</button>
+      </div>
+      <canvas id="attn-canvas" width="720" height="240" style="width:100%;max-width:720px;border:1px solid #e2e8f0;border-radius:8px;background:#fafafa"></canvas>
+      <div id="attn-note" style="margin-top:8px;font-size:13px;color:#334155"></div>
+    </div>
+
     <p class="text-gray-700 mb-4">2014年Bahdanau在Seq2Seq机器翻译中首次引入注意力机制，彻底解决了固定长度上下文瓶颈：解码每个词时，模型可以动态"看"编码器所有位置的输出，给不同位置分配不同权重。</p>
 
     <div class="formula-block">
@@ -518,6 +544,15 @@ def scaled_dot_product_attention(Q, K, V, mask=None):
       </div>
     </div>
 
+
+    <div class="demo-box" style="margin:12px 0">
+      <p style="font-size:14px;color:#475569;margin-bottom:8px">👇 模拟 BERT MLM（掩码语言模型）：在句子里放一个 <code>[MASK]</code>，模型根据上下文预测被遮的词。</p>
+      <div style="display:flex;gap:10px;margin-bottom:10px;flex-wrap:wrap">
+        <input id="mlm-sent" type="text" value="北京是中国的[MASK]都" style="flex:1;min-width:280px;padding:6px 10px;border:1px solid #e2e8f0;border-radius:6px;font-size:14px;font-family:inherit">
+        <button onclick="predictMask()" style="padding:6px 14px;background:#10b981;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:14px">🎯 预测 Mask</button>
+      </div>
+      <div id="mlm-result" style="padding:12px;background:#ecfdf5;border-radius:8px;font-size:14px;color:#065f46;min-height:40px">点按钮试试～</div>
+    </div>
     <p class="text-gray-600">BERT是Encoder路线的顶峰，而GPT是Decoder路线，后来的发展证明：生成式任务上Decoder路线（GPT）更有潜力，这就是大语言模型的方向。</p>
   </section>
 
@@ -590,7 +625,16 @@ print("预测结果:", "正面" if prediction == 1 else "负面")</code></pre>
       <div class="card"><strong>问答系统</strong><p class="text-sm text-gray-600 mt-1">抽取式/生成式问答，机器阅读理解MRC</p></div>
       <div class="card"><strong>文本摘要</strong><p class="text-sm text-gray-600 mt-1">抽取式/生成式摘要，长文自动总结</p></div>
       <div class="card"><strong>对话系统</strong><p class="text-sm text-gray-600 mt-1">闲聊机器人、任务型对话、客服系统</p></div>
+    
+    <div class="demo-box" style="margin:16px 0">
+      <p style="font-size:14px;color:#475569;margin-bottom:10px">👇 输入一段文本，看六大核心任务同时"理解"它：</p>
+      <div style="display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap">
+        <input id="task-sent" type="text" value="这家餐厅的菜品非常好吃，服务态度也很棒，强烈推荐给大家！" style="flex:1;min-width:280px;padding:6px 10px;border:1px solid #e2e8f0;border-radius:6px;font-size:14px;font-family:inherit">
+        <button onclick="runNlpTasks()" style="padding:6px 14px;background:#8b5cf6;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:14px">🚀 运行六大任务</button>
+      </div>
+      <div id="task-out" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px"></div>
     </div>
+</div>
 
     <div class="mt-12 text-center py-8 bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl">
       <p class="text-lg mb-4">学完传统NLP，来学大模型 →</p>
@@ -709,5 +753,341 @@ window.addEventListener('load', function(){
 });
 </script>
 <script src="../js/site.js"></script>
+<script>
+// ===== Viterbi 中文分词（HMM-BMES）真实实现 + 可视化 =====
+(function(){
+  var STATES = ['B','M','E','S'];              // 词首/词中/词尾/单字
+  var PI = {B:0.6, M:0.05, E:0.05, S:0.3};     // 初始状态概率
+  // 转移概率（行=from, 列=to），满足 B→M/E、M→M/E、E→B/S、S→B/S 的合法约束
+  var TRANS = {
+    B:{B:0.0, M:0.7, E:0.3, S:0.0},
+    M:{B:0.0, M:0.6, E:0.4, S:0.0},
+    E:{B:0.6, M:0.0, E:0.0, S:0.4},
+    S:{B:0.6, M:0.0, E:0.0, S:0.4}
+  };
+  // 发射概率：用字在词中位置的朴素估计（词首/中/尾/单字的经验似然）
+  var WORD_DICT = ['我','爱','北京','天安门','天','安','门','南京','南京市','市长','长江','大桥','清华大学'];
+  function emitProb(ch, st){
+    // 依据字在某类位置的"是否成词"给出分数（朴素但可运行）
+    var inWordStart = WORD_DICT.some(function(w){return w[0]===ch;});
+    var inWordMid   = WORD_DICT.some(function(w){return w.length>1 && w.indexOf(ch)>0 && w.indexOf(ch)<w.length-1;});
+    var inWordEnd   = WORD_DICT.some(function(w){return w.length>1 && w[w.length-1]===ch;});
+    var single      = WORD_DICT.indexOf(ch)>=0;
+    var base = 0.15;
+    if(st==='B') return inWordStart ? 0.75 : base;
+    if(st==='M') return inWordMid   ? 0.70 : base;
+    if(st==='E') return inWordEnd   ? 0.75 : base;
+    if(st==='S') return single      ? 0.70 : (inWordStart?0.2:0.35);
+    return base;
+  }
+
+  var vState = null;
+
+  function computeViterbi(chars){
+    var T = chars.length;
+    // V[t][st], BP[t][st]
+    var V = [], BP = [];
+    for(var t=0;t<T;t++){ V.push({}); BP.push({}); }
+    // 初始化
+    STATES.forEach(function(st){
+      V[0][st] = Math.log(PI[st]||1e-6) + Math.log(emitProb(chars[0], st));
+      BP[0][st] = null;
+    });
+    // 递推
+    for(var t=1;t<T;t++){
+      STATES.forEach(function(st){
+        var best=-Infinity, bp=null;
+        STATES.forEach(function(prev){
+          if(V[t-1][prev]===-Infinity) return;
+          var tp = TRANS[prev][st];
+          if(tp<=0) return;
+          var sc = V[t-1][prev] + Math.log(tp) + Math.log(emitProb(chars[t], st));
+          if(sc>best){ best=sc; bp=prev; }
+        });
+        V[t][st] = best; BP[t][st] = bp;
+      });
+    }
+    // 终止：必须以 E 或 S 结束
+    var last=T-1, bestEnd=null, bs=-Infinity;
+    ['E','S'].forEach(function(st){
+      if(V[last][st]>bs){ bs=V[last][st]; bestEnd=st; }
+    });
+    // 回溯
+    var path = new Array(T); path[last] = bestEnd;
+    for(var t=last;t>0;t--){ path[t-1] = BP[t][path[t]]; }
+    return {V:V, BP:BP, path:path, score:bs};
+  }
+
+  function pathToWords(chars, path){
+    var words=[], cur='';
+    for(var i=0;i<chars.length;i++){
+      cur += chars[i];
+      if(path[i]==='E' || path[i]==='S'){ words.push(cur); cur=''; }
+    }
+    if(cur) words.push(cur);
+    return words;
+  }
+
+  function drawViterbi(chars, path, V, reveal){
+    var cv = document.getElementById('viterbiCanvas');
+    if(!cv || !cv.getContext) return;
+    var ctx = cv.getContext('2d');
+    var W = cv.width = cv.clientWidth || 720, H = cv.height = cv.clientHeight || 250;
+    if(!ctx) return;
+    ctx.clearRect(0,0,W,H);
+    ctx.fillStyle='#fff'; ctx.fillRect(0,0,W,H);
+    var T = chars.length;
+    var padL = 60, padT = 44, cellW = Math.min(72, (W-padL-24)/T), cellH = 34;
+    var rowY = {}; STATES.forEach(function(st,i){ rowY[st] = padT + i*(cellH+26); });
+    // 行标签
+    ctx.font='13px sans-serif'; ctx.textAlign='right'; ctx.fillStyle='#64748b';
+    STATES.forEach(function(st){ ctx.fillText(st, padL-10, rowY[st]+cellH*0.68); });
+    // 字符列标签
+    ctx.textAlign='center'; ctx.fillStyle='#334155';
+    for(var t=0;t<T;t++){ ctx.fillText(chars[t], padL+t*cellW+cellW/2, padT-16); }
+    // 格子 + 概率
+    for(var t=0;t<T;t++){
+      STATES.forEach(function(st){
+        var x = padL+t*cellW, y = rowY[st];
+        var logv = V[t][st];
+        var val = isFinite(logv) ? Math.exp(logv) : 0;
+        var on = reveal && path[t]===st;
+        var alpha = Math.max(0, Math.min(1, val*1.6));
+        ctx.fillStyle = on ? '#2563eb' : 'rgba(147,197,253,'+(0.15+alpha*0.75)+')';
+        ctx.strokeStyle = on ? '#1d4ed8' : '#dbeafe'; ctx.lineWidth = on?2:1;
+        ctx.beginPath();
+        if(ctx.roundRect) ctx.roundRect(x+3, y, cellW-6, cellH, 6); else ctx.rect(x+3, y, cellW-6, cellH);
+        ctx.fill(); ctx.stroke();
+        ctx.fillStyle = on ? '#fff' : '#1e3a8a'; ctx.font='11px monospace';
+        if(isFinite(logv)) ctx.fillText(val.toFixed(3), x+cellW/2, y+cellH*0.65);
+        else { ctx.fillStyle='#cbd5e1'; ctx.fillText('—', x+cellW/2, y+cellH*0.65); }
+      });
+    }
+    // 最优路径连线
+    if(reveal){
+      ctx.strokeStyle='#2563eb'; ctx.lineWidth=2.5;
+      ctx.beginPath();
+      for(var t=1;t<T;t++){
+        var x1 = padL+(t-1)*cellW+cellW/2, y1 = rowY[path[t-1]]+cellH/2;
+        var x2 = padL+t*cellW+cellW/2, y2 = rowY[path[t]]+cellH/2;
+        ctx.moveTo(x1,y1); ctx.lineTo(x2,y2);
+      }
+      ctx.stroke();
+    }
+  }
+
+  var vFull = null, vChars = null, vStep = -1;
+
+  window.runViterbi = function(){
+    var inp = document.getElementById('viterbiInput');
+    var text = (inp && inp.value || '我爱北京天安门').trim();
+    vChars = text.split('');
+    var res = computeViterbi(vChars);
+    vFull = res;
+    var words = pathToWords(vChars, res.path);
+    var resEl = document.getElementById('viterbiResult');
+    if(resEl){
+      resEl.innerHTML = '<b>输入：</b>'+text+'<br><b>最优状态序列：</b>'+
+        res.path.map(function(s,i){return vChars[i]+'/'+s;}).join(' ')+
+        '<br><b>✂️ 分词结果：</b><span style="color:#2563eb;font-weight:700">'+words.join(' / ')+'</span>'+
+        '<br><b>路径对数概率：</b>'+res.score.toFixed(3);
+    }
+    // 逐步揭示动画
+    vStep = 0;
+    var t0 = 0;
+    var timer = setInterval(function(){
+      vStep++;
+      drawPartial();
+      if(vStep>=vChars.length-1) clearInterval(timer);
+    }, 220);
+    drawPartial();
+  };
+
+  function drawPartial(){
+    // 构建"到第 vStep 列为止"的部分 V
+    var V = vFull.V, T = vChars.length;
+    var partialV = [];
+    for(var t=0;t<T;t++){
+      partialV.push({});
+      STATES.forEach(function(st){ partialV[t][st] = (t<=vStep)? V[t][st] : -Infinity; });
+    }
+    var revealPath = (vStep>=T-1);
+    drawViterbi(vChars, vFull.path, partialV, revealPath);
+  }
+
+  window.resetViterbi = function(){
+    var inp = document.getElementById('viterbiInput');
+    if(inp) inp.value = '我爱北京天安门';
+    vChars = '我爱北京天安门'.split('');
+    var emptyV = []; vChars.forEach(function(){ var o={}; STATES.forEach(function(s){o[s]=-Infinity;}); emptyV.push(o); });
+    var resEl = document.getElementById('viterbiResult');
+    if(resEl) resEl.innerHTML = '已重置。点击「运行分词」看 Viterbi 动态规划求最优路径。';
+    drawViterbi(vChars, [], emptyV, false);
+  };
+
+  window.addEventListener('load', function(){ window.resetViterbi(); });
+})();
+</script>
+
+<script>
+
+function showLstm(){
+  var f=+document.getElementById('f-gate').value/100;
+  var i=+document.getElementById('i-gate').value/100;
+  var g=+document.getElementById('g-gate').value/100;
+  var o=+document.getElementById('o-gate').value/100;
+  var cv=document.getElementById('lstm-cell-canvas');
+  var ctx=cv.getContext('2d');
+  var cw=cv.width,ch=cv.height;
+  cv.width=cw;cv.height=ch;
+  ctx.fillStyle='#fafafa';ctx.fillRect(0,0,cw,ch);
+  ctx.strokeStyle='#334155';ctx.lineWidth=2;
+  ctx.strokeRect(40,60,cw-80,60);
+  ctx.fillStyle='#f1f5f9';ctx.fillRect(40,60,cw-80,60);
+  var oldW = Math.max(4,(cw-80)*0.4*f);
+  ctx.fillStyle='rgba(59,130,246,'+(0.3+0.7*f)+')';
+  ctx.fillRect(50,70,oldW,40);
+  ctx.fillStyle='#1e40af';ctx.font='bold 12px sans-serif';ctx.textAlign='center';
+  ctx.fillText('旧记忆 x f='+f.toFixed(2), 50+oldW/2, 95);
+  var newW = Math.max(4,(cw-80)*0.4*i*g);
+  ctx.fillStyle='rgba(239,68,68,'+(0.3+0.7*i*g)+')';
+  ctx.fillRect(cw-50-newW,70,newW,40);
+  ctx.fillStyle='#991b1b';
+  ctx.fillText('新候选 x i·g='+(i*g).toFixed(2), cw-50-newW/2, 95);
+  ctx.fillStyle='#334155';ctx.font='bold 20px sans-serif';
+  ctx.fillText('+', cw/2, 98);
+  ctx.fillStyle='rgba(16,185,129,'+(0.3+0.7*o)+')';
+  ctx.fillRect(cw/2-50,135,100,20);
+  ctx.fillStyle='#065f46';ctx.font='bold 13px sans-serif';
+  ctx.fillText('h = tanh(C) x o='+o.toFixed(2), cw/2, 150);
+  var memRetained = (f>0.5)?'旧记忆大量保留，长期依赖能穿过时间步（解决梯度消失）':
+                   (f<0.2)?'旧记忆几乎被清空，适合短依赖':
+                   '旧记忆被部分保留';
+  document.getElementById('lstm-explain').innerHTML =
+    '<b>📊 当前状态：</b>'+memRetained+'；新信息写入强度 i·g = <b>'+(i*g).toFixed(2)+'</b>；输出暴露度 o = <b>'+o.toFixed(2)+'</b>。';
+}
+
+function calcSelfAttn(){
+  var sent=document.getElementById('attn-sent').value.trim();
+  var toks = sent.split(/\s+/).filter(Boolean);
+  if(toks.length<=1 && /[\u4e00-\u9fa5]/.test(sent)){
+    toks = sent.replace(/\s/g,'').split('');
+  }
+  var n=toks.length;
+  function vec(w){
+    var v=[]; for(var k=0;k<16;k++){var s=0;for(var j=0;j<w.length;j++)s=(s*31+w.charCodeAt(j)+k*7)%10007;v.push((s%100)/50-1);} return v;}
+  function dot(a,b){var s=0;for(var k=0;k<a.length;k++)s+=a[k]*b[k];return s;}
+  function norm(a){return Math.sqrt(dot(a,a))+1e-6;}
+  var Q=toks.map(vec), K=toks.map(vec);
+  var w=[];
+  for(var i=0;i<n;i++){
+    var row=[];for(var j=0;j<n;j++){row.push(dot(Q[i],K[j])/(norm(Q[i])*norm(K[j])));}
+    var mx=Math.max.apply(null,row), ex=row.map(x=>Math.exp((x-mx)*3)), sm=ex.reduce((a,b)=>a+b,0);
+    w.push(ex.map(x=>x/sm));
+  }
+  var cv=document.getElementById('attn-canvas');
+  var ctx=cv.getContext('2d');
+  var cw=cv.width, ch=cv.height;
+  cv.width=cw;cv.height=ch;
+  ctx.fillStyle='#fafafa';ctx.fillRect(0,0,cw,ch);
+  var padL=70,padT=30, cell=Math.min(Math.floor((cw-padL-20)/n),Math.floor((ch-padT-30)/n),46);
+  ctx.font='11px sans-serif';ctx.textAlign='center';ctx.fillStyle='#334155';
+  toks.forEach((t,j)=>ctx.fillText(t.length>6?t.slice(0,6):t, padL+j*cell+cell/2, 22));
+  toks.forEach((t,i)=>{
+    ctx.textAlign='right';ctx.fillText(t.length>6?t.slice(0,6):t, padL-6, padT+i*cell+cell*0.65);
+    for(var j=0;j<n;j++){
+      var a=w[i][j];
+      ctx.fillStyle='rgba(99,102,241,'+(0.15+a*0.85)+')';
+      ctx.fillRect(padL+j*cell,padT+i*cell,cell-2,cell-2);
+      ctx.strokeStyle='#e2e8f0';ctx.strokeRect(padL+j*cell,padT+i*cell,cell-2,cell-2);
+      if(cell>=30){
+        ctx.fillStyle=a>0.4?'#fff':'#334155';ctx.textAlign='center';
+        ctx.fillText(a.toFixed(2), padL+j*cell+cell/2, padT+i*cell+cell*0.65);
+      }
+    }
+  });
+  var mx=0,mxi=0,mxj=0;
+  for(var i=0;i<n;i++)for(var j=0;j<n;j++)if(i!==j&&w[i][j]>mx){mx=w[i][j];mxi=i;mxj=j;}
+  document.getElementById('attn-note').innerHTML='<b>🔍 最强非自身关联：</b>"<b>'+toks[mxi]+'</b>" 最关注 "<b>'+toks[mxj]+'</b>"（权重 '+mx.toFixed(2)+'）。试试 "it" 会指向谁？——这就是注意力解决指代消解的直观体现。';
+}
+
+var MLM_RULES = [
+  [/(.+)是(.+)的\[MASK\]都/, function(m){return ['首','国','名','古'];}],
+  [/\[MASK\]是中国的首都/, function(m){return ['北京'];}],
+  [/(.+)喜欢吃\[MASK\]/, function(m){return ['苹果','饭','面条','肉'];}],
+  [/天气很\[MASK\]/, function(m){return ['好','冷','热','糟','棒'];}],
+  [/\[MASK\]很高兴/, function(m){return ['我','他','她','他们'];}],
+  [/我\[MASK\]你/, function(m){return ['爱','恨','想','喜欢','感谢'];}],
+  [/今天天气\[MASK\]好/, function(m){return ['真','很','非常','特别'];}],
+];
+function predictMask(){
+  var s=document.getElementById('mlm-sent').value;
+  var out='';
+  if(!s.includes('[MASK]')){out='⚠️ 请在句子里放一个 <code>[MASK]</code>。';}
+  else{
+    var candidates=null;
+    for(var k=0;k<MLM_RULES.length;k++){
+      var m=s.match(MLM_RULES[k][0]);
+      if(m){candidates=MLM_RULES[k][1](m);break;}
+    }
+    if(!candidates) candidates=['___（试试"北京是中国的[MASK]都"、"天气很[MASK]"、"我[MASK]你"）'];
+    out = '<b>🎯 预测候选：</b><br>';
+    candidates.forEach(function(w,i){
+      var filled = s.replace('[MASK]','<b style="color:#dc2626">'+w+'</b>');
+      out += '<div style="margin:6px 0;padding:6px 10px;background:#fff;border-radius:6px;font-size:13px"><b>#'+(i+1)+' "<span style="color:#8b5cf6">'+w+'</span>"</b> → '+filled+'</div>';
+    });
+    if(candidates[0].startsWith('___')){
+      out += '<div style="font-size:12px;color:#64748b;margin-top:4px">💡 这是规则模拟，仅说明 MLM 任务机制；真实 BERT 在百亿文本上预训练，能预测几乎所有上下文。</div>';
+    }
+  }
+  document.getElementById('mlm-result').innerHTML=out;
+}
+
+function runNlpTasks(){
+  var s=document.getElementById('task-sent').value.trim();
+  var pos=['好','棒','美','爱','喜欢','推荐','优秀','不错','满意','开心','精彩','赞','完美','快乐','高兴'];
+  var neg=['差','烂','糟','讨厌','糟糕','失望','坏','垃圾','不好','难吃','生气','愤怒','伤心','难'];
+  var ps=0,ns=0;
+  pos.forEach(function(w){if(s.indexOf(w)>=0)ps++;});
+  neg.forEach(function(w){if(s.indexOf(w)>=0)ns++;});
+  var senti='中性 🙂';var color='#6b7280';var score=ps-ns;
+  if(score>=2){senti='正面 😄';color='#10b981';}else if(score>0){senti='偏正面 🙂';color='#22c55e';}
+  else if(score<=-2){senti='负面 😠';color='#ef4444';}else if(score<0){senti='偏负面 😟';color='#f97316';}
+  var persons=['小明','张三','李四','我','你','他','她'], orgs=['餐厅','公司','学校','医院','店','银行'], locs=['北京','上海','中国','美国','南京','深圳','广州'];
+  var toks=s.replace(/[，。！？、；：]/g,' ').split(/\s+/).filter(Boolean);
+  var ner=toks.map(function(t){
+    if(persons.indexOf(t)>=0)return t+'/PER';
+    for(var k=0;k<orgs.length;k++)if(t.indexOf(orgs[k])>=0)return t+'/ORG';
+    if(locs.indexOf(t)>=0)return t+'/LOC';
+    return t+'/O';
+  });
+  var stops=['的','了','是','也','很','给','非常','大家','在','把','被','和','有','就','都','这','那','我','你','他','她','不','真'];
+  var freq={};
+  toks.forEach(function(t){if(stops.indexOf(t)<0&&t.length>0)freq[t]=(freq[t]||0)+1;});
+  var kws=Object.keys(freq).sort(function(a,b){return freq[b]-freq[a];}).slice(0,4);
+  var summ=(s.length>30?s.slice(0,30)+'…':s);
+  var enMap={'我':'I','你':'you','他':'he','她':'she','爱':'love','喜欢':'like','很':'very','好':'good','棒':'great','餐厅':'restaurant','菜品':'dishes','服务':'service','态度':'attitude','推荐':'recommend','大家':'everyone','北京':'Beijing','中国':'China','是':'is','也':'also','非常':'very','强烈':'strongly','这':'this','给':'to','好吃':'delicious'};
+  var trans=toks.map(function(t){return enMap[t]||t;}).join(' ');
+  var reply='';
+  if(s.indexOf('推荐')>=0||s.indexOf('好吃')>=0||senti.indexOf('正')>=0)reply='感谢好评！喜欢哪道菜，我再给您推荐几道？😊';
+  else if(senti.indexOf('负')>=0)reply='非常抱歉让您不满意，能具体说一下哪里需要改进吗？';
+  else reply='收到～有什么可以帮您的吗？';
+  document.getElementById('task-out').innerHTML=
+    '<div class="card" style="background:#f0fdf4"><b style="color:#166534">📌 情感分类</b><div style="margin-top:6px;font-size:14px;color:'+color+';font-weight:600">'+senti+'（+'+ps+'/-'+ns+'）</div></div>'+
+    '<div class="card" style="background:#eff6ff"><b style="color:#1e40af">🏷️ 实体识别 NER</b><div style="margin-top:6px;font-size:12px;font-family:monospace;color:#1e40af;word-break:break-all">'+ner.join(' ')+'</div></div>'+
+    '<div class="card" style="background:#faf5ff"><b style="color:#6b21a8">🔑 关键词</b><div style="margin-top:6px">'+kws.map(function(k){return '<span style="display:inline-block;margin:2px;padding:2px 8px;background:#8b5cf6;color:#fff;border-radius:10px;font-size:12px">'+k+'</span>';}).join('')+'</div></div>'+
+    '<div class="card" style="background:#fff7ed"><b style="color:#9a3412">📄 文本摘要</b><div style="margin-top:6px;font-size:13px;color:#78350f">'+summ+'</div></div>'+
+    '<div class="card" style="background:#fef2f2"><b style="color:#991b1b">🌐 机器翻译(规则)</b><div style="margin-top:6px;font-size:13px;color:#7f1d1d;font-style:italic">'+trans+'</div></div>'+
+    '<div class="card" style="background:#ecfeff"><b style="color:#155e75">💬 对话回复</b><div style="margin-top:6px;font-size:13px;color:#164e63">'+reply+'</div></div>';
+}
+
+window.addEventListener('load', function(){
+  showLstm();
+  calcSelfAttn();
+  predictMask();
+  runNlpTasks();
+});
+
+</script>
 </body>
 </html>

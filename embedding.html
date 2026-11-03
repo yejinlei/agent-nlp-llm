@@ -13,8 +13,8 @@
 <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
 <script>
-(function{
-  function render{
+(function(){
+  function render(){
     if(typeof renderMathInElement !== 'function') return false;
     try{
       renderMathInElement(document.body,{
@@ -30,12 +30,12 @@
     }catch(e){console.warn('katex render error',e)}
     return true;
   }
-  function go{ if(render) return; setTimeout(go,200); }
-  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',go); else go;
-  window.addEventListener('load',function{render; setTimeout(render,500); setTimeout(render,1500)});
+  function go(){ if(render) return; setTimeout(go,200); }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',go()); else go();
+  window.addEventListener('load',function(){render(); setTimeout(render,500); setTimeout(render,1500)});
   if(window.MutationObserver){
     var t=null;
-    new MutationObserver(function{ clearTimeout(t); t=setTimeout(render,200); })
+    new MutationObserver(function(){ clearTimeout(t); t=setTimeout(render,200); })
       .observe(document.documentElement,{childList:true,subtree:true});
   }
   window.__katexRender = render;
@@ -197,7 +197,7 @@ opt = torch.optim.Adam(model.parameters, lr=<span class="n">2e-3</span>)
 
 <script src="js/site.js"></script>
 <script>
-(function{
+(function(){
   // 二维示意向量表（手工构造，保证语义关系合理）
   var VEC = {
     '国王':[3.6,3.0], '女王':[3.4,1.2], '男人':[2.2,3.0], '女人':[2.0,1.2],
@@ -208,7 +208,7 @@ opt = torch.optim.Adam(model.parameters, lr=<span class="n">2e-3</span>)
   var canvas = document.getElementById('vecCanvas');
   var ctx = canvas ? canvas.getContext('2d') : null;
   var W = canvas.width, H = canvas.height;
-  function ensureCtx{
+  function ensureCtx(){
     if (!ctx && canvas) ctx = canvas.getContext('2d');
     return ctx;
   }
@@ -222,7 +222,7 @@ opt = torch.optim.Adam(model.parameters, lr=<span class="n">2e-3</span>)
 
   var state = { a:null, b:null, c:null, res:null, best:null };
 
-  function draw{
+  function draw(){
     var c = ensureCtx;
     if (!c) return;
     ctx = c;
@@ -231,16 +231,16 @@ opt = torch.optim.Adam(model.parameters, lr=<span class="n">2e-3</span>)
     ctx.strokeStyle = '#e6e9f2'; ctx.lineWidth = 1;
     for (var i = 0; i <= 6; i++) {
       var gx = pad + i * (W - 2*pad) / 6, gy = pad + i * (H - 2*pad) / 6;
-      ctx.beginPath; ctx.moveTo(gx, pad); ctx.lineTo(gx, H - pad); ctx.stroke;
-      ctx.beginPath; ctx.moveTo(pad, gy); ctx.lineTo(W - pad, gy); ctx.stroke;
+      ctx.beginPath(); ctx.moveTo(gx, pad); ctx.lineTo(gx, H - pad); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(pad, gy); ctx.lineTo(W - pad, gy); ctx.stroke();
     }
     // 结果点
     if (state.res) {
       var rx = mapX(state.res[0]), ry = mapY(state.res[1]);
       ctx.fillStyle = 'rgba(236,72,153,.16)';
-      ctx.beginPath; ctx.arc(rx, ry, 20, 0, Math.PI*2); ctx.fill;
+      ctx.beginPath(); ctx.arc(rx, ry, 20, 0, Math.PI*2); ctx.fill();
       ctx.strokeStyle = '#ec4899'; ctx.setLineDash([5,4]); ctx.lineWidth = 2;
-      ctx.beginPath; ctx.arc(rx, ry, 14, 0, Math.PI*2); ctx.stroke;
+      ctx.beginPath(); ctx.arc(rx, ry, 14, 0, Math.PI*2); ctx.stroke();
       ctx.setLineDash([]);
       ctx.fillStyle = '#ec4899'; ctx.font = 'bold 13px sans-serif';
       ctx.fillText('结果落点', rx - 26, ry - 20);
@@ -250,12 +250,12 @@ opt = torch.optim.Adam(model.parameters, lr=<span class="n">2e-3</span>)
       var x = mapX(VEC[k][0]), y = mapY(VEC[k][1]);
       var isPart = (k === state.a || k === state.b || k === state.c);
       var isBest = (k === state.best);
-      ctx.beginPath; ctx.arc(x, y, isBest ? 8 : 5.5, 0, Math.PI*2);
+      ctx.beginPath(); ctx.arc(x, y, isBest ? 8 : 5.5, 0, Math.PI*2);
       ctx.fillStyle = isBest ? '#10a37f' : (isPart ? '#3b6fe0' : '#aab3c8');
-      ctx.fill;
+      ctx.fill();
       if (isPart || isBest) {
         ctx.strokeStyle = isBest ? '#10a37f' : '#3b6fe0'; ctx.lineWidth = 2;
-        ctx.beginPath; ctx.arc(x, y, isBest ? 12 : 9, 0, Math.PI*2); ctx.stroke;
+        ctx.beginPath(); ctx.arc(x, y, isBest ? 12 : 9, 0, Math.PI*2); ctx.stroke();
       }
       ctx.fillStyle = isBest ? '#0a6b53' : (isPart ? '#2c4a8c' : '#8b93a7');
       ctx.font = (isBest || isPart ? 'bold ' : '') + '13px sans-serif';
@@ -272,11 +272,11 @@ opt = torch.optim.Adam(model.parameters, lr=<span class="n">2e-3</span>)
   }
   function arrow(x1, y1, x2, y2, color){
     if (!ctx) return;
-    ctx.strokeStyle = color; ctx.lineWidth = 2; ctx.beginPath;
-    ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke;
+    ctx.strokeStyle = color; ctx.lineWidth = 2; ctx.beginPath();
+    ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
   }
 
-  function run{
+  function run(){
     var a = document.getElementById('vA').value,
         b = document.getElementById('vB').value,
         c = document.getElementById('vC').value;
@@ -294,7 +294,7 @@ opt = torch.optim.Adam(model.parameters, lr=<span class="n">2e-3</span>)
       if (d < bd) { bd = d; best = k; }
     });
     state = { a:a, b:b, c:c, res:r, best:best };
-    draw;
+    draw();
     var out = document.getElementById('vOut');
     out.className = 'hint good';
     out.innerHTML = '<span class="vec-out">' + a + ' − ' + b + ' + ' + c + ' ≈ <b style="font-size:1.25rem">' + best +
@@ -302,13 +302,13 @@ opt = torch.optim.Adam(model.parameters, lr=<span class="n">2e-3</span>)
       '」身上，就得到了「' + best + '」。模型完全靠统计数据自己学出这个方向，没人教它什么是一对。这就是词向量最迷人的地方。</span>';
   }
   document.getElementById('vGo').onclick = run;
-  document.getElementById('vReset').onclick = function{
+  document.getElementById('vReset').onclick = function(){
     state = { a:null, b:null, c:null, res:null, best:null };
-    draw;
+    draw();
     document.getElementById('vOut').className = 'hint good';
     document.getElementById('vOut').textContent = '👉 点击"计算"看结果。';
   };
-  draw;
+  draw();
 });
 </script>
 </body>

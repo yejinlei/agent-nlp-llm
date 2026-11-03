@@ -15,9 +15,9 @@ canvas { display:block; max-width:100%; background:#fff; border:1px solid var(--
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
 <script>
-document.addEventListener('DOMContentLoaded', function{
-  function r{try{renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false});}catch(e){}}
-  if(document.readyState==='complete')r;else window.addEventListener('load',r);
+document.addEventListener('DOMContentLoaded', function(){
+  function r(){try{renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false});}catch(e){}}
+  if(document.readyState==='complete')r();else window.addEventListener('load',r());
   setTimeout(r,300);setTimeout(r,1000);
 });
 </script>
@@ -122,7 +122,7 @@ document.addEventListener('DOMContentLoaded', function{
 <footer class="site"><p>💬 agent-nlp-llm · 自然语言技术本体论研究站</p></footer>
 <script src="js/site.js"></script>
 <script>
-(function{
+(function(){
   var pSlider=document.getElementById('pSlider');
   var layerSlider=document.getElementById('layerSlider');
   var neuronSlider=document.getElementById('neuronSlider');
@@ -136,7 +136,7 @@ document.addEventListener('DOMContentLoaded', function{
     for(var l=0;l<layers;l++){
       var lay=[];
       for(var n=0;n<neurons;n++){
-        lay.push(Math.random>p);
+        lay.push(Math.random()>p);
       }
       mask.push(lay);
     }
@@ -170,10 +170,10 @@ document.addEventListener('DOMContentLoaded', function{
           var alive = mask[l][i] && mask[l+1][j];
           ctx.strokeStyle = alive?'rgba(59,111,224,0.3)':'rgba(203,213,225,0.15)';
           ctx.lineWidth = alive?1:0.5;
-          ctx.beginPath;
+          ctx.beginPath();
           ctx.moveTo(positions[l][i].x+neuronR, positions[l][i].y);
           ctx.lineTo(positions[l+1][j].x-neuronR, positions[l+1][j].y);
-          ctx.stroke;
+          ctx.stroke();
         }
       }
     }
@@ -191,18 +191,18 @@ document.addEventListener('DOMContentLoaded', function{
           ctx.fillStyle='#cbd5e1';
           ctx.globalAlpha=0.4;
         }
-        ctx.beginPath;ctx.arc(x,y,neuronR,0,Math.PI*2);ctx.fill;
+        ctx.beginPath();ctx.arc(x,y,neuronR,0,Math.PI*2);ctx.fill();
         ctx.globalAlpha=1;
 
         // outline
         ctx.strokeStyle=alive?'#2557b8':'#94a3b8';ctx.lineWidth=2;
-        ctx.beginPath;ctx.arc(x,y,neuronR,0,Math.PI*2);ctx.stroke;
+        ctx.beginPath();ctx.arc(x,y,neuronR,0,Math.PI*2);ctx.stroke();
 
         if(!alive){
           // draw X
           ctx.strokeStyle='#94a3b8';ctx.lineWidth=2;
-          ctx.beginPath;ctx.moveTo(x-neuronR*0.5,y-neuronR*0.5);ctx.lineTo(x+neuronR*0.5,y+neuronR*0.5);ctx.stroke;
-          ctx.beginPath;ctx.moveTo(x+neuronR*0.5,y-neuronR*0.5);ctx.lineTo(x-neuronR*0.5,y+neuronR*0.5);ctx.stroke;
+          ctx.beginPath();ctx.moveTo(x-neuronR*0.5,y-neuronR*0.5);ctx.lineTo(x+neuronR*0.5,y+neuronR*0.5);ctx.stroke();
+          ctx.beginPath();ctx.moveTo(x+neuronR*0.5,y-neuronR*0.5);ctx.lineTo(x-neuronR*0.5,y+neuronR*0.5);ctx.stroke();
         }
       }
 
@@ -228,7 +228,7 @@ document.addEventListener('DOMContentLoaded', function{
     document.getElementById('inferDetail').textContent='推理时输出 = 所有子网络的集成平均。Dropout 在推理时关闭，相当于确定性行为。';
   }
 
-  function update{
+  function update(){
     var p=parseFloat(pSlider.value);
     var layers=parseInt(layerSlider.value);
     var neurons=parseInt(neuronSlider.value);
@@ -258,7 +258,7 @@ document.addEventListener('DOMContentLoaded', function{
   layerSlider.oninput=update;
   neuronSlider.oninput=update;
   document.getElementById('resampleBtn').onclick=update;
-  update;
+  update();
 });
 </script>
 </body>

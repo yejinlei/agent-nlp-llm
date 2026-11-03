@@ -101,13 +101,13 @@ const cv=document.getElementById('cv'),ctx=cv.getContext('2d');
 const CELL=9,PAD=30,GAP=60;
 const N=32; // 可视化的切片大小
 
-function randn{let u=0,v=0;while(u===0)u=Math.random;while(v===0)v=Math.random;return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);}
+function randn(){let u=0,v=0;while(u===0)u=Math.random();while(v===0)v=Math.random();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);}
 
 // 生成一个"真实"的低秩 ΔW 切片，秩 = tRank
 function makeTrueDelta(tRank){
-  const U=Array.from({length:N},=>Array.from({length:tRank},=>randn*.5));
-  const V=Array.from({length:tRank},=>Array.from({length:N},=>randn*.5));
-  const D=Array.from({length:N},=>Array(N).fill(0));
+  const U=Array.from({length:N},()=>Array.from({length:tRank},()=>randn*.5));
+  const V=Array.from({length:tRank},()=>Array.from({length:N},()=>randn*.5));
+  const D=Array.from({length:N},()=>Array(N).fill(0));
   for(let i=0;i<N;i++)for(let j=0;j<N;j++)for(let k=0;k<tRank;k++)D[i][j]+=U[i][k]*V[k][j]/Math.sqrt(tRank);
   return D;
 }
@@ -116,11 +116,11 @@ function loraApprox(D,r,alpha){
   // 简化：用随机初始化 + 少量梯度步拟合（这里用"最优秩-r近似"=前r个主方向，用幂迭代粗糙近似）
   // 为浏览器性能，用简单的 SVD 近似：对 D 做 top-r SVD
   const copy=D.map(row=>row.slice);
-  const B=Array.from({length:N},=>Array(r).fill(0));
-  const A=Array.from({length:r},=>Array(N).fill(0));
+  const B=Array.from({length:N},()=>Array(r).fill(0));
+  const A=Array.from({length:r},()=>Array(N).fill(0));
   for(let k=0;k<r;k++){
     // 幂迭代求最大奇异值对应向量
-    let u=Array.from({length:N},=>Math.random-.5);
+    let u=Array.from({length:N},()=>Math.random()-.5);
     let v=Array(N).fill(0);
     for(let it=0;it<20;it++){
       // v = D^T u
@@ -141,7 +141,7 @@ function loraApprox(D,r,alpha){
   }
   // 构造近似 W = B*A * alpha/r
   const scale=alpha/r;
-  const W=Array.from({length:N},=>Array(N).fill(0));
+  const W=Array.from({length:N},()=>Array(N).fill(0));
   for(let i=0;i<N;i++)for(let j=0;j<N;j++)for(let k=0;k<r;k++)W[i][j]+=B[i][k]*A[k][j]*scale;
   return{W,B,A};
 }
@@ -163,7 +163,7 @@ function drawMat(mat,ox,oy,title){
   ctx.strokeStyle='#94a3b8';ctx.strokeRect(ox,oy,N*CELL,N*CELL);
 }
 
-function draw{
+function draw(){
   const d=+document.getElementById('dim').value;
   const r=+document.getElementById('rank').value;
   const a=+document.getElementById('alpha').value;
@@ -208,7 +208,7 @@ function draw{
 }
 
 ['dim','rank','alpha','trank'].forEach(id=>document.getElementById(id).oninput=draw);
-draw;
+draw();
 </script>
 <script src="js/math.js"></script>
 </body>

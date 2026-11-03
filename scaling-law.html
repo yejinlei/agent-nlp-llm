@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Scaling Law 缩放定律 · 互动演示</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=JetBrains+Mono:wght@400;500&display=swap');
+* { font-family: 'Noto Sans SC', sans-serif; }
+code, .mono { font-family: 'JetBrains Mono', monospace; }
+body { background: #fafbfc; color: #1a1a2e; }
+.wrap { max-width: 1100px; margin: 0 auto; padding: 96px 24px 80px; }
+h1 { font-size: 2rem; font-weight: 700; margin-bottom: 8px; }
+h2 { font-size: 1.35rem; font-weight: 700; margin: 40px 0 16px; padding-bottom: 10px; border-bottom: 2px solid #e5e7eb; }
+p { color: #334155; line-height: 1.8; margin-bottom: 12px; }
+canvas { border-radius: 10px; background: #fff; border: 1px solid #e2e8f0; width: 100%; display: block; }
+.demo { background: #fff; border: 1px solid #e2e8f0; border-radius: 14px; padding: 22px; margin: 18px 0; box-shadow: 0 1px 3px rgba(0,0,0,.04); }
+.ctrl { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; margin-bottom: 16px; font-size: 14px; }
+button { padding: 7px 16px; border: 1px solid #cbd5e1; border-radius: 8px; background: #f8fafc; cursor: pointer; font-size: 14px; }
+button:hover { background: #eff6ff; border-color: #93c5fd; }
+button.primary { background: linear-gradient(135deg,#2563eb,#1d4ed8); color:#fff; border:none; }
+.note { background: #fef3c7; border-left: 4px solid #f59e0b; padding: 12px 16px; border-radius: 8px; font-size: 14px; color: #92400e; margin-top: 14px; line-height: 1.7; }
+.info { background: #eff6ff; border-left: 4px solid #3b82f6; padding: 12px 16px; border-radius: 8px; font-size: 14px; color: #1e40af; margin-top: 14px; line-height: 1.7; }
+.formula { background: #f8fafc; padding: 14px 20px; border-radius: 8px; margin: 14px 0; text-align: center; border-left: 4px solid #2563eb; }
+input[type=range]{ vertical-align:middle; width:180px; }
+</style>
+<link rel="stylesheet" href="css/site.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<script>
+(function(){
+  function render(){ if(typeof renderMathInElement!=='function') return false;
+    try{ renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'\\[',right:'\\]',display:true},{left:'\\(',right:'\\)',display:false},{left:'$',right:'$',display:false}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false}); }catch(e){}
+    return true; }
+  function go(){ if(render()) return; setTimeout(go(),200); }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',go()); else go();
+  window.addEventListener('load',function(){render(); setTimeout(render(),600); setTimeout(render(),1600)});
+})();
+</script>
+</head>
+<body>
+<nav class="navbar">
+  <div class="nav-inner">
+    <a href="index.html" class="nav-logo">💬 agent-nlp-llm</a>
+    <button class="nav-toggle" aria-label="菜单" onclick="document.querySelector('.nav-links').classList.toggle('open')">☰</button>
+    <div class="nav-links">
+      <a href="index.html" class="nav-link">🏠&nbsp;首页</a>
+      <a href="nlp/index.html" class="nav-link">📝&nbsp;NLP</a>
+      <a href="llm/index.html" class="nav-link">🤖&nbsp;LLM</a>
+      <a href="lab.html" class="nav-link">🧪&nbsp;实验室</a>
+      <a href="papers.html" class="nav-link">📚&nbsp;论文</a>
+      <a href="clinic.html" class="nav-link">🕵️&nbsp;诊所</a>
+      <a href="pitfalls.html" class="nav-link">💥&nbsp;踩坑</a>
+      <a href="benchmark.html" class="nav-link">📊&nbsp;选型</a>
+      <a href="universe.html" class="nav-link">🌌&nbsp;宇宙</a>
+      <a href="https://github.com/yejinlei/agent-nlp-llm" target="_blank" rel="noopener" class="nav-gh" aria-label="GitHub"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg></a>
+    </div>
+  </div>
+</nav>
+
+<div class="wrap">
+  <h1>📏 Scaling Law 缩放定律 · 互动演示</h1>
+  <p>它解释了为什么"堆算力就能变强"：损失随参数量、数据量、计算量呈<b>幂律下降</b>，在对数坐标上是一条直线。下面你可以自己拖参数，看这条线怎么走。</p>
+
+  <h2>① 参数量 → 损失：幂律曲线</h2>
+  <div class="formula">
+    $$L(N) = (N_c / N)^{\alpha_N}, \qquad \alpha_N \approx 0.076, \quad N_c \approx 8.8\times10^{13}$$
+  </div>
+  <p>N 是参数量，α<sub>N</sub> 是幂指数（约 0.076，非常小——<b>意味着要提升一点性能，得把参数量增加很多倍</b>）。拖动滑块看不同规模模型的理论损失。</p>
+
+  <div class="demo">
+    <div class="ctrl">
+      <label>参数量 N = <b id="sN-val">7</b> B</label>
+      <input id="sN" type="range" min="0.1" max="200" step="0.1" value="7" oninput="drawScaling">
+      <span id="sN-loss" style="font-weight:700;color:#7c3aed"></span>
+    </div>
+    <canvas id="sc-canvas" width="1000" height="320"></canvas>
+    <div class="info" id="sc-info"></div>
+  </div>
+
+  <h2>② 数据量 → 损失：与参数量对称的幂律</h2>
+  <div class="formula">
+    $$L(D) = (D_c / D)^{\alpha_D}, \qquad \alpha_D \approx 0.095$$
+  </div>
+  <div class="demo">
+    <div class="ctrl">
+      <label>数据量 D = <b id="sD-val">300</b> B tokens</label>
+      <input id="sD" type="range" min="1" max="15000" step="1" value="300" oninput="drawScaling">
+      <span id="sD-loss" style="font-weight:700;color:#2563eb"></span>
+    </div>
+  </div>
+
+  <h2>③ 计算量最优分配：Chinchilla 定律</h2>
+  <p>2022 年 DeepMind 的 Chinchilla 发现：给定计算预算 C，<b>模型参数量 N 和训练数据量 D 要成比例增加</b>（约 D ≈ 20N）才最优。之前的大模型普遍"参数太大、数据太少"，是"训练不足"的。</p>
+  <div class="formula">
+    $$C \approx 6 \, N \, D \qquad\Rightarrow\qquad N^* \propto C^{0.5},\quad D^* \propto C^{0.5}$$
+  </div>
+
+  <div class="demo">
+    <div class="ctrl">
+      <label>计算预算 C = <b id="sC-val">1</b> × 10<sup>23</sup> FLOPs</label>
+      <input id="sC" type="range" min="19" max="26" step="0.1" value="23" oninput="drawCompute">
+    </div>
+    <canvas id="cc-canvas" width="1000" height="320"></canvas>
+    <div id="cc-out" style="margin-top:14px"></div>
+  </div>
+
+  <div class="note">
+    <b>为什么 Chinchilla 这么重要？</b> 它改变了整个行业的方向：与其造一个 280B 的大模型喂 300B token，不如造一个 70B 的模型喂 1.4T token——<b>同样的算力预算，后者效果更好、推理还更便宜</b>。Llama 系列、Qwen 系列的成功都遵循了这条定律。今天"小模型 + 海量数据"的路线（如 Llama-3-8B 训了 15T token）就是它的直接产物。
+  </div>
+
+  <div class="info">
+    <b>和"涌现"的关系：</b> 幂律说的是<b>损失</b>平滑下降，而<b>具体能力</b>（如多步推理、代码）往往不是平滑出现的——它可能在某个规模阈值突然"会了"。这就是"能力涌现（Emergence）"：损失在慢慢降，但能力是台阶式跳上来的。这也是为什么"参数量"至今还是大家判断模型能力的第一直觉。
+  </div>
+
+  <div style="margin-top:50px;display:flex;gap:12px;flex-wrap:wrap">
+    <a href="llm/index.html#scaling" class="btn-primary" style="text-decoration:none">← 回到 LLM · Scaling Law</a>
+    <a href="lab.html" class="btn-secondary" style="text-decoration:none">🧪 实验室总览</a>
+  </div>
+</div>
+
+<script>
+// 幂律
+const ALPHA_N = 0.076, NC = 8.8e13;    // N 以"参数个数"计
+const ALPHA_D = 0.095, DC = 5.0e11;    // D 以 token 数计
+function lossN(Nparams){ return Math.pow(NC / Nparams, ALPHA_N); }
+function lossD(Dtokens){ return Math.pow(DC / Dtokens, ALPHA_D); }
+
+function drawScaling(){
+  const nB = +document.getElementById('sN').value;   // 十亿
+  const dB = +document.getElementById('sD').value;   // 十亿 token
+  const N = nB * 1e9, D = dB * 1e9;
+  document.getElementById('sN-val').textContent = nB < 1 ? nB.toFixed(1) : (nB%1? nB.toFixed(1) : nB);
+  document.getElementById('sD-val').textContent = dB;
+
+  const lN = lossN(N), lD = lossD(D);
+  // 总损失近似（示意：合并两项与不可约损失）
+  const lIrreducible = 1.69;
+  const lTotal = Math.pow(lN, 1) * 0.5 + Math.pow(lD,1)*0.5 + lIrreducible - 1.5;
+  document.getElementById('sN-loss').textContent = `→ 理论 Loss ≈ ${lN.toFixed(3)}`;
+  document.getElementById('sD-loss').textContent = `→ 理论 Loss ≈ ${lD.toFixed(3)}`;
+
+  const cv=document.getElementById('sc-canvas'), ctx=cv.getContext('2d');
+  const W=cv.width,H=cv.height;
+  ctx.clearRect(0,0,W,H); ctx.fillStyle='#fff'; ctx.fillRect(0,0,W,H);
+  const padL=70,padR=40,padT=40,padB=55;
+  const x0=padL, x1=W-padR, y0=H-padB, y1=padT;
+
+  // 横轴 log10(N)，从 1e8 到 1e12
+  const nxMin=8, nxMax=12;   // log10 参数个数
+  // 纵轴 loss，从 1.7 到 5.5（示意）
+  const lyMin=1.9, lyMax=5.5;
+  const X = lx => x0 + (lx-nxMin)/(nxMax-nxMin)*(x1-x0);
+  const Y = lv => y0 - (lv-lyMin)/(lyMax-lyMin)*(y0-y1);
+
+  // 网格
+  ctx.strokeStyle='#f1f5f9'; ctx.lineWidth=1;
+  for(let i=nxMin;i<=nxMax;i++){ ctx.beginPath(); ctx.moveTo(X(i),y0); ctx.lineTo(X(i),y1); ctx.stroke(); }
+  for(let v=2;v<=5.5;v+=0.5){ ctx.beginPath(); ctx.moveTo(x0,Y(v)); ctx.lineTo(x1,Y(v)); ctx.stroke(); }
+  // 坐标轴
+  ctx.strokeStyle='#cbd5e1'; ctx.lineWidth=2;
+  ctx.beginPath(); ctx.moveTo(x0,y0); ctx.lineTo(x1,y0); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(x0,y0); ctx.lineTo(x0,y1); ctx.stroke();
+  // 刻度
+  ctx.fillStyle='#64748b'; ctx.font='12px sans-serif'; ctx.textAlign='center';
+  for(let i=nxMin;i<=nxMax;i++){ ctx.fillText('10^'+i, X(i), y0+20); }
+  ctx.fillText('参数量 N（对数轴）', (x0+x1)/2, y0+44);
+  ctx.textAlign='right';
+  for(let v=2;v<=5.5;v+=0.5){ ctx.fillText(v.toFixed(1), x0-8, Y(v)+4); }
+  ctx.save(); ctx.translate(20,(y0+y1)/2); ctx.rotate(-Math.PI/2); ctx.textAlign='center';
+  ctx.fillText('损失 Loss', 0, 0); ctx.restore();
+
+  // 曲线：L(N)
+  ctx.beginPath();
+  for(let lx=nxMin; lx<=nxMax; lx+=0.02){
+    const v = lossN(Math.pow(10,lx));
+    const px=X(lx), py=Y(Math.min(lyMax,Math.max(lyMin,v)));
+    lx===nxMin? ctx.moveTo(px,py):ctx.lineTo(px,py);
+  }
+  ctx.strokeStyle='#7c3aed'; ctx.lineWidth=3; ctx.stroke();
+
+  // 当前点
+  const cxl = Math.log10(N);
+  const cvy = lossN(N);
+  ctx.beginPath(); ctx.arc(X(cxl), Y(cvy), 8, 0, Math.PI*2);
+  ctx.fillStyle='#f59e0b'; ctx.fill(); ctx.strokeStyle='#fff'; ctx.lineWidth=3; ctx.stroke();
+  ctx.fillStyle='#d97706'; ctx.font='bold 13px sans-serif'; ctx.textAlign='left';
+  ctx.fillText(`当前 N=${nB}B → Loss≈${cvy.toFixed(2)}`, X(cxl)+12, Y(cvy)-8);
+
+  // 几条参考竖线（模型规模）
+  const refs=[{n:7,label:'7B'},{n:70,label:'70B'},{n:175,label:'175B'}];
+  ctx.font='11px sans-serif';
+  refs.forEach(r=>{
+    const lx=Math.log10(r.n*1e9);
+    if(lx>=nxMin&&lx<=nxMax){
+      ctx.beginPath(); ctx.setLineDash([4,4]); ctx.moveTo(X(lx),y0); ctx.lineTo(X(lx),y1);
+      ctx.strokeStyle='#cbd5e1'; ctx.lineWidth=1; ctx.stroke(); ctx.setLineDash([]);
+      ctx.fillStyle='#94a3b8'; ctx.textAlign='center';
+      ctx.fillText(r.label, X(lx), y1-6);
+    }
+  });
+
+  document.getElementById('sc-info').innerHTML =
+    `当前设定：<b>N = ${nB}B 参数</b>，<b>D = ${dB}B tokens</b>。` +
+    `幂律意味着：从 7B 提到 70B（参数 ×10），Loss 只下降约 <b>${(1 - Math.pow(10,-ALPHA_N)).toFixed(1)}% 的绝对量级</b>——` +
+    `${( (Math.pow(10,ALPHA_N)-1)*100 ).toFixed(0)}% 的相对改善看起来小，但换算到 PPL 上是从 ${Math.exp(lossN(7e9)).toFixed(1)} 降到 ${Math.exp(lossN(70e9)).toFixed(1)}，<b>足足差了几十个困惑度</b>。`;
+}
+
+function drawCompute(){
+  const cExp = +document.getElementById('sC').value;
+  document.getElementById('sC-val').textContent = cExp.toFixed(1);
+  const C = Math.pow(10, cExp);
+  // Chinchilla: D ≈ 20N, C ≈ 6ND  => N* = sqrt(C/(6*20))
+  const Nstar = Math.sqrt(C/(6*20));
+  const Dstar = 20*Nstar;
+  const cv=document.getElementById('cc-canvas'), ctx=cv.getContext('2d');
+  const W=cv.width,H=cv.height;
+  ctx.clearRect(0,0,W,H); ctx.fillStyle='#fff'; ctx.fillRect(0,0,W,H);
+
+  // 画 N-D 平面上的等计算量曲线 + 最优点
+  const padL=80,padR=50,padT=45,padB=55;
+  const x0=padL,x1=W-padR,y0=H-padB,y1=padT;
+  const nMin=7,nMax=12, dMin=8, dMax=14;  // log10 N, log10 D
+  const X = ln => x0 + (ln-nMin)/(nMax-nMin)*(x1-x0);
+  const Y = ld => y0 - (ld-dMin)/(dMax-dMin)*(y0-y1);
+  // 等值线 C=6ND
+  [21,22,23,24,25,26].forEach(le=>{
+    const LC = le;
+    ctx.beginPath();
+    let first=true;
+    for(let ln=nMin; ln<=nMax; ln+=0.05){
+      const ld = LC - Math.log10(6) - ln;  // log10 D = LC - log10(6) - ln
+      if(ld<dMin||ld>dMax) continue;
+      const px=X(ln), py=Y(ld);
+      if(first){ ctx.moveTo(px,py); first=false; } else ctx.lineTo(px,py);
+    }
+    ctx.strokeStyle = (Math.abs(le-cExp)<0.3)? '#7c3aed' : '#e2e8f0';
+    ctx.lineWidth = (Math.abs(le-cExp)<0.3)? 3:1.5; ctx.stroke();
+    // 标注
+  });
+  // 坐标轴
+  ctx.strokeStyle='#cbd5e1'; ctx.lineWidth=2;
+  ctx.beginPath(); ctx.moveTo(x0,y0); ctx.lineTo(x1,y0); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(x0,y0); ctx.lineTo(x0,y1); ctx.stroke();
+  ctx.fillStyle='#64748b'; ctx.font='12px sans-serif'; ctx.textAlign='center';
+  for(let i=nMin;i<=nMax;i++) ctx.fillText('10^'+i, X(i), y0+20);
+  ctx.fillText('参数量 N', (x0+x1)/2, y0+44);
+  ctx.textAlign='right';
+  for(let i=dMin;i<=dMax;i+=2) ctx.fillText('10^'+i, x0-8, Y(i)+4);
+  ctx.save(); ctx.translate(20,(y0+y1)/2); ctx.rotate(-Math.PI/2); ctx.textAlign='center';
+  ctx.fillText('数据量 D (tokens)', 0, 0); ctx.restore();
+
+  // 最优线 D=20N
+  ctx.beginPath(); first=true;
+  for(let ln=nMin; ln<=nMax; ln+=0.05){
+    const ld = ln + Math.log10(20);
+    if(ld<dMin||ld>dMax) continue;
+    const px=X(ln), py=Y(ld);
+    if(first){ctx.moveTo(px,py);first=false;} else ctx.lineTo(px,py);
+  }
+  ctx.strokeStyle='#f59e0b'; ctx.lineWidth=3; ctx.setLineDash([7,5]); ctx.stroke(); ctx.setLineDash([]);
+  ctx.fillStyle='#d97706'; ctx.font='bold 12px sans-serif'; ctx.textAlign='left';
+  ctx.fillText('Chinchilla 最优线 D ≈ 20N', X(9.6), Y(10.6));
+
+  // 当前最优点
+  const lns=Math.log10(Nstar), lds=Math.log10(Dstar);
+  if(lns>=nMin&&lns<=nMax&&lds>=dMin&&lds<=dMax){
+    ctx.beginPath(); ctx.arc(X(lns), Y(lds), 9, 0, Math.PI*2);
+    ctx.fillStyle='#7c3aed'; ctx.fill(); ctx.strokeStyle='#fff'; ctx.lineWidth=3; ctx.stroke();
+  }
+  document.getElementById('cc-out').innerHTML =
+    `给定计算预算 C = 10<sup>${cExp.toFixed(1)}</sup> FLOPs：` +
+    `<b>最优参数量 N* ≈ ${fmt(Nstar)}</b>，<b>最优数据量 D* ≈ ${fmt(Dstar)} tokens</b>` +
+    ` <span style="color:#64748b">（紫色曲线=当前预算的等计算量线，黄点=该预算下的最优点）</span>`;
+}
+function fmt(x){
+  if(x>=1e12) return (x/1e12).toFixed(2)+'T';
+  if(x>=1e9) return (x/1e9).toFixed(2)+'B';
+  if(x>=1e6) return (x/1e6).toFixed(2)+'M';
+  return x.toFixed(0);
+}
+window.addEventListener('load', ()=>{ drawScaling(); drawCompute(); });
+</script>
+</body>
+</html>

@@ -25,9 +25,9 @@
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
 <script>
-document.addEventListener('DOMContentLoaded', function{
-  function r{try{renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false});}catch(e){}}
-  if(document.readyState==='complete')r;else window.addEventListener('load',r);
+document.addEventListener('DOMContentLoaded', function(){
+  function r(){try{renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false});}catch(e){}}
+  if(document.readyState==='complete')r();else window.addEventListener('load',r());
   setTimeout(r,300);setTimeout(r,1000);
 });
 </script>
@@ -125,19 +125,19 @@ document.addEventListener('DOMContentLoaded', function{
 <footer class="site"><p>💬 agent-nlp-llm · 自然语言技术本体论研究站</p></footer>
 <script src="js/site.js"></script>
 <script>
-(function{
+(function(){
   // Character-level language model: a simple bigram-like model
   // Define transition probabilities for different scenes
   var vocab = '今天明气下雨晴多云吃好吃美去北南上火锅旅行海边山玩。';
   var scenes = {
-    weather: buildWeatherProbs,
-    food: buildFoodProbs,
-    travel: buildTravelProbs
+    weather: buildWeatherProbs(),
+    food: buildFoodProbs(),
+    travel: buildTravelProbs()
   };
   var START = '^';
   var END = '$';
 
-  function buildWeatherProbs{
+  function buildWeatherProbs(){
     // transitions from state: {nextChar: logProb, ...}
     // log probabilities (natural log), higher is better
     var p={};
@@ -152,7 +152,6 @@ document.addEventListener('DOMContentLoaded', function{
     p['多']={'云':Math.log(0.9)};
     p['云']={'。':Math.log(0.6),'转':Math.log(0.3),'有':Math.log(0.1)};
     p['好']={'。':Math.log(0.85),'极':Math.log(0.1),'爽':Math.log(0.05)};
-    p['是']={'{'/*placeholder*/}:0};
     // greedy trap: 天气->好->。 is decent but 天气->下雨 is more likely globally
     p['是']={'晴':Math.log(0.3),'下':Math.log(0.2),'多':Math.log(0.2),'好':Math.log(0.3)};
     p['有']={'雨':Math.log(0.4),'云':Math.log(0.35),'雾':Math.log(0.25)};
@@ -171,7 +170,7 @@ document.addEventListener('DOMContentLoaded', function{
     return p;
   }
 
-  function buildFoodProbs{
+  function buildFoodProbs(){
     var p={};
     p['^']={'我':Math.log(0.4),'今':Math.log(0.3),'最':Math.log(0.3)};
     p['我']={'想':Math.log(0.5),'爱':Math.log(0.3),'要':Math.log(0.2)};
@@ -202,7 +201,7 @@ document.addEventListener('DOMContentLoaded', function{
     return p;
   }
 
-  function buildTravelProbs{
+  function buildTravelProbs(){
     var p={};
     p['^']={'我':Math.log(0.5),'去':Math.log(0.3),'今':Math.log(0.2)};
     p['我']={'去':Math.log(0.45),'想':Math.log(0.35),'爱':Math.log(0.2)};
@@ -356,9 +355,9 @@ document.addEventListener('DOMContentLoaded', function{
     }
   }
 
-  document.getElementById('beamSlider').oninput=function{document.getElementById('beamVal').textContent=this.value;};
-  document.getElementById('lenSlider').oninput=function{document.getElementById('lenVal').textContent=this.value;};
-  document.getElementById('runBtn').onclick=function{
+  document.getElementById('beamSlider').oninput=function(){document.getElementById('beamVal').textContent=this.value;};
+  document.getElementById('lenSlider').oninput=function(){document.getElementById('lenVal').textContent=this.value;};
+  document.getElementById('runBtn').onclick=function(){
     var b=parseInt(document.getElementById('beamSlider').value);
     var l=parseInt(document.getElementById('lenSlider').value);
     var s=document.getElementById('sceneSelect').value;

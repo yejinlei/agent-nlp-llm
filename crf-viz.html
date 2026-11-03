@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CRF 条件随机场 · 互动原理图</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=JetBrains+Mono:wght@400;500&display=swap');
+* { font-family: 'Noto Sans SC', sans-serif; }
+code, pre, .mono { font-family: 'JetBrains Mono', monospace; }
+body { background: #fafbfc; color: #1a1a2e; }
+.wrap { max-width: 1100px; margin: 0 auto; padding: 96px 24px 80px; }
+h1 { font-size: 2rem; font-weight: 700; margin-bottom: 8px; }
+h2 { font-size: 1.35rem; font-weight: 700; margin: 40px 0 16px; padding-bottom: 10px; border-bottom: 2px solid #e5e7eb; }
+p { color: #334155; line-height: 1.8; margin-bottom: 12px; }
+canvas { border-radius: 10px; background: #fff; border: 1px solid #e2e8f0; width: 100%; display: block; }
+.demo { background: #fff; border: 1px solid #e2e8f0; border-radius: 14px; padding: 22px; margin: 18px 0; box-shadow: 0 1px 3px rgba(0,0,0,.04); }
+.ctrl { display: flex; flex-wrap: wrap; gap: 14px; align-items: center; margin-bottom: 16px; font-size: 14px; }
+button { padding: 7px 16px; border: 1px solid #cbd5e1; border-radius: 8px; background: #f8fafc; cursor: pointer; font-size: 14px; }
+button:hover { background: #eff6ff; border-color: #93c5fd; }
+button.primary { background: linear-gradient(135deg,#2563eb,#1d4ed8); color:#fff; border:none; }
+.note { background: #fef3c7; border-left: 4px solid #f59e0b; padding: 12px 16px; border-radius: 8px; font-size: 14px; color: #92400e; margin-top: 14px; line-height: 1.7; }
+.info { background: #eff6ff; border-left: 4px solid #3b82f6; padding: 12px 16px; border-radius: 8px; font-size: 14px; color: #1e40af; margin-top: 14px; line-height: 1.7; }
+.formula { background: #f8fafc; padding: 14px 20px; border-radius: 8px; margin: 14px 0; text-align: center; border-left: 4px solid #2563eb; }
+table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 14px; }
+th { background: #f8fafc; padding: 10px 14px; text-align: left; color: #374151; border-bottom: 1px solid #e5e7eb; }
+td { padding: 10px 14px; border-bottom: 1px solid #f3f4f6; color: #4b5563; }
+</style>
+<link rel="stylesheet" href="css/site.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<script>
+(function(){
+  function render(){ if(typeof renderMathInElement!=='function') return false;
+    try{ renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'\\[',right:'\\]',display:true},{left:'\\(',right:'\\)',display:false},{left:'$',right:'$',display:false}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false}); }catch(e){}
+    return true; }
+  function go(){ if(render()) return; setTimeout(go(),200); }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',go()); else go();
+  window.addEventListener('load',function(){render(); setTimeout(render(),600); setTimeout(render(),1600)});
+})();
+</script>
+</head>
+<body>
+<nav class="navbar">
+  <div class="nav-inner">
+    <a href="index.html" class="nav-logo">💬 agent-nlp-llm</a>
+    <button class="nav-toggle" aria-label="菜单" onclick="document.querySelector('.nav-links').classList.toggle('open')">☰</button>
+    <div class="nav-links">
+      <a href="index.html" class="nav-link">🏠&nbsp;首页</a>
+      <a href="nlp/index.html" class="nav-link">📝&nbsp;NLP</a>
+      <a href="llm/index.html" class="nav-link">🤖&nbsp;LLM</a>
+      <a href="lab.html" class="nav-link">🧪&nbsp;实验室</a>
+      <a href="papers.html" class="nav-link">📚&nbsp;论文</a>
+      <a href="clinic.html" class="nav-link">🕵️&nbsp;诊所</a>
+      <a href="pitfalls.html" class="nav-link">💥&nbsp;踩坑</a>
+      <a href="benchmark.html" class="nav-link">📊&nbsp;选型</a>
+      <a href="universe.html" class="nav-link">🌌&nbsp;宇宙</a>
+      <a href="https://github.com/yejinlei/agent-nlp-llm" target="_blank" rel="noopener" class="nav-gh" aria-label="GitHub"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg></a>
+    </div>
+  </div>
+</nav>
+
+<div class="wrap">
+  <h1>📐 CRF 条件随机场 · 互动原理图</h1>
+  <p>HMM 是<b>生成式</b>模型，它要建模 P(X,Y)，还被迫假设"观测之间相互独立"——这明显不合理（"北京"和"大学"显然相关）。<b>CRF 是判别式模型，直接建模 P(Y|X)</b>，想用什么特征就用什么特征，因此序列标注效果远超 HMM。</p>
+
+  <h2>① 为什么需要 CRF：HMM 的两个"过强假设"</h2>
+  <table>
+    <tr><th>假设</th><th>HMM 的说法</th><th>现实</th><th>CRF 怎么破</th></tr>
+    <tr><td>观测独立性</td><td>当前观测只依赖当前状态</td><td>❌"中国"和"人"强相关，观测间有依赖</td><td>✅ 特征函数可以引用<b>任意位置</b>的观测</td></tr>
+    <tr><td>马尔可夫假设</td><td>状态只依赖前一个状态</td><td>基本成立，保留</td><td>✅ 同样保留一阶/二阶转移</td></tr>
+  </table>
+  <div class="formula">
+    $$P(Y|X) = \frac{1}{Z(X)} \exp\Big(\sum_{i,k} \lambda_k f_k(y_{i-1}, y_i, X, i)\Big)$$
+  </div>
+  <p>其中 <span class="mono">f<sub>k</sub></span> 是<b>特征函数</b>，<span class="mono">λ<sub>k</sub></span> 是学到的权重，<span class="mono">Z(X)</span> 是归一化因子（对所有可能标签序列求和）。注意 <b>f<sub>k</sub> 里带了整个 X 和位置 i</b>——这就是"什么上下文都能看"的来源。</p>
+
+  <h2>② 特征打分：每一步到底在算什么</h2>
+  <p>下面把句子"我 爱 北京"的每个位置、每种标签的<b>发射特征分数</b>画出来（数值是示意）。CRF 的最终得分 = 所有位置分数之和 + 所有转移分数之和。</p>
+
+  <div class="demo">
+    <div class="ctrl">
+      <label><b>标签集：</b></label>
+      <select id="crf-scheme" onchange="drawCRF">
+        <option value="BMES">BMES（分词用）</option>
+        <option value="BIO">BIO（NER用）</option>
+      </select>
+      <button class="primary" onclick="randomizeCRF">🎲 随机扰动特征分数</button>
+    </div>
+    <canvas id="crf-score" width="1000" height="300"></canvas>
+    <div id="crf-best" style="margin-top:12px;font-size:15px"></div>
+  </div>
+
+  <h2>③ 标签转移约束：CRF 最实用的"防错护栏"</h2>
+  <p>序列标注有一批<b>硬性规则</b>：词首 B 后面不能直接跟词尾 E 之外的怪组合、B-ORG 后面不能直接接 I-PER……CRF 通过给<b>非法转移</b>一个极大的负权重，让这些错误组合在解码时被自动排除。下面点按钮对比"无约束 vs 有约束"的解码结果。</p>
+
+  <div class="demo">
+    <div class="ctrl">
+      <button class="primary" onclick="decodeCRF(false)">▶ 无转移约束解码</button>
+      <button class="primary" onclick="decodeCRF(true)">▶ 有 CRF 转移约束解码</button>
+    </div>
+    <canvas id="crf-trans" width="1000" height="320"></canvas>
+    <div id="crf-trans-out" style="margin-top:12px;font-size:15px;font-family:'JetBrains Mono',monospace"></div>
+  </div>
+
+  <div class="info">
+    <b>CRF 的精髓就在这张转移矩阵里。</b> 主对角线附近是合法转移（B→M→E、B→E、S→B…），我们用深绿表示；非法转移（如 M→B、E→M 在多数标注规范里非法）用红色 −∞ 表示。解码时走红色格子 = 这一步直接出局。这套机制让 CRF 的输出<b>永远合法</b>，不需要后处理修补。
+  </div>
+
+  <div class="note">
+    <b>和今天的联系：</b> BiLSTM-CRF 曾是序列标注的黄金组合——BiLSTM 负责"看上下文、给每个字打发射分数"，CRF 层负责"管标签之间的合法性"。今天的大模型做结构化抽取时，也常用"约束解码"（constrained decoding）来保证输出 JSON 合法，思想完全一致：<b>在解码阶段就把非法输出掐死在摇篮里</b>。
+  </div>
+
+  <div style="margin-top:50px;display:flex;gap:12px;flex-wrap:wrap">
+    <a href="nlp/index.html#crf" class="btn-primary" style="text-decoration:none">← 回到 NLP · CRF 章节</a>
+    <a href="lab.html" class="btn-secondary" style="text-decoration:none">🧪 实验室总览</a>
+  </div>
+</div>
+
+<script>
+const SENT = ['我','爱','北京'];
+let scheme = 'BMES';
+let labels = ['B','M','E','S'];
+let scores = [];  // [pos][label]
+
+function initScores(){
+  // 每个位置给一组示意分数
+  scores = [
+    [2.1, 0.4, 0.9, 1.6],
+    [0.5, 1.8, 2.4, 0.7],
+    [1.9, 0.6, 2.8, 0.3]
+  ];
+}
+function randomizeCRF(){
+  scores = SENT.map(()=> labels.map(()=> +(Math.random()*4).toFixed(2)));
+  drawCRF();
+}
+function drawCRF(){
+  scheme = document.getElementById('crf-scheme').value;
+  labels = scheme==='BIO' ? ['B','I','O'] : ['B','M','E','S'];
+  const cv = document.getElementById('crf-score'), ctx = cv.getContext('2d');
+  const W=cv.width,H=cv.height;
+  ctx.clearRect(0,0,W,H); ctx.fillStyle='#fff'; ctx.fillRect(0,0,W,H);
+
+  // 若标签数变了，重采样分数
+  if(scores.length!==SENT.length || scores[0].length!==labels.length) randomizeCRF();
+
+  const padL=90,padT=54,cw=(W-padL-50)/SENT.length,ch=(H-padT-50)/labels.length;
+  // 列（位置）
+  ctx.textAlign='center';
+  SENT.forEach((c,t)=>{
+    ctx.fillStyle='#1e40af'; ctx.font='bold 15px sans-serif';
+    ctx.fillText(c, padL+t*cw+cw/2, padT-22);
+    ctx.fillStyle='#94a3b8'; ctx.font='11px sans-serif';
+    ctx.fillText('位置 '+t, padL+t*cw+cw/2, padT-7);
+  });
+  // 行（标签）
+  labels.forEach((l,i)=>{
+    ctx.fillStyle='#5b21b6'; ctx.font='bold 15px sans-serif';
+    ctx.fillText(l, padL-44, padT+i*ch+ch/2+5);
+  });
+  // 数值格
+  const allV = scores.flat();
+  const mx = Math.max(...allV), mn = Math.min(...allV);
+  labels.forEach((l,i)=>{
+    for(let t=0;t<SENT.length;t++){
+      const v = scores[t][i];
+      const a = (v-mn)/(mx-mn+1e-9);
+      const x=padL+t*cw, y=padT+i*ch;
+      ctx.fillStyle=`rgba(139,92,246,${0.12+0.72*a})`;
+      ctx.fillRect(x+4,y+4,cw-8,ch-8);
+      ctx.strokeStyle='#e9d5ff'; ctx.strokeRect(x+4,y+4,cw-8,ch-8);
+      ctx.fillStyle= a>0.55?'#fff':'#4c1d95';
+      ctx.font='14px monospace'; ctx.textAlign='center';
+      ctx.fillText(v.toFixed(2), x+cw/2, y+ch/2+5);
+    }
+  });
+  // 贪心最优（每列取最大）
+  const best = [];
+  SENT.forEach((c,t)=>{
+    let bi=0; scores[t].forEach((v,i)=>{ if(v>scores[t][bi]) bi=i; });
+    best.push(labels[bi]);
+    const x=padL+t*cw, y=padT+bi*ch;
+    ctx.strokeStyle='#f59e0b'; ctx.lineWidth=3; ctx.strokeRect(x+4,y+4,cw-8,ch-8);
+  });
+  const totalScore = best.reduce((s,l,t)=> s + scores[t][labels.indexOf(l)], 0);
+  document.getElementById('crf-best').innerHTML =
+    `<b>每位置独立取最大 → 序列：</b><span style="color:#d97706;font-weight:700">${best.join(' ')}</span>` +
+    ` &nbsp;｜&nbsp; <b>总得分：</b>${totalScore.toFixed(2)}` +
+    ` <span style="color:#64748b">（橙色框 = 该位置最高分标签）</span>`;
+}
+
+// 转移约束解码
+const ILLEGAL = {  // 非法转移对（BMES）
+  'M->B':1,'M->S':1,'E->M':1,'E->E':1,'S->M':1,'S->E':1
+};
+function decodeCRF(useConstraint){
+  const cv=document.getElementById('crf-trans'), ctx=cv.getContext('2d');
+  const W=cv.width,H=cv.height;
+  ctx.clearRect(0,0,W,H); ctx.fillStyle='#fff'; ctx.fillRect(0,0,W,H);
+  if(scores.length!==3 || scores[0].length!==4) { scheme='BMES'; labels=['B','M','E','S']; randomizeCRF(); }
+
+  const L=labels, n=L.length;
+  const padL=100,padT=60,cell=Math.min(78,(W-padL-60)/n);
+  ctx.font='12px sans-serif'; ctx.textAlign='center';
+  // 表头
+  L.forEach((l,j)=>{ ctx.fillStyle='#7c3aed'; ctx.font='bold 14px sans-serif'; ctx.fillText('→'+l, padL+j*cell+cell/2, padT-14); });
+  L.forEach((l,i)=>{ ctx.fillStyle='#7c3aed'; ctx.font='bold 14px sans-serif'; ctx.textAlign='right'; ctx.fillText(l+'→', padL-10, padT+i*cell+cell/2+5); ctx.textAlign='center'; });
+
+  // 转移矩阵
+  L.forEach((from,i)=>{
+    L.forEach((to,j)=>{
+      const key = from+'->'+to;
+      const bad = !!ILLEGAL[key];
+      const x=padL+j*cell, y=padT+i*cell;
+      if(bad){
+        ctx.fillStyle = useConstraint? '#fee2e2' : '#f1f5f9';
+        ctx.fillRect(x+3,y+3,cell-6,cell-6);
+        ctx.strokeStyle= useConstraint? '#ef4444':'#cbd5e1'; ctx.lineWidth= useConstraint?2:1;
+        ctx.strokeRect(x+3,y+3,cell-6,cell-6);
+        ctx.fillStyle = useConstraint? '#dc2626':'#94a3b8';
+        ctx.font='13px monospace';
+        ctx.fillText(useConstraint?'−∞':'允许', x+cell/2, y+cell/2+5);
+      } else {
+        ctx.fillStyle = '#dcfce7'; ctx.fillRect(x+3,y+3,cell-6,cell-6);
+        ctx.strokeStyle='#22c55e'; ctx.strokeRect(x+3,y+3,cell-6,cell-6);
+        ctx.fillStyle='#15803d'; ctx.font='13px monospace';
+        ctx.fillText('✓', x+cell/2, y+cell/2+5);
+      }
+    });
+  });
+
+  const path = useConstraint ? ['B','M','E'] : ['B','B','S'];
+  const seg = useConstraint ? '北京（合法 ✓）' : '北京（非法 ✗ B→B 不允许）';
+  document.getElementById('crf-trans-out').innerHTML =
+    useConstraint
+      ? `<b>解码路径：</b><span style="color:#16a34a;font-weight:700">${path.join(' → ')}</span> &nbsp;→&nbsp; 切分：${seg}`
+      : `<b>解码路径：</b><span style="color:#dc2626;font-weight:700">${path.join(' → ')}</span> &nbsp;→&nbsp; 切分：${seg}`;
+}
+
+window.addEventListener('load', ()=>{ initScores(); drawCRF(); decodeCRF(true); });
+</script>
+</body>
+</html>

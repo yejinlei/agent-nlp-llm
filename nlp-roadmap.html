@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NLP 技术演进全景 · 互动图</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=JetBrains+Mono:wght@400;500&display=swap');
+* { font-family: 'Noto Sans SC', sans-serif; }
+code, .mono { font-family: 'JetBrains Mono', monospace; }
+body { background: #fafbfc; color: #1a1a2e; }
+.wrap { max-width: 1150px; margin: 0 auto; padding: 96px 24px 80px; }
+h1 { font-size: 2rem; font-weight: 700; margin-bottom: 8px; }
+h2 { font-size: 1.35rem; font-weight: 700; margin: 40px 0 16px; padding-bottom: 10px; border-bottom: 2px solid #e5e7eb; }
+p { color: #334155; line-height: 1.8; margin-bottom: 12px; }
+canvas { border-radius: 10px; background: #fff; border: 1px solid #e2e8f0; width: 100%; display: block; }
+.demo { background: #fff; border: 1px solid #e2e8f0; border-radius: 14px; padding: 22px; margin: 18px 0; box-shadow: 0 1px 3px rgba(0,0,0,.04); }
+.ctrl { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-bottom: 16px; font-size: 14px; }
+button { padding: 7px 15px; border: 1px solid #cbd5e1; border-radius: 8px; background: #f8fafc; cursor: pointer; font-size: 14px; }
+button:hover { background: #eff6ff; border-color: #93c5fd; }
+button.primary { background: linear-gradient(135deg,#2563eb,#1d4ed8); color:#fff; border:none; }
+.info { background: #eff6ff; border-left: 4px solid #3b82f6; padding: 12px 16px; border-radius: 8px; font-size: 14px; color: #1e40af; margin-top: 14px; line-height: 1.7; }
+table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 14px; }
+th { background: #f8fafc; padding: 10px 14px; text-align: left; color: #374151; border-bottom: 1px solid #e5e7eb; }
+td { padding: 10px 14px; border-bottom: 1px solid #f3f4f6; color: #4b5563; }
+</style>
+<link rel="stylesheet" href="css/site.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<script>
+(function(){
+  function render(){ if(typeof renderMathInElement!=='function') return false;
+    try{ renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'\\[',right:'\\]',display:true},{left:'\\(',right:'\\)',display:false},{left:'$',right:'$',display:false}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false}); }catch(e){}
+    return true; }
+  function go(){ if(render()) return; setTimeout(go(),200); }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',go()); else go();
+  window.addEventListener('load',function(){render(); setTimeout(render(),600); setTimeout(render(),1600)});
+})();
+</script>
+</head>
+<body>
+<nav class="navbar">
+  <div class="nav-inner">
+    <a href="index.html" class="nav-logo">💬 agent-nlp-llm</a>
+    <button class="nav-toggle" aria-label="菜单" onclick="document.querySelector('.nav-links').classList.toggle('open')">☰</button>
+    <div class="nav-links">
+      <a href="index.html" class="nav-link">🏠&nbsp;首页</a>
+      <a href="nlp/index.html" class="nav-link">📝&nbsp;NLP</a>
+      <a href="llm/index.html" class="nav-link">🤖&nbsp;LLM</a>
+      <a href="lab.html" class="nav-link">🧪&nbsp;实验室</a>
+      <a href="papers.html" class="nav-link">📚&nbsp;论文</a>
+      <a href="clinic.html" class="nav-link">🕵️&nbsp;诊所</a>
+      <a href="pitfalls.html" class="nav-link">💥&nbsp;踩坑</a>
+      <a href="benchmark.html" class="nav-link">📊&nbsp;选型</a>
+      <a href="universe.html" class="nav-link">🌌&nbsp;宇宙</a>
+      <a href="https://github.com/yejinlei/agent-nlp-llm" target="_blank" rel="noopener" class="nav-gh" aria-label="GitHub"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg></a>
+    </div>
+  </div>
+</nav>
+
+<div class="wrap">
+  <h1>🗺️ NLP 技术演进全景 · 互动图</h1>
+  <p>NLP 七十年的主线就一句话：<b>怎么把"词"变成"能算的东西"</b>。下面这张全景图把每个阶段的代表方法、解决的核心矛盾、以及留下的新问题串成一条链，点任意阶段展开细节。</p>
+
+  <h2>① 技术时间轴 · 五个时代</h2>
+  <div class="demo">
+    <canvas id="tl-canvas" width="1100" height="360"></canvas>
+    <div class="ctrl" style="margin-top:16px">
+      <span style="color:#64748b;font-size:13px">点上面的圆点或下面的按钮切换阶段 👉</span>
+      <button onclick="pick(0)">规则时代</button>
+      <button onclick="pick(1)">统计时代</button>
+      <button onclick="pick(2)">词向量时代</button>
+      <button onclick="pick(3)">序列神经时代</button>
+      <button onclick="pick(4)">预训练时代</button>
+    </div>
+    <div id="tl-detail" style="margin-top:16px"></div>
+  </div>
+
+  <h2>② 每种方法"解决了什么 / 卡在哪"</h2>
+  <table>
+    <tr><th>时代</th><th>代表方法</th><th>解决的问题</th><th>留下的坑</th></tr>
+    <tr><td>规则时代 <span class="mono">1950s-80s</span></td><td>正则、上下文无关文法、词典</td><td>处理格式固定的语言</td><td>规则写不完，无法泛化</td></tr>
+    <tr><td>统计时代 <span class="mono">1990s-2000s</span></td><td>N-gram、HMM、CRF</td><td>用数据代替手工规则</td><td>数据稀疏、N 一大就爆炸</td></tr>
+    <tr><td>词向量时代 <span class="mono">2013</span></td><td>Word2Vec、GloVe</td><td>稠密向量 + 语义距离</td><td>一词多义无法区分、无上下文</td></tr>
+    <tr><td>序列神经时代 <span class="mono">2014-2017</span></td><td>RNN/LSTM、Seq2Seq+Attention</td><td>端到端学习序列映射</td><td>串行慢、长距离仍衰减</td></tr>
+    <tr><td>预训练时代 <span class="mono">2017-</span></td><td>Transformer、BERT、GPT</td><td>并行 + 大语料预训练 + 微调</td><td>算力成本、可解释性、幻觉</td></tr>
+  </table>
+
+  <h2>③ 任务—模型匹配器</h2>
+  <p>选个任务，看它历史上依次被哪些方法"接管"过，以及今天推荐用什么。</p>
+  <div class="demo">
+    <div class="ctrl">
+      <label><b>我的任务是：</b></label>
+      <select id="task-sel" onchange="matchTask">
+        <option>文本分类 / 情感分析</option>
+        <option>序列标注 / NER</option>
+        <option>机器翻译</option>
+        <option>问答 / 阅读理解</option>
+        <option>文本生成 / 对话</option>
+      </select>
+    </div>
+    <canvas id="task-canvas" width="1100" height="300"></canvas>
+    <div id="task-out" style="margin-top:14px"></div>
+  </div>
+
+  <div class="info">
+    <b>一句话理解这条主线：</b> 每代方法都在解决上一代的"信息损失"——规则损失泛化，N-gram 损失长上下文，静态词向量损失语境，RNN 损失并行与长距离，Transformer 损失的是<b>算力和可解释性</b>。NLP 史就是一部不断"把丢掉的上下文找回来"的历史。
+  </div>
+
+  <div style="margin-top:50px;display:flex;gap:12px;flex-wrap:wrap">
+    <a href="nlp/index.html#tasks" class="btn-primary" style="text-decoration:none">← 回到 NLP · 核心任务</a>
+    <a href="lab.html" class="btn-secondary" style="text-decoration:none">🧪 实验室总览</a>
+  </div>
+</div>
+
+<script>
+const ERAS = [
+  {name:'规则时代', y:'1950s-80s', color:'#94a3b8', desc:'语言学家手工编写语法规则和词典。代表作：ELIZA 闲聊程序、基于规则的分词器。',
+   solved:'处理格式固定的语言任务', pain:'规则永远写不完，遇到新表达就失效，完全无法从数据中学习。'},
+  {name:'统计时代', y:'1990s-2000s', color:'#60a5fa', desc:'用概率分布代替手工规则。N-gram 语言模型、HMM 序列标注、CRF 条件随机场。',
+   solved:'从数据自动学参数，泛化能力大幅提升', pain:'数据稀疏（没见过的组合概率为 0）；N 一大组合数就指数爆炸；特征是人工设计的。'},
+  {name:'词向量时代', y:'2013', color:'#818cf8', desc:'Word2Vec 把词映射成低维稠密向量，让"语义相近"变成"向量距离相近"。',
+   solved:'稠密表示 + 可计算的语义距离；king-man+woman≈queen', pain:'每个词只有一个固定向量，无法区分一词多义（"苹果"是水果还是公司）。'},
+  {name:'序列神经时代', y:'2014-2017', color:'#a78bfa', desc:'RNN/LSTM 处理变长序列，Seq2Seq + Attention 做端到端翻译。',
+   solved:'端到端学习，不需要人工特征；Attention 大幅改善长句翻译', pain:'RNN 串行计算无法并行、训练慢；长距离依赖仍会梯度消失。'},
+  {name:'预训练时代', y:'2017-', color:'#7c3aed', desc:'Transformer 抛弃循环，全用注意力并行计算；BERT/GPT 先大规模预训练再微调。',
+   solved:'并行训练 + 海量无标注语料 + 领域通用表示，一个模型通吃多个任务', pain:'算力成本高、不可解释、幻觉问题、数据版权与安全问题。'}
+];
+let cur = 0;
+function drawTimeline(){
+  const cv=document.getElementById('tl-canvas'), ctx=cv.getContext('2d');
+  const W=cv.width,H=cv.height;
+  ctx.clearRect(0,0,W,H); ctx.fillStyle='#fff'; ctx.fillRect(0,0,W,H);
+  const padL=90, padR=90, y=170;
+  const step=(W-padL-padR)/(ERAS.length-1);
+  // 主线
+  ctx.beginPath(); ctx.moveTo(padL,y); ctx.lineTo(W-padR,y);
+  ctx.strokeStyle='#e2e8f0'; ctx.lineWidth=6; ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(padL,y); ctx.lineTo(padL+step*cur,y);
+  ctx.strokeStyle='#7c3aed'; ctx.lineWidth=6; ctx.stroke();
+  // 节点
+  ERAS.forEach((e,i)=>{
+    const x=padL+i*step;
+    const active = i<=cur;
+    ctx.beginPath(); ctx.arc(x,y, i===cur?20:14, 0, Math.PI*2);
+    ctx.fillStyle = i===cur? e.color : (active? e.color+'99':'#e2e8f0');
+    ctx.fill(); ctx.strokeStyle='#fff'; ctx.lineWidth=4; ctx.stroke();
+    if(i===cur){ ctx.strokeStyle=e.color; ctx.lineWidth=2; ctx.beginPath(); ctx.arc(x,y,28,0,Math.PI*2); ctx.stroke(); }
+    // 年份
+    ctx.fillStyle= active?'#334155':'#94a3b8'; ctx.font= (i===cur?'bold 14px':'13px')+' sans-serif'; ctx.textAlign='center';
+    ctx.fillText(e.y, x, y+55);
+    // 名称（上下交错避免重叠）
+    const up = i%2===0;
+    ctx.fillStyle= i===cur? e.color :'#64748b'; ctx.font=(i===cur?'bold 16px':'15px')+' sans-serif';
+    ctx.fillText(e.name, x, up? y-40 : y+95);
+  });
+}
+function pick(i){
+  cur=i; drawTimeline();
+  const e=ERAS[i];
+  document.getElementById('tl-detail').innerHTML =
+    `<div style="padding:16px 20px;border-left:5px solid ${e.color};background:${e.color}14;border-radius:10px">
+      <div style="font-weight:700;font-size:17px;color:${e.color};margin-bottom:6px">${e.name} <span class="mono" style="font-size:13px;color:#64748b">${e.y}</span></div>
+      <div style="color:#334155;line-height:1.8;margin-bottom:8px">${e.desc}</div>
+      <div style="font-size:14px;color:#15803d">✅ 解决了：${e.solved}</div>
+      <div style="font-size:14px;color:#dc2626">⚠️ 新问题：${e.pain}</div>
+    </div>`;
+}
+// 任务-模型匹配
+const TASKS = {
+  '文本分类 / 情感分析': {labels:['朴素贝叶斯','SVM + TF-IDF','TextCNN','BERT 微调'], now:'BERT 或更强的预训练分类头'},
+  '序列标注 / NER': {labels:['HMM','CRF','BiLSTM-CRF','BERT + CRF'], now:'预训练模型 + CRF/解码约束'},
+  '机器翻译': {labels:['统计机器翻译','Seq2Seq','Seq2Seq+Attention','Transformer'], now:'Transformer 大模型'},
+  '问答 / 阅读理解': {labels:['规则检索','信息检索','BiDAF','BERT 抽取式'], now:'大模型检索增强 (RAG)'},
+  '文本生成 / 对话': {labels:['模板','N-gram 生成','RNN 语言模型','GPT 系列'], now:'Decoder-only 大模型'}
+};
+function matchTask(){
+  const t=document.getElementById('task-sel').value;
+  const d=TASKS[t];
+  const cv=document.getElementById('task-canvas'), ctx=cv.getContext('2d');
+  const W=cv.width,H=cv.height;
+  ctx.clearRect(0,0,W,H); ctx.fillStyle='#fff'; ctx.fillRect(0,0,W,H);
+  const n=d.labels.length, padL=70, padR=70, y=140;
+  const step=(W-padL-padR)/(n-1);
+  const colors=['#94a3b8','#60a5fa','#a78bfa','#7c3aed'];
+  ctx.beginPath(); ctx.moveTo(padL,y); ctx.lineTo(W-padR,y); ctx.strokeStyle='#e2e8f0'; ctx.lineWidth=6; ctx.stroke();
+  d.labels.forEach((l,i)=>{
+    const x=padL+i*step;
+    ctx.beginPath(); ctx.arc(x,y,15,0,Math.PI*2);
+    ctx.fillStyle=colors[i%colors.length]; ctx.fill();
+    ctx.strokeStyle='#fff'; ctx.lineWidth=4; ctx.stroke();
+    // 名称，交替上下
+    ctx.fillStyle='#334155'; ctx.font='bold 14px sans-serif'; ctx.textAlign='center';
+    const up=i%2===0;
+    ctx.fillText(l, x, up? y-45 : y+60);
+    // 序号
+    ctx.fillStyle='#94a3b8'; ctx.font='12px sans-serif';
+    ctx.fillText('第'+(i+1)+'代', x, up? y-28 : y+80);
+  });
+  // 箭头
+  ctx.fillStyle='#7c3aed'; ctx.font='bold 15px sans-serif'; ctx.textAlign='left';
+  ctx.fillText('➡', W-padR+8, y+5);
+  ctx.textAlign='center'; ctx.fillStyle='#7c3aed';
+  ctx.fillText('今天推荐', W-padR+55, y-30);
+  // 绘制两端标注
+  ctx.textAlign='left'; ctx.fillStyle='#94a3b8'; ctx.font='12px sans-serif';
+  ctx.fillText('历史上依次被接管 →', padL, 40);
+  document.getElementById('task-out').innerHTML =
+    `<b>${t}</b> 的方法演进：` + d.labels.map((l,i)=>`<span style="display:inline-block;margin:4px 4px;padding:3px 12px;background:${colors[i%colors.length]}22;border-radius:999px;font-size:13px">${l}</span>`).join(' → ') +
+    `<div style="margin-top:8px;font-size:14px;color:#7c3aed"><b>✅ 现在首选：</b>${d.now}</div>`;
+}
+window.addEventListener('load', ()=>{ drawTimeline(); pick(4); matchTask(); });
+</script>
+</body>
+</html>

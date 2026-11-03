@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HMM 隐马尔可夫 · 互动原理图</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=JetBrains+Mono:wght@400;500&display=swap');
+* { font-family: 'Noto Sans SC', sans-serif; }
+code, pre, .mono { font-family: 'JetBrains Mono', monospace; }
+body { background: #fafbfc; color: #1a1a2e; }
+.wrap { max-width: 1100px; margin: 0 auto; padding: 96px 24px 80px; }
+h1 { font-size: 2rem; font-weight: 700; margin-bottom: 8px; }
+h2 { font-size: 1.35rem; font-weight: 700; margin: 40px 0 16px; padding-bottom: 10px; border-bottom: 2px solid #e5e7eb; }
+h3 { font-size: 1.05rem; font-weight: 700; color: #1e40af; margin: 24px 0 10px; }
+p { color: #334155; line-height: 1.8; margin-bottom: 12px; }
+canvas { border-radius: 10px; background: #fff; border: 1px solid #e2e8f0; width: 100%; display: block; }
+.demo { background: #fff; border: 1px solid #e2e8f0; border-radius: 14px; padding: 22px; margin: 18px 0; box-shadow: 0 1px 3px rgba(0,0,0,.04); }
+.ctrl { display: flex; flex-wrap: wrap; gap: 14px; align-items: center; margin-bottom: 16px; font-size: 14px; }
+.ctrl label { color: #475569; }
+input[type=range] { vertical-align: middle; }
+button { padding: 7px 16px; border: 1px solid #cbd5e1; border-radius: 8px; background: #f8fafc; cursor: pointer; font-size: 14px; transition: all .18s; }
+button:hover { background: #eff6ff; border-color: #93c5fd; }
+button.primary { background: linear-gradient(135deg,#2563eb,#1d4ed8); color: #fff; border: none; }
+button.primary:hover { box-shadow: 0 6px 14px -4px rgba(37,99,235,.5); }
+.note { background: #fef3c7; border-left: 4px solid #f59e0b; padding: 12px 16px; border-radius: 8px; font-size: 14px; color: #92400e; margin-top: 14px; line-height: 1.7; }
+.info { background: #eff6ff; border-left: 4px solid #3b82f6; padding: 12px 16px; border-radius: 8px; font-size: 14px; color: #1e40af; margin-top: 14px; line-height: 1.7; }
+.formula { background: #f8fafc; padding: 14px 20px; border-radius: 8px; margin: 14px 0; text-align: center; border-left: 4px solid #2563eb; }
+table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 14px; }
+th { background: #f8fafc; padding: 10px 14px; text-align: left; color: #374151; border-bottom: 1px solid #e5e7eb; }
+td { padding: 10px 14px; border-bottom: 1px solid #f3f4f6; color: #4b5563; }
+.pill { display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: 13px; font-weight: 600; }
+</style>
+<link rel="stylesheet" href="css/site.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<script>
+(function(){
+  function render(){
+    if(typeof renderMathInElement !== 'function') return false;
+    try{ renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'\\[',right:'\\]',display:true},{left:'\\(',right:'\\)',display:false},{left:'$',right:'$',display:false}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false}); }catch(e){}
+    return true;
+  }
+  function go(){ if(render()) return; setTimeout(go(),200); }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',go()); else go();
+  window.addEventListener('load',function(){render(); setTimeout(render(),600); setTimeout(render(),1600)});
+})();
+</script>
+</head>
+<body>
+<nav class="navbar">
+  <div class="nav-inner">
+    <a href="index.html" class="nav-logo">💬 agent-nlp-llm</a>
+    <button class="nav-toggle" aria-label="菜单" onclick="document.querySelector('.nav-links').classList.toggle('open')">☰</button>
+    <div class="nav-links">
+      <a href="index.html" class="nav-link">🏠&nbsp;首页</a>
+      <a href="nlp/index.html" class="nav-link">📝&nbsp;NLP</a>
+      <a href="llm/index.html" class="nav-link">🤖&nbsp;LLM</a>
+      <a href="lab.html" class="nav-link">🧪&nbsp;实验室</a>
+      <a href="papers.html" class="nav-link">📚&nbsp;论文</a>
+      <a href="clinic.html" class="nav-link">🕵️&nbsp;诊所</a>
+      <a href="pitfalls.html" class="nav-link">💥&nbsp;踩坑</a>
+      <a href="benchmark.html" class="nav-link">📊&nbsp;选型</a>
+      <a href="universe.html" class="nav-link">🌌&nbsp;宇宙</a>
+      <a href="https://github.com/yejinlei/agent-nlp-llm" target="_blank" rel="noopener" class="nav-gh" aria-label="GitHub"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg></a>
+    </div>
+  </div>
+</nav>
+
+<div class="wrap">
+  <h1>🔗 HMM 隐马尔可夫模型 · 互动原理图</h1>
+  <p>HMM 是序列标注（分词、词性标注、命名实体识别）的经典模型。它的本质是：<b>你看得见的是"观测序列"（一串字），看不见的是背后生成它们的"隐藏状态序列"（B/M/E/S 标签）</b>。下面这张图把"看不见"的部分画出来了。</p>
+
+  <h2>① 状态转移图 · 谁生成谁</h2>
+  <p>HMM 有两条"路"：上层是<b>隐藏状态</b>（词性/BMES 标签），下层是<b>观测</b>（实际字符）。每个隐藏状态会"发射"出观测，状态之间按转移概率跳转。</p>
+
+  <div class="demo">
+    <canvas id="hmm-graph" width="1000" height="330"></canvas>
+    <div class="ctrl" style="margin-top:16px">
+      <label><b>选一个句子：</b></label>
+      <input id="hmm-sent" type="text" value="我爱北京" style="flex:1;min-width:200px;padding:7px 12px;border:1px solid #cbd5e1;border-radius:8px;font-size:14px;font-family:inherit">
+      <button class="primary" onclick="drawHMM">▶ 生成状态路径</button>
+      <button onclick="playHMM">🎬 播放生成过程</button>
+    </div>
+    <div id="hmm-path" style="margin-top:12px;font-size:15px;font-family:'JetBrains Mono',monospace;color:#334155"></div>
+  </div>
+
+  <div class="info">
+    <b>怎么读这张图？</b> 紫色节点是隐藏状态 B（词首）/ M（词中）/ E（词尾）/ S（单字），蓝色框是实际观测的字。箭头有两类：<b>状态间的转移</b>（B→M、M→E…）和<b>状态→观测的发射</b>。一条从左到右的路径，就对应一种分词方案。
+  </div>
+
+  <h2>② 概率计算问题 · 前向算法的动态规划表</h2>
+  <p>给定模型 λ 和观测序列 O，怎么算 <b>P(O|λ)</b>？暴力枚举所有状态路径是指数级。前向算法用一个递推表把它降到多项式：<b>α<sub>t</sub>(j) = 到 t 时刻停在状态 j 的所有路径概率之和</b>。</p>
+
+  <div class="formula">
+    $$\alpha_t(j) = \Big[\sum_{i} \alpha_{t-1}(i)\, a_{ij}\Big]\, b_j(o_t)$$
+  </div>
+
+  <div class="demo">
+    <div class="ctrl">
+      <label>观测序列长度 T = <b id="tw-val">5</b></label>
+      <input id="tw-t" type="range" min="3" max="8" value="5" oninput="drawForward">
+      <button class="primary" onclick="drawForward">重算</button>
+    </div>
+    <canvas id="fwd-canvas" width="1000" height="300"></canvas>
+    <div id="fwd-total" style="margin-top:12px;font-size:15px;color:#334155"></div>
+  </div>
+
+  <div class="note">
+    每个格子 α<sub>t</sub>(j) 的颜色深浅代表概率大小。你会发现：<b>越往右，格子颜色越浅</b>——因为每一步都要乘一个 ≤1 的转移概率，路径概率指数衰减。这正是"为什么长序列直接算概率会下溢"，工程上要取对数或用前后向算法。
+  </div>
+
+  <h2>③ 解码问题 · Viterbi 回溯指针</h2>
+  <p>HMM 三大问题里最实用的是<b>解码</b>：给定观测求最可能的状态序列。Viterbi 算法和前向算法只差一个字——<b>把"求和"换成"取最大"</b>，并额外记录"从哪来"的回溯指针 δ。</p>
+
+  <table>
+    <tr><th>问题</th><th>输入</th><th>输出</th><th>算法</th><th>核心操作</th></tr>
+    <tr><td><b>概率计算</b></td><td>λ, O</td><td>P(O|λ)</td><td>前向/后向</td><td class="mono">Σ 求和</td></tr>
+    <tr><td><b>解码</b></td><td>λ, O</td><td>最优状态序列</td><td>Viterbi</td><td class="mono">max 取最大</td></tr>
+    <tr><td><b>学习</b></td><td>O</td><td>参数 λ=(A,B,π)</td><td>Baum-Welch (EM)</td><td class="mono">E步+Σ / M步更新</td></tr>
+  </table>
+
+  <div class="demo">
+    <button class="primary" onclick="runViterbi">▶ 跑一遍 Viterbi 解码（以"我爱北京"为例）</button>
+    <canvas id="vit-canvas" width="1000" height="300" style="margin-top:16px"></canvas>
+    <div id="vit-out" style="margin-top:12px;font-size:15px;font-family:'JetBrains Mono',monospace"></div>
+  </div>
+
+  <div class="info">
+    <b>Viterbi 的意义：</b>它是"动态规划"在序列上的经典应用。每一步都保留"到该状态的最大概率"和"从哪来"，避免重复计算，复杂度从 O(|S|<sup>T</sup>) 降到 O(|S|<sup>2</sup>·T)。今天大模型的 beam search 本质上是同一个思想——保留 top-k 最优路径，而不是只看一条。
+  </div>
+
+  <div style="margin-top:50px;display:flex;gap:12px;flex-wrap:wrap">
+    <a href="nlp/index.html#hmm" class="btn-primary" style="text-decoration:none">← 回到 NLP · HMM 章节</a>
+    <a href="lab.html" class="btn-secondary" style="text-decoration:none">🧪 实验室总览</a>
+  </div>
+</div>
+
+<script>
+// ---------- 状态转移图 ----------
+const STATES = ['B','M','E','S'];
+const STATE_NAME = {B:'词首',M:'词中',E:'词尾',S:'单字'};
+// 一张固定的转移概率表（每行：B,M,E,S）
+const TRANS = {
+  B:[0.05,0.75,0.15,0.05],
+  M:[0.02,0.73,0.23,0.02],
+  E:[0.55,0.05,0.05,0.35],
+  S:[0.55,0.05,0.05,0.35]
+};
+// 从句子简单推一个"合理"的 BMES 方案（每两字成词）
+function bmesOf(sent){
+  const n = sent.length, out = [];
+  let i = 0;
+  while(i < n){
+    if(i+1 < n){ out.push('B'); out.push('E'); i+=2; }
+    else { out.push('S'); i+=1; }
+  }
+  return out;
+}
+let hmmPath = [], hmmSent = '';
+function drawHMM(){
+  const sent = document.getElementById('hmm-sent').value.trim();
+  hmmSent = sent;
+  const chars = [...sent];
+  const labels = bmesOf(sent);
+  hmmPath = labels;
+  const cv = document.getElementById('hmm-graph'), ctx = cv.getContext('2d');
+  const W = cv.width, H = cv.height;
+  ctx.clearRect(0,0,W,H);
+  ctx.fillStyle = '#fff'; ctx.fillRect(0,0,W,H);
+
+  const padL = 70, padR = 30;
+  const x0 = padL, x1 = W - padR;
+  const step = chars.length > 1 ? (x1-x0)/(chars.length-1) : 0;
+  const yState = 95, yObs = 235;
+
+  // 图例
+  ctx.font = '13px sans-serif'; ctx.textAlign='left';
+  ctx.fillStyle = '#7c3aed'; ctx.fillText('◉ 隐藏状态（BMES）', 20, 26);
+  ctx.fillStyle = '#2563eb'; ctx.fillText('▭ 观测（字符）', 200, 26);
+  ctx.fillStyle = '#94a3b8'; ctx.fillText('→ 转移概率   ⇣ 发射概率', 340, 26);
+
+  // 画状态节点
+  chars.forEach((c,i)=>{
+    const x = x0 + i*step;
+    const lab = labels[i];
+    const isB = lab==='B', isE = lab==='E';
+    // 状态圆
+    ctx.beginPath();
+    ctx.arc(x, yState, 26, 0, Math.PI*2);
+    ctx.fillStyle = lab==='S' ? '#ede9fe' : (lab==='M'? '#e0e7ff' : '#ddd6fe');
+    ctx.fill(); ctx.lineWidth=2.5; ctx.strokeStyle='#7c3aed'; ctx.stroke();
+    ctx.fillStyle='#5b21b6'; ctx.font='bold 17px sans-serif'; ctx.textAlign='center';
+    ctx.fillText(lab, x, yState+6);
+    // 状态名
+    ctx.font='11px sans-serif'; ctx.fillStyle='#8b5cf6';
+    ctx.fillText(STATE_NAME[lab], x, yState-36);
+
+    // 观测框
+    ctx.fillStyle = '#eff6ff'; ctx.strokeStyle='#2563eb'; ctx.lineWidth=2;
+    roundRect(ctx, x-24, yObs-24, 48, 48, 8); ctx.fill(); ctx.stroke();
+    ctx.fillStyle='#1e40af'; ctx.font='bold 20px sans-serif';
+    ctx.fillText(c, x, yObs+7);
+
+    // 发射箭头
+    ctx.beginPath(); ctx.moveTo(x, yState+26); ctx.lineTo(x, yObs-24);
+    ctx.strokeStyle='#93c5fd'; ctx.lineWidth=2; ctx.setLineDash([5,4]); ctx.stroke(); ctx.setLineDash([]);
+    // 箭头头
+    ctx.beginPath(); ctx.moveTo(x, yObs-24); ctx.lineTo(x-4, yObs-31); ctx.lineTo(x+4, yObs-31); ctx.closePath();
+    ctx.fillStyle='#93c5fd'; ctx.fill();
+
+    // 转移箭头（到下一个）
+    if(i < chars.length-1){
+      const nx = x0 + (i+1)*step;
+      const row = TRANS[labels[i]] || [0.25,0.25,0.25,0.25];
+      const p = row[STATES.indexOf(labels[i+1])];
+      const pv = (typeof p==='number' && isFinite(p)) ? p : 0.25;
+      ctx.beginPath();
+      ctx.moveTo(x+26, yState);
+      ctx.lineTo(nx-26, yState);
+      ctx.strokeStyle = '#a78bfa'; ctx.lineWidth = 2 + pv*2; ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(nx-26, yState); ctx.lineTo(nx-33, yState-5); ctx.lineTo(nx-33, yState+5); ctx.closePath();
+      ctx.fillStyle='#a78bfa'; ctx.fill();
+      ctx.font='11px monospace'; ctx.fillStyle='#7c3aed'; ctx.textAlign='center';
+      ctx.fillText(pv.toFixed(2), (x+nx)/2, yState-12);
+    }
+  });
+
+  // 路径文字
+  const seg = [];
+  let cur = '';
+  chars.forEach((c,i)=>{
+    if(labels[i]==='B') cur = c;
+    else if(labels[i]==='M') cur += c;
+    else if(labels[i]==='E'){ cur += c; seg.push(cur); cur=''; }
+    else { if(cur) seg.push(cur); seg.push(c); cur=''; }
+  });
+  if(cur) seg.push(cur);
+  document.getElementById('hmm-path').innerHTML =
+    `<b>字符：</b>${chars.join(' ')}<br><b>状态：</b>${labels.join(' ')}<br><b>切分结果：</b>` +
+    seg.map(s=>`<span class="pill" style="background:#ddd6fe;color:#5b21b6;margin-right:6px">${s}</span>`).join('');
+}
+function playHMM(){
+  if(!hmmPath.length) drawHMM();
+  const cv = document.getElementById('hmm-graph'), ctx = cv.getContext('2d');
+  const chars = [...hmmSent];
+  const padL=70,padR=30,x0=padL,x1=cv.width-padR;
+  const step = chars.length>1?(x1-x0)/(chars.length-1):0;
+  let i = 0;
+  const timer = setInterval(()=>{
+    if(i >= chars.length){ clearInterval(timer); return; }
+    const x = x0 + i*step;
+    ctx.beginPath(); ctx.arc(x, 95, 34, 0, Math.PI*2);
+    ctx.strokeStyle='#f59e0b'; ctx.lineWidth=3; ctx.stroke();
+    i++;
+  }, 420);
+}
+function roundRect(ctx,x,y,w,h,r){
+  ctx.beginPath();
+  ctx.moveTo(x+r,y); ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r);
+  ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath();
+}
+
+// ---------- 前向算法表 ----------
+function drawForward(){
+  const T = +document.getElementById('tw-t').value;
+  document.getElementById('tw-val').textContent = T;
+  // 用固定参数模拟
+  const states = STATES;
+  const pi = {B:0.4,M:0.0,E:0.0,S:0.6};
+  // 发射概率：简单按状态给不同分布
+  const emit = {B:0.55,M:0.3,E:0.5,S:0.7};
+  const cv = document.getElementById('fwd-canvas'), ctx = cv.getContext('2d');
+  const W=cv.width,H=cv.height;
+  ctx.clearRect(0,0,W,H); ctx.fillStyle='#fff'; ctx.fillRect(0,0,W,H);
+
+  // 递推
+  const alpha = [];
+  alpha[0] = states.map(s => pi[s] * emit[s]);
+  for(let t=1;t<T;t++){
+    alpha[t] = states.map((s,j)=>{
+      let sum = 0;
+      states.forEach((si,i)=> sum += alpha[t-1][i]*TRANS[si][j]);
+      return sum * emit[s];
+    });
+  }
+  const flat = alpha.flat();
+  const maxV = Math.max(...flat);
+
+  const padL=90, padT=50, cw=(W-padL-40)/T, ch=44;
+  ctx.font='12px sans-serif'; ctx.textAlign='center';
+  states.forEach((s,i)=>{
+    ctx.fillStyle='#5b21b6'; ctx.font='bold 14px sans-serif';
+    ctx.fillText(s, padL-42, padT+i*ch+ch/2+5);
+  });
+  // 列标题
+  ctx.fillStyle='#64748b'; ctx.font='12px sans-serif';
+  for(let t=0;t<T;t++) ctx.fillText('t='+(t+1), padL+t*cw+cw/2, padT-16);
+
+  states.forEach((s,i)=>{
+    for(let t=0;t<T;t++){
+      const v = alpha[t][i];
+      const x = padL+t*cw, y = padT+i*ch;
+      const a = maxV>0? v/maxV : 0;
+      // 颜色：概率大→深蓝
+      const r = Math.round(239 - a*180), g = Math.round(246 - a*150), b = Math.round(255 - a*60);
+      ctx.fillStyle = `rgb(${r},${g},${b})`;
+      ctx.fillRect(x+2, y+2, cw-4, ch-4);
+      ctx.strokeStyle='#e2e8f0'; ctx.strokeRect(x+2,y+2,cw-4,ch-4);
+      ctx.fillStyle = a>0.55?'#fff':'#334155';
+      ctx.font='11px monospace'; ctx.textAlign='center';
+      ctx.fillText(v.toExponential(1), x+cw/2, y+ch/2+4);
+    }
+  });
+  const total = alpha[T-1].reduce((a,b)=>a+b,0);
+  document.getElementById('fwd-total').innerHTML =
+    `<b>P(O|λ) = Σ<sub>j</sub> α<sub>T</sub>(j) = </b><span style="color:#2563eb;font-weight:700">${total.toExponential(3)}</span>` +
+    ` &nbsp;｜&nbsp; 共 ${states.length**T} 条可能路径，前向算法只用了 ${states.length*states.length*(T-1)+states.length} 次乘法`;
+}
+
+// ---------- Viterbi ----------
+function runViterbi(){
+  const sent = '我爱北京';
+  const chars = [...sent];
+  const T = chars.length;
+  const states = STATES;
+  const pi = {B:0.4,M:0.0,E:0.0,S:0.6};
+  const emit = {B:0.55,M:0.3,E:0.5,S:0.7};
+  const delta = [], back = [];
+  delta[0] = states.map(s => Math.log(pi[s]*emit[s]));
+  back[0] = states.map(()=> -1);
+  for(let t=1;t<T;t++){
+    delta[t] = []; back[t] = [];
+    states.forEach((s,j)=>{
+      let best=-Infinity, bi=0;
+      states.forEach((si,i)=>{
+        const v = delta[t-1][i] + Math.log(TRANS[si][j]+1e-9);
+        if(v>best){ best=v; bi=i; }
+      });
+      delta[t][j] = best + Math.log(emit[s]);
+      back[t][j] = bi;
+    });
+  }
+  // 回溯
+  let last=0; delta[T-1].forEach((v,i)=>{ if(v>delta[T-1][last]) last=i; });
+  const path = new Array(T); path[T-1]=states[last];
+  let cur=last;
+  for(let t=T-2;t>=0;t--){ cur=back[t+1][cur]; path[t]=states[cur]; }
+
+  // 画
+  const cv=document.getElementById('vit-canvas'), ctx=cv.getContext('2d');
+  const W=cv.width,H=cv.height;
+  ctx.clearRect(0,0,W,H); ctx.fillStyle='#fff'; ctx.fillRect(0,0,W,H);
+  const padL=90,padT=50,cw=(W-padL-40)/T,ch=44;
+  const maxD = Math.max(...delta.flat());
+  states.forEach((s,i)=>{
+    ctx.fillStyle='#5b21b6'; ctx.font='bold 14px sans-serif'; ctx.textAlign='center';
+    ctx.fillText(s, padL-42, padT+i*ch+ch/2+5);
+  });
+  for(let t=0;t<T;t++){ ctx.fillStyle='#64748b'; ctx.font='12px sans-serif'; ctx.fillText(chars[t]+' (t='+(t+1)+')', padL+t*cw+cw/2, padT-16); }
+
+  states.forEach((s,i)=>{
+    for(let t=0;t<T;t++){
+      const v=delta[t][i];
+      const x=padL+t*cw,y=padT+i*ch;
+      const a=(v-maxD+10)/10;
+      ctx.fillStyle=`rgba(37,99,235,${Math.max(.08,Math.min(.9,a()))})`;
+      ctx.fillRect(x+2,y+2,cw-4,ch-4);
+      ctx.strokeStyle='#e2e8f0'; ctx.strokeRect(x+2,y+2,cw-4,ch-4);
+      ctx.fillStyle= a>0.5?'#fff':'#475569'; ctx.font='10px monospace'; ctx.textAlign='center';
+      ctx.fillText(v.toFixed(2), x+cw/2, y+ch/2+4);
+    }
+  });
+  // 最优路径高亮
+  states.forEach((s,i)=>{ for(let t=0;t<T;t++){ if(path[t]===s){
+    const x=padL+t*cw,y=padT+i*ch;
+    ctx.strokeStyle='#f59e0b'; ctx.lineWidth=3; ctx.strokeRect(x+2,y+2,cw-4,ch-4);
+  }}});
+  document.getElementById('vit-out').innerHTML =
+    `<b>最优状态序列：</b><span style="color:#d97706;font-weight:700">${path.join(' ')}</span>` +
+    ` &nbsp;｜&nbsp; 对应字符：${chars.join(' ')}`;
+}
+window.addEventListener('load', ()=>{ drawHMM(); drawForward(); });
+</script>
+</body>
+</html>

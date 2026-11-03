@@ -414,6 +414,38 @@
         <span class="lab-tag tag-gpt">推理优化</span>
       </div>
     </a>
+    <a href="hmm-viz.html" class="lab-card" data-name="HMM 隐马尔可夫模型 观测状态 隐含状态 发射矩阵 转移矩阵 天气心情 观测序列">
+      <div class="lab-icon">🌤️</div>
+      <div class="lab-body">
+        <h3>HMM 隐马尔可夫模型</h3>
+        <p>天气-心情经典例子，改观测序列看前向概率计算全过程，α 表格高亮最可能隐含状态路径</p>
+        <span class="lab-tag tag-nlp">概率图模型</span>
+      </div>
+    </a>
+    <a href="crf-viz.html" class="lab-card" data-name="CRF 条件随机场 特征函数 转移特征 状态特征 维特比 NER 序列标注">
+      <div class="lab-icon">🔗</div>
+      <div class="lab-body">
+        <h3>CRF 条件随机场</h3>
+        <p>用"形容词→名词"等语言学特征函数，看CRF打分+维特比解码如何比HMM更稳地做序列标注</p>
+        <span class="lab-tag tag-nlp">序列标注</span>
+      </div>
+    </a>
+    <a href="bert-pretrain.html" class="lab-card" data-name="BERT MLM Mask掩码 NSP 下一句预测 预训练 双向编码器 Transformer Encoder">
+      <div class="lab-icon">🎭</div>
+      <div class="lab-body">
+        <h3>BERT 预训练双任务</h3>
+        <p>点随机Mask看15%被遮token→MLM预测；切换 NSP 样本看二分类判断；直观理解双向编码</p>
+        <span class="lab-tag tag-attn">预训练</span>
+      </div>
+    </a>
+    <a href="nlp-roadmap.html" class="lab-card" data-name="NLP 技术路线图 发展史 规则时代 统计时代 深度学习 预训练 大模型 Transformer">
+      <div class="lab-icon">🗺️</div>
+      <div class="lab-body">
+        <h3>NLP 七十年路线图</h3>
+        <p>1950图灵测试→2020+大模型时间轴，点击每个里程碑看代表方法/论文/代表作，一张图看懂演进</p>
+        <span class="lab-tag tag-nlp">发展历程</span>
+      </div>
+    </a>
   </div>
 </section>
 <div style="height:80px"></div>
@@ -425,11 +457,11 @@ const searchInput = document.getElementById('searchInput');
 const cards = document.querySelectorAll('.lab-card');
 
 searchInput.addEventListener('input', (e) => {
-  const keyword = e.target.value.trim.toLowerCase;
+  const keyword = e.target.value.trim().toLowerCase();
   cards.forEach(card => {
-    const name = (card.dataset.name || '').toLowerCase;
-    const title = card.querySelector('h3')?.textContent.toLowerCase || '';
-    const desc = card.querySelector('p')?.textContent.toLowerCase || '';
+    const name = (card.dataset.name || '').toLowerCase();
+    const title = card.querySelector('h3')?.textContent.toLowerCase() || '';
+    const desc = card.querySelector('p')?.textContent.toLowerCase() || '';
     if (!keyword || name.includes(keyword) || title.includes(keyword) || desc.includes(keyword)) {
       card.classList.remove('hidden');
     } else {

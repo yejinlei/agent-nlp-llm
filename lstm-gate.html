@@ -119,7 +119,7 @@ function stepLSTM(f,i,g,o,cPrev){
   return{c,h};
 }
 
-function draw{
+function draw(){
   const f=+document.getElementById('fs').value;
   const i=+document.getElementById('is').value;
   const g=+document.getElementById('gvs').value;
@@ -167,9 +167,9 @@ function drawChart(cp,c,h,f,i,g,o){
   ctx.clearRect(0,0,W,H);
   // 轴
   ctx.strokeStyle='#e2e8f0';ctx.lineWidth=1;
-  for(let y=0;y<=4;y++){ctx.beginPath;ctx.moveTo(40,y*(H-40)/4+10);ctx.lineTo(W-10,y*(H-40)/4+10);ctx.stroke;}
+  for(let y=0;y<=4;y++){ctx.beginPath();ctx.moveTo(40,y*(H-40)/4+10);ctx.lineTo(W-10,y*(H-40)/4+10);ctx.stroke();}
   ctx.strokeStyle='#64748b';ctx.lineWidth=1.5;
-  ctx.beginPath;ctx.moveTo(40,H-30);ctx.lineTo(W-10,H-30);ctx.moveTo(40,10);ctx.lineTo(40,H-30);ctx.stroke;
+  ctx.beginPath();ctx.moveTo(40,H-30);ctx.lineTo(W-10,H-30);ctx.moveTo(40,10);ctx.lineTo(40,H-30);ctx.stroke();
   ctx.fillStyle='#334155';ctx.font='11px sans-serif';
   ctx.fillText('+1',10,15);ctx.fillText('0',20,H/2);ctx.fillText('-1',10,H-30);
   ctx.fillText('c_{t-1}',80,H-15);ctx.fillText('→ f⊙c',200,H-15);ctx.fillText('+ i⊙g̃',340,H-15);ctx.fillText('c_t',480,H-15);ctx.fillText('→ o⊙tanh(c)=h_t',580,H-15);
@@ -198,7 +198,7 @@ function drawChart(cp,c,h,f,i,g,o){
 
 ['fs','is','gvs','os','cps'].forEach(id=>document.getElementById(id).oninput=draw);
 
-document.getElementById('playSeq').onclick=async=>{
+document.getElementById('playSeq').onclick=async()=>{
   // 模拟序列：前3步"写入"（i高f高g正），中间6步"保持"（f≈1,i≈0），最后一步"输出"（o高）
   const seq=[
     {f:0.9,i:0.8,g:0.8,o:0.1},{f:0.95,i:0.5,g:0.5,o:0.1},{f:0.95,i:0.2,g:0.2,o:0.1},
@@ -214,13 +214,13 @@ document.getElementById('playSeq').onclick=async=>{
     document.getElementById('gvs').value=s.g;
     document.getElementById('os').value=s.o;
     document.getElementById('cps').value=c.toFixed(2);
-    draw;
+    draw();
     c=stepLSTM(s.f,s.i,s.g,s.o,c).c;
     await new Promise(r=>setTimeout(r,500));
   }
 };
 
-draw;
+draw();
 </script>
 <script src="js/math.js"></script>
 </body>

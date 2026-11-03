@@ -28,9 +28,9 @@
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
 <script>
-document.addEventListener('DOMContentLoaded', function{
-  function r{try{renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false});}catch(e){}}
-  if(document.readyState==='complete')r;else window.addEventListener('load',r);
+document.addEventListener('DOMContentLoaded', function(){
+  function r(){try{renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false});}catch(e){}}
+  if(document.readyState==='complete')r();else window.addEventListener('load',r());
   setTimeout(r,300);setTimeout(r,1000);
 });
 </script>
@@ -142,7 +142,7 @@ document.addEventListener('DOMContentLoaded', function{
 <footer class="site"><p>💬 agent-nlp-llm · 自然语言技术本体论研究站</p></footer>
 <script src="js/site.js"></script>
 <script>
-(function{
+(function(){
   // Simulated tokenizer vocabularies and rules
   var commonWords = new Set(['the','a','is','was','are','to','of','in','for','on','with','that','this','it','and','or','but','not','be','by','as','at','from','model','train','neural','network','run','debug','transformer','chat','神经','网络','模型','训练','调试','ChatGPT','GPT']);
   var bpeMerges = [
@@ -188,11 +188,11 @@ document.addEventListener('DOMContentLoaded', function{
 
   // BPE tokenization (simplified: longest match from merged vocab)
   function bpeTokenize(word){
-    if(commonWords.has(word.toLowerCase))return [{text:word,type:'full'}];
+    if(commonWords.has(word.toLowerCase()))return [{text:word,type:'full'}];
     if(word.length<=1)return [{text:word,type:'char'}];
     var tokens=[];
     var i=0;
-    var lower=word.toLowerCase;
+    var lower=word.toLowerCase();
     while(i<word.length){
       var matched=false;
       for(var len=Math.min(8,word.length-i);len>=1;len--){
@@ -213,10 +213,10 @@ document.addEventListener('DOMContentLoaded', function{
 
   // WordPiece tokenization (add ## for non-word-start)
   function wordpieceTokenize(word){
-    if(commonWords.has(word.toLowerCase))return [{text:word,type:'full'}];
+    if(commonWords.has(word.toLowerCase()))return [{text:word,type:'full'}];
     var tokens=[];
     var i=0;
-    var lower=word.toLowerCase;
+    var lower=word.toLowerCase();
     var isFirst=true;
     while(i<word.length){
       var matched=false;
@@ -247,7 +247,7 @@ document.addEventListener('DOMContentLoaded', function{
       var best=null,bestLen=1;
       for(var len=Math.min(6,word.length-i);len>=1;len--){
         var sub=word.substr(i,len);
-        if(unigramTokens.has(sub)||unigramTokens.has(sub.toLowerCase)){
+        if(unigramTokens.has(sub)||unigramTokens.has(sub.toLowerCase())){
           best=sub;bestLen=len;break;
         }
       }
@@ -325,9 +325,9 @@ document.addEventListener('DOMContentLoaded', function{
       '<div class="stat-row"><span>OOV率</span><span style="color:#10a37f">~0%</span></div>';
   }
 
-  function process{
+  function process(){
     var text=document.getElementById('inputText').value;
-    if(!text.trim)return;
+    if(!text.trim())return;
 
     var bpeToks=tokenize(text,'bpe');
     var wpToks=tokenize(text,'wp');
@@ -359,7 +359,7 @@ document.addEventListener('DOMContentLoaded', function{
   }
 
   document.getElementById('inputText').oninput=process;
-  process;
+  process();
 });
 </script>
 </body>

@@ -82,10 +82,10 @@
 const DETAILS = {
   "enc-in":{title:"输入嵌入 + 位置编码",body:"把 token id 查表变成 d_model 维向量，再<b>加上位置编码</b>。由于注意力本身不知道词的顺序，必须用 PE(sin/cos或可学习)显式注入位置信息。"},
   "enc-mha":{title:"多头自注意力（Encoder）",body:"<b>Q=K=V 都来自输入</b>。每个 token 都能看到句子里所有其它 token。多头让模型同时学习多种关系：一个头学语法，一个头学指代，一个头学语义相似。<br><br>公式：Attention(Q,K,V)=softmax(QKᵀ/√d)V"},
-  "enc-ffn":{title:"前馈网络 FFN",body:"每个位置独立过同一个两层 MLP：<br>FFN(x)=ReLU(xW₁+b₁)W₂+b₂<br>内层维度通常是 4×d_model。这是 Transformer 的"记忆"单元，自注意力负责"交流"，FFN 负责"思考"。"},
+  "enc-ffn":{title:"前馈网络 FFN",body:"每个位置独立过同一个两层 MLP：<br>FFN(x)=ReLU(xW₁+b₁)W₂+b₂<br>内层维度通常是 4×d_model。这是 Transformer 的“记忆”单元，自注意力负责“交流”，FFN 负责“思考”。"},
   "dec-in":{title:"输出嵌入（右移一位）",body:"解码器的输入是<b>已经生成的前 t 个词</b>，预测第 t+1 个词。训练时用 teacher forcing，推理时自回归逐步生成。"},
   "dec-mha1":{title:"掩码多头自注意力",body:"和编码器自注意力几乎一样，但是加了<b>因果掩码</b>：第 i 个位置只能看到 1..i，不能偷看未来词。上三角全部置为 -∞。"},
-  "dec-cross":{title:"交叉注意力（Cross Attention）",body:"<b>Q 来自解码器，K/V 来自编码器输出</b>。这是源语言和目标语言的"桥梁"：翻译"我"时，Q 指向 "I"，K/V 提供源语言所有词的信息，注意力权重告诉模型"现在该看原文哪个位置"。"},
+  "dec-cross":{title:"交叉注意力（Cross Attention）",body:"<b>Q 来自解码器，K/V 来自编码器输出</b>。这是源语言和目标语言的“桥梁”：翻译“我”时，Q 指向 “I”，K/V 提供源语言所有词的信息，注意力权重告诉模型“现在该看原文哪个位置”。"},
   "dec-ffn":{title:"解码器前馈网络",body:"结构和编码器 FFN 相同，但参数独立。"}
 };
 document.querySelectorAll('.arch-block').forEach(el=>{

@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RLHF 对齐三阶段 · 互动演示</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=JetBrains+Mono:wght@400;500&display=swap');
+* { font-family: 'Noto Sans SC', sans-serif; }
+code, .mono { font-family: 'JetBrains Mono', monospace; }
+body { background: #fafbfc; color: #1a1a2e; }
+.wrap { max-width: 1100px; margin: 0 auto; padding: 96px 24px 80px; }
+h1 { font-size: 2rem; font-weight: 700; margin-bottom: 8px; }
+h2 { font-size: 1.35rem; font-weight: 700; margin: 40px 0 16px; padding-bottom: 10px; border-bottom: 2px solid #e5e7eb; }
+p { color: #334155; line-height: 1.8; margin-bottom: 12px; }
+canvas { border-radius: 10px; background: #fff; border: 1px solid #e2e8f0; width: 100%; display: block; }
+.demo { background: #fff; border: 1px solid #e2e8f0; border-radius: 14px; padding: 22px; margin: 18px 0; box-shadow: 0 1px 3px rgba(0,0,0,.04); }
+.ctrl { display: flex; flex-wrap: wrap; gap: 14px; align-items: center; margin-bottom: 16px; font-size: 14px; }
+button { padding: 7px 16px; border: 1px solid #cbd5e1; border-radius: 8px; background: #f8fafc; cursor: pointer; font-size: 14px; }
+button:hover { background: #eff6ff; border-color: #93c5fd; }
+button.primary { background: linear-gradient(135deg,#2563eb,#1d4ed8); color:#fff; border:none; }
+.note { background: #fef3c7; border-left: 4px solid #f59e0b; padding: 12px 16px; border-radius: 8px; font-size: 14px; color: #92400e; margin-top: 14px; line-height: 1.7; }
+.info { background: #eff6ff; border-left: 4px solid #3b82f6; padding: 12px 16px; border-radius: 8px; font-size: 14px; color: #1e40af; margin-top: 14px; line-height: 1.7; }
+.formula { background: #f8fafc; padding: 14px 20px; border-radius: 8px; margin: 14px 0; text-align: center; border-left: 4px solid #2563eb; }
+.rank-item { border: 2px solid #e2e8f0; border-radius: 10px; padding: 14px 16px; margin: 10px 0; cursor: pointer; transition: all .18s; display:flex; align-items:center; gap:12px; }
+.rank-item:hover { border-color: #a78bfa; background: #faf5ff; }
+.rank-item.win { border-color:#16a34a; background:#f0fdf4; }
+.rank-item.lose { border-color:#ef4444; background:#fef2f2; opacity:.75; }
+.rank-badge { width:26px;height:26px;border-radius:50%;background:#e2e8f0;color:#475569;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex:0 0 26px; }
+</style>
+<link rel="stylesheet" href="css/site.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<script>
+(function(){
+  function render(){ if(typeof renderMathInElement!=='function') return false;
+    try{ renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'\\[',right:'\\]',display:true},{left:'\\(',right:'\\)',display:false},{left:'$',right:'$',display:false}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false}); }catch(e){}
+    return true; }
+  function go(){ if(render()) return; setTimeout(go(),200); }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',go()); else go();
+  window.addEventListener('load',function(){render(); setTimeout(render(),600); setTimeout(render(),1600)});
+})();
+</script>
+</head>
+<body>
+<nav class="navbar">
+  <div class="nav-inner">
+    <a href="index.html" class="nav-logo">💬 agent-nlp-llm</a>
+    <button class="nav-toggle" aria-label="菜单" onclick="document.querySelector('.nav-links').classList.toggle('open')">☰</button>
+    <div class="nav-links">
+      <a href="index.html" class="nav-link">🏠&nbsp;首页</a>
+      <a href="nlp/index.html" class="nav-link">📝&nbsp;NLP</a>
+      <a href="llm/index.html" class="nav-link">🤖&nbsp;LLM</a>
+      <a href="lab.html" class="nav-link">🧪&nbsp;实验室</a>
+      <a href="papers.html" class="nav-link">📚&nbsp;论文</a>
+      <a href="clinic.html" class="nav-link">🕵️&nbsp;诊所</a>
+      <a href="pitfalls.html" class="nav-link">💥&nbsp;踩坑</a>
+      <a href="benchmark.html" class="nav-link">📊&nbsp;选型</a>
+      <a href="universe.html" class="nav-link">🌌&nbsp;宇宙</a>
+      <a href="https://github.com/yejinlei/agent-nlp-llm" target="_blank" rel="noopener" class="nav-gh" aria-label="GitHub"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg></a>
+    </div>
+  </div>
+</nav>
+
+<div class="wrap">
+  <h1>⚖️ RLHF 对齐三阶段 · 互动演示</h1>
+  <p>预训练让模型"会说人话"，SFT 让模型"听懂指令"，而 <b>RLHF</b> 让模型"说人喜欢的话"。它把"什么算好回答"这种模糊标准，变成了可优化的数学目标。下面从头走一遍。</p>
+
+  <h2>① 三阶段全景流程</h2>
+  <div class="demo">
+    <canvas id="flow-canvas" width="1050" height="340"></canvas>
+    <div class="ctrl" style="margin-top:14px">
+      <button onclick="playFlow">▶ 播放对齐流程</button>
+      <button onclick="stopFlow">⏹ 停止</button>
+    </div>
+    <div id="flow-detail" style="margin-top:10px;font-size:14px;color:#475569;min-height:52px"></div>
+  </div>
+
+  <h2>② 你把"好回答"标成什么？—— 偏好数据是怎么攒的</h2>
+  <p>RLHF 最关键的一步是<b>收集人类偏好</b>：给同一个问题两个回答，让人选哪个更好。下面扮演一次标注员，"标"出你的偏好，看奖励模型会学到什么。</p>
+
+  <div class="demo">
+    <p style="font-weight:700;color:#1e293b">问题：请解释一下什么是过拟合。</p>
+    <div id="rank-list"></div>
+    <div class="ctrl" style="margin-top:12px">
+      <button class="primary" onclick="resetRank">🔄 重新标注</button>
+    </div>
+    <div id="rank-feedback"></div>
+  </div>
+
+  <div class="info">
+    <b>为什么要用"排序"而不是"打绝对分"？</b> 人类给绝对分数很不一致（同样质量，今天打 7 分明天打 9 分），但"A 比 B 好"这种<b>相对判断</b>很稳定。奖励模型学的就是相对偏好，损失用 pairwise 的 Bradley-Terry 形式：
+    $$\mathcal{L} = -\log \sigma\big(r(x, y_w) - r(x, y_l)\big)$$
+    其中 y<sub>w</sub> 是更优回答、y<sub>l</sub> 是更差回答。它只要求"好的分数比差的高"，不去纠结绝对数值。
+  </div>
+
+  <h2>③ 奖励模型怎么训练 + PPO 怎么更新</h2>
+  <div class="demo">
+    <div class="ctrl">
+      <label>训练步 t = <b id="ppo-val">0</b></label>
+      <input id="ppo" type="range" min="0" max="40" step="1" value="0" oninput="drawPPO" style="width:220px">
+      <button class="primary" onclick="playPPO">▶ 自动播放训练</button>
+    </div>
+    <canvas id="ppo-canvas" width="1000" height="320"></canvas>
+    <div class="note" style="margin-top:14px">
+      <b>三件事同时在变：</b> ①<b>策略模型</b>输出越来越讨喜；②<b>奖励</b>稳步上升；③但 <b>KL 散度</b>也在涨——它是"策略跑偏度"的护栏。目标函数里有一项 <span class="mono">−β·KL(π<sub>θ</sub> ∥ π<sub>SFT</sub>)</span>，惩罚策略离 SFT 太远。没有这个约束，模型会钻奖励模型空子，生成"人类看着好但实际很怪"的文本——这就是<b>奖励黑客（reward hacking）</b>。
+    </div>
+  </div>
+
+  <div class="info">
+    <b>PPO 目标函数：</b>
+    $$J(\theta) = \mathbb{E}\big[r_\phi(x,y)\big] - \beta\, D_{KL}\!\left(\pi_\theta \,\|\, \pi_{SFT}\right)$$
+    最大化"奖励"，同时别偏离起点太远。β 就是这个"忠诚度 vs 讨好度"的平衡阀——放大 β 更保守、放小 β 更激进也更容易失控。
+  </div>
+
+  <p>后来人们发现 PPO 太重（要同时加载 4 个模型），于是有了 <b>DPO</b>：直接用偏好数据、跳过奖励模型和强化学习，把 RLHF 变成一个类似 SFT 的简单训练任务，效果接近、工程简单得多。这是对齐技术从"复杂"走向"好用"的典型演进。</p>
+
+  <div style="margin-top:50px;display:flex;gap:12px;flex-wrap:wrap">
+    <a href="llm/index.html#rlhf" class="btn-primary" style="text-decoration:none">← 回到 LLM · 对齐章节</a>
+    <a href="lab.html" class="btn-secondary" style="text-decoration:none">🧪 实验室总览</a>
+  </div>
+</div>
+
+<script>
+// ---------- 流程图 ----------
+const STAGES=[
+  {name:'① 预训练', color:'#94a3b8', desc:'海量文本上学习语言规律，得到 Base 模型（会接话茬，但不听指令）'},
+  {name:'② SFT 监督微调', color:'#60a5fa', desc:'用"问题-优质回答"示范数据微调，模型学会遵循指令' },
+  {name:'③ 奖励模型 RM', color:'#a78bfa', desc:'用人类偏好排序数据训练一个"打分器"，学会判断回答好坏'},
+  {name:'④ PPO 强化学习', color:'#7c3aed', desc:'策略模型生成回答 → RM 打分 → PPO 更新，同时用 KL 约束别跑偏'}
+];
+let flowTimer=null, flowStep=-1;
+function drawFlow(active){
+  const cv=document.getElementById('flow-canvas'), ctx=cv.getContext('2d');
+  const W=cv.width,H=cv.height;
+  ctx.clearRect(0,0,W,H); ctx.fillStyle='#fff'; ctx.fillRect(0,0,W,H);
+  const padL=50, boxW=(W-padL*2)/STAGES.length-24;
+  const y=90, bh=110;
+  STAGES.forEach((s,i)=>{
+    const x=padL+i*(boxW+24);
+    const on = i<=active;
+    ctx.fillStyle = on? s.color+'1f' : '#f8fafc';
+    ctx.strokeStyle = on? s.color : '#e2e8f0'; ctx.lineWidth = i===active?3:1.5;
+    roundRect(ctx,x,y,boxW,bh,12); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = on? s.color : '#94a3b8';
+    ctx.font='bold 15px sans-serif'; ctx.textAlign='center';
+    wrapText(ctx, s.name, x+boxW/2, y+34, boxW-20, 20);
+    ctx.fillStyle = '#64748b'; ctx.font='11.5px sans-serif';
+    wrapText(ctx, s.desc, x+boxW/2, y+62, boxW-16, 15);
+    // 箭头
+    if(i<STAGES.length-1){
+      const ax=x+boxW+4, ay=y+bh/2;
+      ctx.beginPath(); ctx.moveTo(ax,ay); ctx.lineTo(ax+16,ay);
+      ctx.strokeStyle = i<active? '#a78bfa':'#e2e8f0'; ctx.lineWidth=3; ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(ax+16,ay); ctx.lineTo(ax+9,ay-5); ctx.lineTo(ax+9,ay+5); ctx.closePath();
+      ctx.fillStyle = i<active? '#a78bfa':'#e2e8f0'; ctx.fill();
+    }
+  });
+  // 二、三阶段之间的"数据"标注
+  ctx.fillStyle='#94a3b8'; ctx.font='11px sans-serif'; ctx.textAlign='center';
+  ctx.fillText('人类偏好排序数据', padL+2*(boxW+24)+boxW/2, y+bh+26);
+  // PPO 回收箭头（RM 反馈）
+  ctx.strokeStyle='#f59e0b'; ctx.lineWidth=2; ctx.setLineDash([5,4]);
+  ctx.beginPath();
+  ctx.moveTo(padL+3*(boxW+24)+boxW/2, y+bh);
+  ctx.lineTo(padL+3*(boxW+24)+boxW/2, y+bh+50);
+  ctx.lineTo(padL+2*(boxW+24)+boxW/2, y+bh+50);
+  ctx.stroke(); ctx.setLineDash([]);
+  ctx.beginPath(); ctx.moveTo(padL+2*(boxW+24)+boxW/2, y+bh+50); ctx.lineTo(padL+2*(boxW+24)+boxW/2+8, y+bh+45); ctx.lineTo(padL+2*(boxW+24)+boxW/2+8, y+bh+55); ctx.closePath();
+  ctx.fillStyle='#f59e0b'; ctx.fill();
+  ctx.fillStyle='#d97706'; ctx.font='11px sans-serif'; ctx.textAlign='center';
+  ctx.fillText('RM 打分反馈', padL+2.5*(boxW+24)+boxW/2, y+bh+66);
+}
+function wrapText(ctx,text,x,y,maxW,lh){
+  const words=[...text];
+  let line='', lines=[];
+  words.forEach(ch=>{
+    if(ctx.measureText(line+ch).width>maxW){ lines.push(line); line=ch; } else line+=ch;
+  });
+  lines.push(line);
+  lines.forEach((l,i)=> ctx.fillText(l, x, y+i*lh));
+}
+function roundRect(ctx,x,y,w,h,r){ ctx.beginPath(); ctx.moveTo(x+r,y); ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r); ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath(); }
+function playFlow(){
+  stopFlow(); flowStep=-1;
+  flowTimer=setInterval(()=>{
+    flowStep++;
+    if(flowStep>=STAGES.length){ stopFlow(); return; }
+    drawFlow(flowStep);
+    document.getElementById('flow-detail').innerHTML =
+      `<b style="color:${STAGES[flowStep].color}">${STAGES[flowStep].name}：</b>${STAGES[flowStep].desc}`;
+  }, 1200);
+}
+function stopFlow(){ if(flowTimer){clearInterval(flowTimer); flowTimer=null;} }
+
+// ---------- 偏好排序 ----------
+let ANSWERS=[
+  {id:0, text:'过拟合就是模型把训练数据"背"下来了，连噪声都记住。结果是：训练集上表现极好，遇到新数据就拉胯。好比学生死记硬背了题库，换套题就不会做。'},
+  {id:1, text:'过拟合是指模型在训练数据上表现很好，但在未见过的测试数据上表现较差的现象。'},
+  {id:2, text:'过拟合（Overfitting）是机器学习中模型过度拟合训练数据分布中噪声与偶然特征，导致泛化能力下降的现象。通常在训练损失持续下降而验证损失开始上升时出现，可通过正则化、Dropout、早停、增加数据量等方法缓解。'}
+];
+let winner=null;
+function renderRank(){
+  const box=document.getElementById('rank-list');
+  box.innerHTML = ANSWERS.map((a,i)=>`
+    <div class="rank-item ${winner===i?'win':(winner!==null?'lose':'')}" onclick="pickWinner(${i})">
+      <div class="rank-badge">${String.fromCharCode(65+i)}</div>
+      <div style="flex:1;font-size:14px;color:#334155;line-height:1.7">${a.text}</div>
+      ${winner===i?'<span style="color:#16a34a;font-weight:700;font-size:13px">👍 更优</span>':''}
+    </div>`).join('');
+}
+function pickWinner(i){
+  winner=i; renderRank();
+  const fb=document.getElementById('rank-feedback');
+  if(i===2){
+    fb.innerHTML = `<div class="info" style="margin-top:14px">
+      ✅ 你选的是<b>第三位</b>——它最完整：给了定义、成因（拟合了噪声）、判断信号（训练降验证升）、以及缓解方法。
+      <br>奖励模型学到的偏好就是：<b>"信息密度高 + 有判断信号 + 给出解法" 的回答 > "只给定义" > "只打比方但含糊"</b>。
+      <br>当然真实标注里不会有这么明显的梯度，靠的是大量标注员的一致性投票。</div>`;
+  } else if(i===1){
+    fb.innerHTML = `<div class="info" style="margin-top:14px">
+      🤔 你选了<b>第二位</b>——它定义准确但偏"教科书式"，缺少成因和判断方法。
+      <br>这类回答在 RLHF 里常被标为"不算错，但不是最好的"。奖励模型会学到它弱于更完整的回答。</div>`;
+  } else {
+    fb.innerHTML = `<div class="info" style="margin-top:14px">
+      💡 你选了<b>第一位</b>——比喻很生动、通俗。这个选择完全合理，说明"好回答"其实取决于<b>你希望模型更像老师还是更像百科</b>。
+      <br>这正是 RLHF 的价值观绑定：<b>偏好数据决定了模型最终长成什么样</b>。不同团队标注标准不同，训出来的模型风格就不同。</div>`;
+  }
+}
+function resetRank(){ winner=null; renderRank(); document.getElementById('rank-feedback').innerHTML=''; }
+
+// ---------- PPO ----------
+let ppoTimer=null;
+function drawPPO(){
+  const t=+document.getElementById('ppo').value;
+  document.getElementById('ppo-val').textContent=t;
+  const cv=document.getElementById('ppo-canvas'), ctx=cv.getContext('2d');
+  const W=cv.width,H=cv.height;
+  ctx.clearRect(0,0,W,H); ctx.fillStyle='#fff'; ctx.fillRect(0,0,W,H);
+  const padL=60,padR=50,padT=40,padB=50;
+  const x0=padL,x1=W-padR,y0=H-padB,y1=padT;
+  const T=40;
+  const X = k => x0 + k/T*(x1-x0);
+  const Y = v => y0 - v*(y0-y1);   // v: 0-1
+  // 坐标轴
+  ctx.strokeStyle='#cbd5e1'; ctx.lineWidth=2;
+  ctx.beginPath(); ctx.moveTo(x0,y0); ctx.lineTo(x1,y0); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(x0,y0); ctx.lineTo(x0,y1); ctx.stroke();
+  ctx.fillStyle='#64748b'; ctx.font='12px sans-serif'; ctx.textAlign='center';
+  ctx.fillText('PPO 训练步', (x0+x1)/2, y0+34);
+  ctx.textAlign='left';
+  ctx.fillStyle='#16a34a'; ctx.fillText('■ 奖励', x0, y1+14);
+  ctx.fillStyle='#7c3aed'; ctx.fillText('■ 策略质量', x0+70, y1+14);
+  ctx.fillStyle='#ef4444'; ctx.fillText('■ KL 偏离度', x0+175, y1+14);
+
+  // 曲线函数
+  const reward = k => 1-Math.exp(-k/9);
+  const policy = k => 1-Math.exp(-k/11);
+  const kl     = k => Math.min(1, k*k/1400 + k/90);
+
+  function line(fn, color){
+    ctx.beginPath();
+    for(let k=0;k<=t;k++){
+      const px=X(k), py=Y(fn(k));
+      k===0? ctx.moveTo(px,py):ctx.lineTo(px,py);
+    }
+    ctx.strokeStyle=color; ctx.lineWidth=3; ctx.stroke();
+  }
+  line(reward,'#16a34a');
+  line(policy,'#7c3aed');
+  line(kl,'#ef4444');
+  // 当前点
+  [[reward,'#16a34a'],[policy,'#7c3aed'],[kl,'#ef4444']].forEach(([fn,c])=>{
+    ctx.beginPath(); ctx.arc(X(t),Y(fn(t)),6,0,Math.PI*2); ctx.fillStyle=c; ctx.fill(); ctx.strokeStyle='#fff'; ctx.lineWidth=2; ctx.stroke();
+  });
+  if(kl(t)>0.75){
+    ctx.fillStyle='#fef2f2'; ctx.fillRect(x0,y1,x1-x0,26);
+    ctx.fillStyle='#dc2626'; ctx.font='bold 13px sans-serif'; ctx.textAlign='center';
+    ctx.fillText('⚠️ KL 偏离过大：模型开始"讨好奖励模型"而脱离自然语言，可能出现奖励黑客', (x0+x1)/2, y1+18);
+  }
+}
+function playPPO(){
+  if(ppoTimer) clearInterval(ppoTimer);
+  let k=0;
+  ppoTimer=setInterval(()=>{
+    if(k>40){ clearInterval(ppoTimer); ppoTimer=null; return; }
+    document.getElementById('ppo').value=k; drawPPO(); k++;
+  },80);
+}
+window.addEventListener('load', ()=>{ drawFlow(-1); renderRank(); drawPPO(); });
+</script>
+</body>
+</html>

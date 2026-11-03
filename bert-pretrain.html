@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BERT 预训练任务 · 互动演示</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=JetBrains+Mono:wght@400;500&display=swap');
+* { font-family: 'Noto Sans SC', sans-serif; }
+code, pre, .mono { font-family: 'JetBrains Mono', monospace; }
+body { background: #fafbfc; color: #1a1a2e; }
+.wrap { max-width: 1100px; margin: 0 auto; padding: 96px 24px 80px; }
+h1 { font-size: 2rem; font-weight: 700; margin-bottom: 8px; }
+h2 { font-size: 1.35rem; font-weight: 700; margin: 40px 0 16px; padding-bottom: 10px; border-bottom: 2px solid #e5e7eb; }
+p { color: #334155; line-height: 1.8; margin-bottom: 12px; }
+canvas { border-radius: 10px; background: #fff; border: 1px solid #e2e8f0; width: 100%; display: block; }
+.demo { background: #fff; border: 1px solid #e2e8f0; border-radius: 14px; padding: 22px; margin: 18px 0; box-shadow: 0 1px 3px rgba(0,0,0,.04); }
+.ctrl { display: flex; flex-wrap: wrap; gap: 14px; align-items: center; margin-bottom: 16px; font-size: 14px; }
+input[type=text] { padding: 7px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; font-family: inherit; }
+button { padding: 7px 16px; border: 1px solid #cbd5e1; border-radius: 8px; background: #f8fafc; cursor: pointer; font-size: 14px; }
+button:hover { background: #eff6ff; border-color: #93c5fd; }
+button.primary { background: linear-gradient(135deg,#2563eb,#1d4ed8); color:#fff; border:none; }
+.note { background: #fef3c7; border-left: 4px solid #f59e0b; padding: 12px 16px; border-radius: 8px; font-size: 14px; color: #92400e; margin-top: 14px; line-height: 1.7; }
+.info { background: #eff6ff; border-left: 4px solid #3b82f6; padding: 12px 16px; border-radius: 8px; font-size: 14px; color: #1e40af; margin-top: 14px; line-height: 1.7; }
+.formula { background: #f8fafc; padding: 14px 20px; border-radius: 8px; margin: 14px 0; text-align: center; border-left: 4px solid #2563eb; }
+.tok { display:inline-block; padding:5px 11px; margin:3px; border-radius:7px; font-family:'JetBrains Mono',monospace; font-size:15px; border:1px solid #cbd5e1; }
+.tok.mask { background:#7c3aed; color:#fff; border-color:#7c3aed; font-weight:700; }
+.tok.rand { background:#f472b6; color:#fff; border-color:#f472b6; }
+.tok.keep { background:#f1f5f9; color:#334155; }
+</style>
+<link rel="stylesheet" href="css/site.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<script>
+(function(){
+  function render(){ if(typeof renderMathInElement!=='function') return false;
+    try{ renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'\\[',right:'\\]',display:true},{left:'\\(',right:'\\)',display:false},{left:'$',right:'$',display:false}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false}); }catch(e){}
+    return true; }
+  function go(){ if(render()) return; setTimeout(go(),200); }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',go()); else go();
+  window.addEventListener('load',function(){render(); setTimeout(render(),600); setTimeout(render(),1600)});
+})();
+</script>
+</head>
+<body>
+<nav class="navbar">
+  <div class="nav-inner">
+    <a href="index.html" class="nav-logo">💬 agent-nlp-llm</a>
+    <button class="nav-toggle" aria-label="菜单" onclick="document.querySelector('.nav-links').classList.toggle('open')">☰</button>
+    <div class="nav-links">
+      <a href="index.html" class="nav-link">🏠&nbsp;首页</a>
+      <a href="nlp/index.html" class="nav-link">📝&nbsp;NLP</a>
+      <a href="llm/index.html" class="nav-link">🤖&nbsp;LLM</a>
+      <a href="lab.html" class="nav-link">🧪&nbsp;实验室</a>
+      <a href="papers.html" class="nav-link">📚&nbsp;论文</a>
+      <a href="clinic.html" class="nav-link">🕵️&nbsp;诊所</a>
+      <a href="pitfalls.html" class="nav-link">💥&nbsp;踩坑</a>
+      <a href="benchmark.html" class="nav-link">📊&nbsp;选型</a>
+      <a href="universe.html" class="nav-link">🌌&nbsp;宇宙</a>
+      <a href="https://github.com/yejinlei/agent-nlp-llm" target="_blank" rel="noopener" class="nav-gh" aria-label="GitHub"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg></a>
+    </div>
+  </div>
+</nav>
+
+<div class="wrap">
+  <h1>🌐 BERT 预训练任务 · 互动演示</h1>
+  <p>BERT 之所以强，是因为它用<b>两个自监督任务</b>在海量无标注文本上"自己教自己"：一个学词与上下文的关系（MLM），一个学句子与句子的关系（NSP）。下面你可以亲手"造"一次训练样本。</p>
+
+  <h2>① MLM 掩码语言模型 · 15% 的三种玩法</h2>
+  <p>BERT 随机挑 15% 的 token 来预测。但这 15% 不是全换成 [MASK]，而是<b>又分成三份</b>：80% 换 [MASK]、10% 换随机词、10% 保持不变。为什么这么绕？下面亲手点一下就懂了。</p>
+
+  <div class="demo">
+    <div class="ctrl">
+      <label><b>输入句子：</b></label>
+      <input id="mlm-sent" type="text" value="深度学习是人工智能的核心技术" style="flex:1;min-width:280px">
+      <button class="primary" onclick="runMLM">🎲 生成掩码样本</button>
+    </div>
+    <div id="mlm-out" style="margin-top:6px;line-height:2.4"></div>
+    <div id="mlm-legend" style="margin-top:14px;font-size:13px;color:#475569"></div>
+  </div>
+
+  <div class="info">
+    <b>为什么 80/10/10 而不是全 [MASK]？</b> 因为训练时能看到 [MASK]，但<b>下游微调时输入里根本没有 [MASK]</b>——这个"训练/推理不一致"会让模型学偏。混入 10% 随机词 + 10% 原词，逼模型对<b>任何</b> token 都保持上下文感知，而不是只在看到 [MASK] 时才动脑。这是一个典型的"训练策略为部署服务"的设计。
+  </div>
+
+  <h2>② 为什么必须"双向"看上下文</h2>
+  <p>同一个词在不同上下文里意思完全不同。BERT 的 Encoder <b>同时</b>看左右两边，所以能区分下面这些情况。对比 GPT 只能看左边。</p>
+
+  <div class="demo">
+    <canvas id="mlm-ctx" width="1000" height="240"></canvas>
+    <div class="note">
+      <b>提示：</b> 左边红区是 GPT 能看到的范围（只到目标词之前），右边蓝区是 BERT 能看到的范围（左右全看）。这就是为什么 BERT 适合"理解类"任务（分类/NER/问答），GPT 适合"生成类"任务。
+    </div>
+  </div>
+
+  <h2>③ NSP 下一句预测 · 句子关系学习</h2>
+  <p>NSP 任务喂给模型两个句子，判断第二句是不是真的跟在第一句后面。正样本从原文相邻取，负样本从别的文档随机抓。这让模型学会理解句子之间的<b>逻辑关系</b>（因果、顺承、转折），对问答和推理任务很关键。</p>
+
+  <div class="demo">
+    <div class="ctrl">
+      <button class="primary" onclick="nspSample(true)">✅ 取正样本（相邻句）</button>
+      <button class="primary" onclick="nspSample(false)">❌ 取负样本（随机句）</button>
+    </div>
+    <canvas id="nsp-canvas" width="1000" height="300"></canvas>
+    <div id="nsp-out" style="margin-top:12px;font-size:15px;line-height:2"></div>
+  </div>
+
+  <div class="note">
+    <b>历史插曲：</b> 后来 RoBERTa 的论文发现 NSP 任务<b>其实没啥用</b>，去掉它只用 MLM、训练更久，效果反而更好。所以现在主流模型基本只保留 MLM（或它的变体）。这说明"预训练任务不是越多越好，要看它是否真的逼模型学有用的表示"。
+  </div>
+
+  <h2>④ 输入表示：三个 Embedding 相加</h2>
+  <p>BERT 的每个 token 最终输入 = <b>词嵌入 + 位置嵌入 + 段嵌入</b>，三个相加。段嵌入（Segment）就是为 NSP 服务的，用来区分第一句和第二句。</p>
+
+  <div class="demo">
+    <button class="primary" onclick="drawEmbed">▶ 画出 [CLS] 我 爱 [SEP] 你 [SEP] 的表示构成</button>
+    <canvas id="embed-canvas" width="1000" height="280" style="margin-top:16px"></canvas>
+    <div class="info" style="margin-top:14px">
+      <b>三个特殊 token 的作用：</b> <span class="mono">[CLS]</span> 放在句首，它的最终向量被当作"整句表示"用于分类；<span class="mono">[SEP]</span> 用来分隔句子（NSP 需要）；<span class="mono">[MASK]</span> 是 MLM 要预测的占位符。BertEmbeddings 层做的就是这三张表查出来相加，再过 LayerNorm + Dropout。
+    </div>
+  </div>
+
+  <div style="margin-top:50px;display:flex;gap:12px;flex-wrap:wrap">
+    <a href="nlp/index.html#bert" class="btn-primary" style="text-decoration:none">← 回到 NLP · BERT 章节</a>
+    <a href="lab.html" class="btn-secondary" style="text-decoration:none">🧪 实验室总览</a>
+  </div>
+</div>
+
+<script>
+// ---------- MLM ----------
+function runMLM(){
+  const sent = document.getElementById('mlm-sent').value.trim();
+  const chars = [...sent];
+  const n = chars.length;
+  const k = Math.max(1, Math.round(n*0.15));
+  // 随机选 k 个不重复位置
+  const idx = [...Array(n).keys()];
+  for(let i=idx.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [idx[i],idx[j]]=[idx[j],idx[i]]; }
+  const chosen = idx.slice(0,k).sort((a,b)=>a-b);
+  const kind = {}; // pos -> 'mask'|'rand'|'keep'
+  chosen.forEach(p=>{
+    const r = Math.random();
+    kind[p] = r<0.8?'mask':(r<0.9?'rand':'keep');
+  });
+  let html = '<div>';
+  chars.forEach((c,p)=>{
+    const kd = kind[p];
+    if(kd==='mask') html += `<span class="tok mask">[MASK]</span>`;
+    else if(kd==='rand') html += `<span class="tok rand">${randChar()}</span>`;
+    else html += `<span class="tok keep">${c}</span>`;
+  });
+  html += '</div>';
+  document.getElementById('mlm-out').innerHTML = html;
+  const nMask = Object.values(kind).filter(v=>v==='mask').length;
+  const nRand = Object.values(kind).filter(v=>v==='rand').length;
+  const nKeep = Object.values(kind).filter(v=>v==='keep').length;
+  document.getElementById('mlm-legend').innerHTML =
+    `共 ${n} 个 token，选中的 15% ≈ ${k} 个：` +
+    `<span class="tok mask" style="font-size:13px">[MASK] ${nMask} 个 (≈80%)</span>` +
+    `<span class="tok rand" style="font-size:13px">随机词 ${nRand} 个 (≈10%)</span>` +
+    `<span class="tok keep" style="font-size:13px">保持原词 ${nKeep} 个 (≈10%)</span>` +
+    `<br><button style="margin-top:10px" onclick="runMLM()">🔄 再抽一次（每次不一样）</button>`;
+}
+function randChar(){
+  const pool = '天地人山水火风雷云雨花草树木鸟鱼虫石金玉春夏秋冬';
+  return pool[Math.floor(Math.random()*pool.length)];
+}
+
+// ---------- 双向上下文 ----------
+function drawCtx(){
+  const cv=document.getElementById('mlm-ctx'), ctx=cv.getContext('2d');
+  const W=cv.width,H=cv.height;
+  ctx.clearRect(0,0,W,H); ctx.fillStyle='#fff'; ctx.fillRect(0,0,W,H);
+  const words = ['银行','旁边','的','河','水','很','深'];
+  const target = 3; // "河"
+  const n=words.length, padL=60, boxW=(W-padL*2)/n;
+  words.forEach((w,i)=>{
+    const x=padL+i*boxW, y=70;
+    const isTarget = i===target;
+    ctx.fillStyle = isTarget? '#7c3aed' : '#f1f5f9';
+    ctx.fillRect(x+6,y,boxW-12,52);
+    ctx.strokeStyle = isTarget?'#7c3aed':'#cbd5e1'; ctx.lineWidth=2; ctx.strokeRect(x+6,y,boxW-12,52);
+    ctx.fillStyle = isTarget? '#fff':'#334155'; ctx.font = isTarget?'bold 20px sans-serif':'20px sans-serif'; ctx.textAlign='center';
+    ctx.fillText(w, x+boxW/2, y+35);
+    ctx.font='11px sans-serif'; ctx.fillStyle='#94a3b8';
+    ctx.fillText('pos '+i, x+boxW/2, y+68);
+  });
+  // GPT 可见范围
+  const gy = 165, gx0 = padL, gx1 = padL+(target)*boxW+6;
+  ctx.fillStyle='rgba(239,68,68,0.13)';
+  ctx.fillRect(gx0, gy, Math.max(boxW*0.5, gx1-gx0), 46);
+  ctx.strokeStyle='#ef4444'; ctx.setLineDash([5,4]); ctx.strokeRect(gx0, gy, Math.max(boxW*0.5,gx1-gx0), 46); ctx.setLineDash([]);
+  ctx.fillStyle='#dc2626'; ctx.font='bold 13px sans-serif'; ctx.textAlign='left';
+  ctx.fillText('GPT 只能看左边（因果掩码）→ 拿不到"河"右边是什么', padL, gy+70);
+  // BERT 可见范围
+  const by = 175;
+  ctx.fillStyle='rgba(59,130,246,0.13)';
+  ctx.fillRect(padL, by, W-padL*2, 46);
+  ctx.strokeStyle='#3b82f6'; ctx.setLineDash([5,4]); ctx.strokeRect(padL, by, W-padL*2, 46); ctx.setLineDash([]);
+  ctx.fillStyle='#2563eb'; ctx.font='bold 13px sans-serif';
+  ctx.fillText('BERT 左右全看 → 知道"银行""河"在句里其实是"河流"的河', padL, by+70);
+  ctx.fillStyle='#64748b'; ctx.font='13px sans-serif';
+  ctx.fillText('目标词："河"', padL, 36);
+}
+// 两个条会重叠，改为上下分布
+function drawCtx2(){
+  const cv=document.getElementById('mlm-ctx'), ctx=cv.getContext('2d');
+  const W=cv.width,H=cv.height;
+  ctx.clearRect(0,0,W,H); ctx.fillStyle='#fff'; ctx.fillRect(0,0,W,H);
+  const words = ['银行','旁边','的','河','水','很','深'];
+  const target = 3;
+  const n=words.length, padL=60, boxW=(W-padL*2)/n;
+  ctx.textAlign='center';
+  words.forEach((w,i)=>{
+    const x=padL+i*boxW, y=26;
+    const isTarget = i===target;
+    ctx.fillStyle = isTarget? '#7c3aed' : '#f1f5f9';
+    ctx.fillRect(x+6,y,boxW-12,48);
+    ctx.strokeStyle = isTarget?'#7c3aed':'#cbd5e1'; ctx.lineWidth=2; ctx.strokeRect(x+6,y,boxW-12,48);
+    ctx.fillStyle = isTarget? '#fff':'#334155'; ctx.font = isTarget?'bold 19px sans-serif':'19px sans-serif';
+    ctx.fillText(w, x+boxW/2, y+32);
+  });
+  // GPT 行
+  const gy=118, gEnd=padL+target*boxW+boxW-6;
+  ctx.fillStyle='rgba(239,68,68,0.14)'; ctx.fillRect(padL, gy, gEnd-padL, 40);
+  ctx.strokeStyle='#ef4444'; ctx.setLineDash([5,4]); ctx.lineWidth=2; ctx.strokeRect(padL, gy, gEnd-padL, 40); ctx.setLineDash([]);
+  ctx.fillStyle='#dc2626'; ctx.font='bold 13px sans-serif'; ctx.textAlign='left';
+  ctx.fillText('GPT 可见范围：只能看左边', padL, gy+60);
+  // BERT 行
+  const by=196;
+  ctx.fillStyle='rgba(59,130,246,0.14)'; ctx.fillRect(padL, by, W-padL*2, 40);
+  ctx.strokeStyle='#3b82f6'; ctx.setLineDash([5,4]); ctx.strokeRect(padL, by, W-padL*2, 40); ctx.setLineDash([]);
+  ctx.fillStyle='#2563eb'; ctx.font='bold 13px sans-serif';
+  ctx.fillText('BERT 可见范围：左右全看（双向）', padL, by+60);
+}
+// ---------- NSP ----------
+const DOC = [
+  ['深度学习是机器学习的分支','它使用多层神经网络建模数据'],
+  ['北京是中国的首都','这里有故宫和长城'],
+  ['人工智能正在改变世界','大模型是其中的重要推动力']
+];
+function nspSample(positive){
+  const di = Math.floor(Math.random()*DOC.length);
+  const pair = DOC[di];
+  let s2, fromSame;
+  if(positive){
+    s2 = pair[1]; fromSame = true;
+  } else {
+    let other;
+    do { other = Math.floor(Math.random()*DOC.length); } while(other===di);
+    s2 = DOC[other][1]; fromSame = false;
+  }
+  const label = positive? 'IsNext ✅' : 'NotNext ❌';
+  const cv=document.getElementById('nsp-canvas'), ctx=cv.getContext('2d');
+  const W=cv.width,H=cv.height;
+  ctx.clearRect(0,0,W,H); ctx.fillStyle='#fff'; ctx.fillRect(0,0,W,H);
+  ctx.textAlign='left';
+  // 输入
+  ctx.fillStyle='#1e293b'; ctx.font='bold 15px sans-serif';
+  ctx.fillText('[CLS]', 40, 70);
+  ctx.fillStyle='#334155'; ctx.font='15px sans-serif';
+  ctx.fillText(pair[0], 100, 70);
+  ctx.fillStyle='#94a3b8'; ctx.fillText('[SEP]', 100+ctx.measureText(pair[0]).width+16, 70);
+  ctx.fillStyle='#334155';
+  ctx.fillText(s2, 40, 110);
+  ctx.fillStyle='#94a3b8'; ctx.fillText('[SEP]', 40+ctx.measureText(s2).width+16, 110);
+  // 箭头
+  ctx.strokeStyle='#cbd5e1'; ctx.lineWidth=2;
+  ctx.beginPath(); ctx.moveTo(500,140); ctx.lineTo(500,175); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(500,175); ctx.lineTo(495,168); ctx.lineTo(505,168); ctx.closePath(); ctx.fillStyle='#cbd5e1'; ctx.fill();
+  ctx.fillStyle='#64748b'; ctx.font='13px sans-serif'; ctx.textAlign='center';
+  ctx.fillText('BERT Encoder', 500, 200);
+  ctx.textAlign='left';
+  // [CLS] 输出
+  ctx.fillStyle='#7c3aed'; ctx.font='bold 14px sans-serif';
+  ctx.fillText('[CLS] 的向量 → 二分类头 →', 200, 250);
+  ctx.fillStyle = positive? '#16a34a':'#dc2626'; ctx.font='bold 18px sans-serif';
+  ctx.fillText(label, 470, 250);
+  document.getElementById('nsp-out').innerHTML =
+    `<b>句子1：</b>${pair[0]}<br><b>句子2：</b>${s2}<br><b>来源：</b>${fromSame?'与句子1相邻（同一篇文档）':'从其他文档随机抽取'}<br><b>NSP 标签：</b><span style="color:${positive?'#16a34a':'#dc2626'};font-weight:700">${label}</span>`;
+}
+// ---------- 输入表示 ----------
+function drawEmbed(){
+  const cv=document.getElementById('embed-canvas'), ctx=cv.getContext('2d');
+  const W=cv.width,H=cv.height;
+  ctx.clearRect(0,0,W,H); ctx.fillStyle='#fff'; ctx.fillRect(0,0,W,H);
+  const toks=['[CLS]','我','爱','[SEP]','你','[SEP]'];
+  const n=toks.length, padL=70, boxW=(W-padL*2)/n;
+  const rows=[
+    {y:30, c:'#3b82f6', name:'词嵌入 Token'},
+    {y:95, c:'#f59e0b', name:'位置嵌入 Position'},
+    {y:160, c:'#10b981', name:'段嵌入 Segment'},
+  ];
+  ctx.textAlign='right';
+  rows.forEach(r=>{ ctx.fillStyle=r.c; ctx.font='bold 13px sans-serif'; ctx.fillText(r.name, padL-12, r.y+30); });
+  ctx.textAlign='center';
+  toks.forEach((t,i)=>{
+    const x=padL+i*boxW;
+    rows.forEach(r=>{
+      ctx.fillStyle=r.c+'22'; ctx.fillRect(x+6,r.y,boxW-12,44);
+      ctx.strokeStyle=r.c; ctx.lineWidth=1; ctx.strokeRect(x+6,r.y,boxW-12,44);
+    });
+  });
+  // 等号 与 结果
+  ctx.fillStyle='#64748b'; ctx.font='bold 22px sans-serif';
+  ctx.fillText('=', padL/2, 145);
+  ctx.textAlign='left';
+  ctx.fillStyle='#1e293b'; ctx.font='bold 14px sans-serif';
+  ctx.fillText('相加 → 每个 token 的最终输入表示（再过 LayerNorm + Dropout）', 70, 245);
+  ctx.fillStyle='#64748b'; ctx.font='12px sans-serif';
+  ctx.fillText('段嵌入：第 1 句全 0，第 2 句全 1；位置嵌入：0,1,2,...；词嵌入：共享词表查表', 70, 268);
+}
+window.addEventListener('load', ()=>{ runMLM(); drawCtx2(); nspSample(true); drawEmbed(); });
+</script>
+</body>
+</html>

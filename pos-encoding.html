@@ -16,9 +16,9 @@ canvas { display: block; max-width: 100%; background: #fff; border: 1px solid va
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
 <script>
-document.addEventListener('DOMContentLoaded', function{
-  function r{try{renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false});}catch(e){}}
-  if(document.readyState==='complete')r;else window.addEventListener('load',r);
+document.addEventListener('DOMContentLoaded', function(){
+  function r(){try{renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false});}catch(e){}}
+  if(document.readyState==='complete')r();else window.addEventListener('load',r());
   setTimeout(r,300);setTimeout(r,1000);
 });
 </script>
@@ -114,7 +114,7 @@ document.addEventListener('DOMContentLoaded', function{
 <footer class="site"><p>💬 agent-nlp-llm · 自然语言技术本体论研究站</p></footer>
 <script src="js/site.js"></script>
 <script>
-(function{
+(function(){
   var dModelEl = document.getElementById('dModel');
   var posEl = document.getElementById('posVal');
   var dimIEl = document.getElementById('dimI');
@@ -128,7 +128,7 @@ document.addEventListener('DOMContentLoaded', function{
     return [Math.sin(angle), Math.cos(angle)];
   }
 
-  function drawCurve {
+  function drawCurve(){
     var d = parseInt(dModelEl.value);
     var pos = parseInt(posEl.value);
     var i = parseInt(dimIEl.value);
@@ -145,56 +145,56 @@ document.addEventListener('DOMContentLoaded', function{
 
     // axes
     ctx.strokeStyle = '#e2e8f0'; ctx.lineWidth = 1;
-    ctx.beginPath;
+    ctx.beginPath();
     ctx.moveTo(pad.l, pad.t); ctx.lineTo(pad.l, pad.t+ch); ctx.lineTo(pad.l+cw, pad.t+ch);
-    ctx.stroke;
+    ctx.stroke();
 
     // grid
     ctx.strokeStyle = '#f1f5f9';
     for(var g=0;g<=5;g++){
       var gy = pad.t + ch*g/5;
-      ctx.beginPath; ctx.moveTo(pad.l,gy); ctx.lineTo(pad.l+cw,gy); ctx.stroke;
+      ctx.beginPath(); ctx.moveTo(pad.l,gy); ctx.lineTo(pad.l+cw,gy); ctx.stroke();
       ctx.fillStyle = '#94a3b8'; ctx.font='11px sans-serif'; ctx.textAlign='right';
       ctx.fillText((1-g*0.4).toFixed(1), pad.l-6, gy+4);
     }
     for(var gx=0;gx<=5;gx++){
       var gxp = pad.l+cw*gx/5;
-      ctx.beginPath; ctx.moveTo(gxp,pad.t); ctx.lineTo(gxp,pad.t+ch); ctx.stroke;
+      ctx.beginPath(); ctx.moveTo(gxp,pad.t); ctx.lineTo(gxp,pad.t+ch); ctx.stroke();
       ctx.fillStyle='#94a3b8';ctx.textAlign='center';
       ctx.fillText(Math.round(maxPos*gx/5), gxp, pad.t+ch+18);
     }
 
     // sin curve (even dim 2i)
-    ctx.strokeStyle = '#3b6fe0'; ctx.lineWidth = 2.5; ctx.beginPath;
+    ctx.strokeStyle = '#3b6fe0'; ctx.lineWidth = 2.5; ctx.beginPath();
     for(var p=0;p<=maxPos;p++){
       var v = pe(p,i,d)[0];
       var x = pad.l + cw*p/maxPos;
       var y = pad.t + ch*(1-(v+1)/2);
       if(p===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
     }
-    ctx.stroke;
+    ctx.stroke();
 
     // cos curve (odd dim 2i+1)
-    ctx.strokeStyle = '#ec4899'; ctx.lineWidth = 2.5; ctx.beginPath;
+    ctx.strokeStyle = '#ec4899'; ctx.lineWidth = 2.5; ctx.beginPath();
     for(var p=0;p<=maxPos;p++){
       var v = pe(p,i,d)[1];
       var x = pad.l + cw*p/maxPos;
       var y = pad.t + ch*(1-(v+1)/2);
       if(p===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
     }
-    ctx.stroke;
+    ctx.stroke();
 
     // vertical line at current pos
     var vx = pad.l + cw*pos/maxPos;
     ctx.strokeStyle = '#10a37f'; ctx.lineWidth = 2; ctx.setLineDash([6,4]);
-    ctx.beginPath; ctx.moveTo(vx,pad.t); ctx.lineTo(vx,pad.t+ch); ctx.stroke;
+    ctx.beginPath(); ctx.moveTo(vx,pad.t); ctx.lineTo(vx,pad.t+ch); ctx.stroke();
     ctx.setLineDash([]);
 
     // dots at intersection
     var sv = pe(pos,i,d)[0], cv = pe(pos,i,d)[1];
     var sy = pad.t+ch*(1-(sv+1)/2), cy = pad.t+ch*(1-(cv+1)/2);
-    ctx.fillStyle = '#3b6fe0'; ctx.beginPath; ctx.arc(vx,sy,6,0,Math.PI*2); ctx.fill;
-    ctx.fillStyle = '#ec4899'; ctx.beginPath; ctx.arc(vx,cy,6,0,Math.PI*2); ctx.fill;
+    ctx.fillStyle = '#3b6fe0'; ctx.beginPath(); ctx.arc(vx,sy,6,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#ec4899'; ctx.beginPath(); ctx.arc(vx,cy,6,0,Math.PI*2); ctx.fill();
 
     // labels
     ctx.fillStyle = '#3b6fe0'; ctx.font='bold 12px sans-serif'; ctx.textAlign='left';
@@ -205,7 +205,7 @@ document.addEventListener('DOMContentLoaded', function{
     ctx.fillText('位置 pos →', pad.l+cw-60, pad.t+ch+34);
   }
 
-  function drawSim {
+  function drawSim(){
     var d = parseInt(dModelEl.value);
     var N = 21; // pos 0..20
     var cellSize = 22;
@@ -261,7 +261,7 @@ document.addEventListener('DOMContentLoaded', function{
     }
   }
 
-  function showValues {
+  function showValues(){
     var d = parseInt(dModelEl.value);
     var pos = parseInt(posEl.value);
     var host = document.getElementById('peValues');
@@ -272,25 +272,25 @@ document.addEventListener('DOMContentLoaded', function{
       var angle=pos/Math.pow(10000,2*idx/d);
       var v = k%2===0?Math.sin(angle):Math.cos(angle);
       var color = k%2===0?'var(--blue)':'var(--pink)';
-      var label = k%2===0?('sin,'+k):('cos,'+k);
+      var label = k%2===0?('sin,'+k):('cos(),'+k);
       html += '<span style="display:inline-block;padding:6px 10px;background:'+(k%2===0?'#eef3ff':'#fdf2f8')+';border-radius:8px;font-family:var(--mono);font-size:.78rem;color:'+color+'">d'+k+': '+v.toFixed(3)+'</span>';
     }
     if(d>16) html+='<span style="color:var(--text-3);font-size:.85rem;padding:6px">...共'+d+'维</span>';
     host.innerHTML=html;
   }
 
-  function update{
-    dimIEl.max = Math.min(31, Math.floor(dModelEl.value/2)-1);
-    if(parseInt(dimIEl.value)>parseInt(dimIEl.max)) dimIEl.value=dimIEl.max;
-    drawCurve;
-    drawSim;
-    showValues;
+  function update(){
+    dimIEl.max() = Math.min(31, Math.floor(dModelEl.value/2)-1);
+    if(parseInt(dimIEl.value)>parseInt(dimIEl.max())) dimIEl.value=dimIEl.max();
+    drawCurve();
+    drawSim();
+    showValues();
   }
 
   dModelEl.oninput = update;
   posEl.oninput = update;
   dimIEl.oninput = update;
-  update;
+  update();
 });
 </script>
 </body>

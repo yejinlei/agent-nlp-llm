@@ -16,9 +16,9 @@ canvas { display:block; max-width:100%; background:#fff; border:1px solid var(--
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
 <script>
-document.addEventListener('DOMContentLoaded', function{
-  function r{try{renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false});}catch(e){}}
-  if(document.readyState==='complete')r;else window.addEventListener('load',r);
+document.addEventListener('DOMContentLoaded', function(){
+  function r(){try{renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false});}catch(e){}}
+  if(document.readyState==='complete')r();else window.addEventListener('load',r());
   setTimeout(r,300);setTimeout(r,1000);
 });
 </script>
@@ -122,7 +122,7 @@ document.addEventListener('DOMContentLoaded', function{
 <footer class="site"><p>💬 agent-nlp-llm · 自然语言技术本体论研究站</p></footer>
 <script src="js/site.js"></script>
 <script>
-(function{
+(function(){
   var scenes = {
     normal: [0.8, -0.5, 0.3, -0.2, 0.6, -0.4, 0.1, 0.7],
     explode: [12.0, -8.5, 15.3, -6.7, 9.2, -11.8, 7.4, -13.1],
@@ -147,45 +147,45 @@ document.addEventListener('DOMContentLoaded', function{
     vctx.strokeStyle='#f1f5f9';vctx.lineWidth=1;
     for(var i=-5;i<=5;i++){
       var x=cx+i*30;
-      vctx.beginPath;vctx.moveTo(x,20);vctx.lineTo(x,H-20);vctx.stroke;
+      vctx.beginPath();vctx.moveTo(x,20);vctx.lineTo(x,H-20);vctx.stroke();
       var y=cy+i*30;
-      vctx.beginPath;vctx.moveTo(20,y);vctx.lineTo(W-20,y);vctx.stroke;
+      vctx.beginPath();vctx.moveTo(20,y);vctx.lineTo(W-20,y);vctx.stroke();
     }
 
     // axes
     vctx.strokeStyle='#cbd5e1';vctx.lineWidth=1.5;
-    vctx.beginPath;vctx.moveTo(20,cy);vctx.lineTo(W-20,cy);vctx.stroke;
-    vctx.beginPath;vctx.moveTo(cx,20);vctx.lineTo(cx,H-20);vctx.stroke;
+    vctx.beginPath();vctx.moveTo(20,cy);vctx.lineTo(W-20,cy);vctx.stroke();
+    vctx.beginPath();vctx.moveTo(cx,20);vctx.lineTo(cx,H-20);vctx.stroke();
 
     // threshold circle
     vctx.strokeStyle='#3b6fe0';vctx.lineWidth=2;vctx.setLineDash([6,4]);
-    vctx.beginPath;vctx.arc(cx,cy,c*sc,0,Math.PI*2);vctx.stroke;
+    vctx.beginPath();vctx.arc(cx,cy,c*sc,0,Math.PI*2);vctx.stroke();
     vctx.setLineDash([]);
     vctx.fillStyle='rgba(59,111,224,0.06)';
-    vctx.beginPath;vctx.arc(cx,cy,c*sc,0,Math.PI*2);vctx.fill;
+    vctx.beginPath();vctx.arc(cx,cy,c*sc,0,Math.PI*2);vctx.fill();
 
     // original gradient (red)
     var gx=orig[0]*sc, gy=-orig[1]*sc;
     vctx.strokeStyle='#ef4444';vctx.lineWidth=3;
-    vctx.beginPath;vctx.moveTo(cx,cy);vctx.lineTo(cx+gx,cy+gy);vctx.stroke;
+    vctx.beginPath();vctx.moveTo(cx,cy);vctx.lineTo(cx+gx,cy+gy);vctx.stroke();
     // arrowhead
     var angle=Math.atan2(gy,gx);
-    vctx.beginPath;
+    vctx.beginPath();
     vctx.moveTo(cx+gx,cy+gy);
     vctx.lineTo(cx+gx-12*Math.cos(angle-0.3),cy+gy-12*Math.sin(angle-0.3));
     vctx.lineTo(cx+gx-12*Math.cos(angle+0.3),cy+gy-12*Math.sin(angle+0.3));
-    vctx.closePath;vctx.fillStyle='#ef4444';vctx.fill;
+    vctx.closePath();vctx.fillStyle='#ef4444';vctx.fill();
 
     // clipped gradient (green)
     var clgx=clipped[0]*sc, clgy=-clipped[1]*sc;
     vctx.strokeStyle='#10a37f';vctx.lineWidth=3;
-    vctx.beginPath;vctx.moveTo(cx,cy);vctx.lineTo(cx+clgx,cy+clgy);vctx.stroke;
+    vctx.beginPath();vctx.moveTo(cx,cy);vctx.lineTo(cx+clgx,cy+clgy);vctx.stroke();
     angle=Math.atan2(clgy,clgx);
-    vctx.beginPath;
+    vctx.beginPath();
     vctx.moveTo(cx+clgx,cy+clgy);
     vctx.lineTo(cx+clgx-12*Math.cos(angle-0.3),cy+clgy-12*Math.sin(angle-0.3));
     vctx.lineTo(cx+clgx-12*Math.cos(angle+0.3),cy+clgy-12*Math.sin(angle+0.3));
-    vctx.closePath;vctx.fillStyle='#10a37f';vctx.fill;
+    vctx.closePath();vctx.fillStyle='#10a37f';vctx.fill();
 
     // legend
     vctx.font='12px sans-serif';
@@ -203,15 +203,15 @@ document.addEventListener('DOMContentLoaded', function{
     var pad={l:60,r:20,t:20,b:40};
     var cw=W-pad.l-pad.r, ch=H-pad.t-pad.b;
     var n=orig.length;
-    var maxAbs=Math.max.apply(null,orig.map(Math.abs));
+    var maxAbs=Math.max.apply(null,orig.map(Math.abs()));
     var bh = ch/n*0.38;
     var gap = ch/n*0.62;
 
     // axes
     cctx.strokeStyle='#e2e8f0';cctx.lineWidth=1;
-    cctx.beginPath;cctx.moveTo(pad.l,pad.t);cctx.lineTo(pad.l,pad.t+ch);cctx.stroke;
+    cctx.beginPath();cctx.moveTo(pad.l,pad.t);cctx.lineTo(pad.l,pad.t+ch);cctx.stroke();
     var zeroX = pad.l+cw/2;
-    cctx.beginPath;cctx.moveTo(zeroX,pad.t);cctx.lineTo(zeroX,pad.t+ch);cctx.stroke;
+    cctx.beginPath();cctx.moveTo(zeroX,pad.t);cctx.lineTo(zeroX,pad.t+ch);cctx.stroke();
 
     for(var i=0;i<n;i++){
       var y=pad.t+gap*i+bh/2;
@@ -236,7 +236,7 @@ document.addEventListener('DOMContentLoaded', function{
     cctx.fillStyle='#10a37f';cctx.fillRect(pad.l+80,pad.t+ch+28,12,12);cctx.fillStyle='#475569';cctx.fillText('裁剪后',pad.l+96,pad.t+ch+39);
   }
 
-  function update{
+  function update(){
     var c = parseFloat(clipSlider.value);
     document.getElementById('clipDisplay').textContent = c.toFixed(1);
     var origN = norm(grad);
@@ -266,18 +266,18 @@ document.addEventListener('DOMContentLoaded', function{
 
   clipSlider.oninput = update;
   document.querySelectorAll('.scene').forEach(function(b){
-    b.onclick=function{
+    b.onclick=function(){
       document.querySelectorAll('.scene').forEach(function(x){x.classList.remove('active');});
       b.classList.add('active');
       var s=b.dataset.scene;
       if(s==='random'){
-        grad=[];for(var i=0;i<8;i++)grad.push((Math.random*30-15));
+        grad=[];for(var i=0;i<8;i++)grad.push((Math.random()*30-15));
       }else{grad=scenes[s].slice;}
-      update;
+      update();
     };
   });
 
-  update;
+  update();
 });
 </script>
 </body>

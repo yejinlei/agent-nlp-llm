@@ -105,7 +105,7 @@ input[type=range]{width:100%}
 
 <script>
 const DEMO_VOCAB=['的','了','是','我','你','他','在','有','和','不','这','说','人','就','都','一','个','上','也','到','说','要','去','你','会','着','没有','看','好','自己','这','那','小','猫','狗','今天','学习','深度','学习','神经','网络','词','向量','模型','训练','梯度','反向','传播','算法','计算','嵌入','矩阵','函数','损失','优化','学习率','epoch','batch','数据','样本','正例','负例','sigmoid','softmax','交叉熵','参数','权重','偏置','激活','输出','输入','隐藏层','语言','自然','处理','NLP','智能','人工','大模型','GPT','transformer','注意力','编码','解码','序列','时间','步','记忆','状态','遗忘','门','输入门','输出门','cell'] ;
-const FREQ=DEMO_VOCAB.map((_,i)=>Math.exp(-i/25)*(0.5+Math.random)); // 模拟词频递减
+const FREQ=DEMO_VOCAB.map((_,i)=>Math.exp(-i/25)*(0.5+Math.random())); // 模拟词频递减
 let V=10000,K=5,H=100,pow=0.75;
 
 function fmt(n){if(n>=1e9)return(n/1e9).toFixed(2)+'G';if(n>=1e6)return(n/1e6).toFixed(2)+'M';if(n>=1e3)return(n/1e3).toFixed(1)+'K';return n}
@@ -116,13 +116,13 @@ function sampleNegs(K,power){
   const sum=probs.reduce((a,b)=>a+b,0);
   const picks=new Set;picks.add(3); // 正例索引 = "你"
   while(picks.size<K+1){
-    let r=Math.random*sum,acc=0;
+    let r=Math.random()*sum,acc=0;
     for(let i=0;i<DEMO_VOCAB.length;i++){acc+=probs[i];if(acc>=r){picks.add(i);break;}}
   }
   return[...picks];
 }
 
-function draw{
+function draw(){
   document.getElementById('vv').textContent=fmt(V);
   document.getElementById('kv').textContent=K;
   document.getElementById('hv').textContent=H;
@@ -151,20 +151,20 @@ function drawSigmoid(picks){
   ctx.clearRect(0,0,W,H);
   // 轴
   ctx.strokeStyle='#e2e8f0';ctx.lineWidth=1;
-  ctx.beginPath;ctx.moveTo(30,H-20);ctx.lineTo(W-10,H-20);ctx.moveTo(30,10);ctx.lineTo(30,H-20);ctx.stroke;
+  ctx.beginPath();ctx.moveTo(30,H-20);ctx.lineTo(W-10,H-20);ctx.moveTo(30,10);ctx.lineTo(30,H-20);ctx.stroke();
   // 画 sigmoid
-  ctx.strokeStyle='#6366f1';ctx.lineWidth=2;ctx.beginPath;
+  ctx.strokeStyle='#6366f1';ctx.lineWidth=2;ctx.beginPath();
   for(let px=30;px<W-10;px++){const x=(px-30)/(W-40)*8-4;const y=1/(1+Math.exp(-x));const py=H-20-y*(H-30);if(px===30)ctx.moveTo(px,py);else ctx.lineTo(px,py);}
-  ctx.stroke;
+  ctx.stroke();
   // 0.5 线
-  ctx.strokeStyle='#cbd5e1';ctx.setLineDash([4,4]);ctx.beginPath;ctx.moveTo(30,H/2);ctx.lineTo(W-10,H/2);ctx.stroke;ctx.setLineDash([]);
+  ctx.strokeStyle='#cbd5e1';ctx.setLineDash([4,4]);ctx.beginPath();ctx.moveTo(30,H/2);ctx.lineTo(W-10,H/2);ctx.stroke();ctx.setLineDash([]);
   // 画点：正例高分、负例低分
-  const dots=[{x:2.5+Math.random*1,label:'正例',c:'#22c55e',target:1}];
-  picks.slice(1).forEach((_,i)=>dots.push({x:-3+Math.random*2,label:'负'+(i+1),c:'#ef4444',target:0}));
+  const dots=[{x:2.5+Math.random()*1,label:'正例',c:'#22c55e',target:1}];
+  picks.slice(1).forEach((_,i)=>dots.push({x:-3+Math.random()*2,label:'负'+(i+1),c:'#ef4444',target:0}));
   dots.forEach(d=>{
     const y=1/(1+Math.exp(-d.x));
     const px=30+(d.x+4)/8*(W-40);const py=H-20-y*(H-30);
-    ctx.fillStyle=d.c;ctx.beginPath;ctx.arc(px,py,5,0,Math.PI*2);ctx.fill;
+    ctx.fillStyle=d.c;ctx.beginPath();ctx.arc(px,py,5,0,Math.PI*2);ctx.fill();
   });
   ctx.fillStyle='#475569';ctx.font='11px sans-serif';
   ctx.fillText('σ(h·v)=1  →  是目标词',W-160,18);
@@ -177,11 +177,11 @@ function drawSigmoid(picks){
     if(id==='ks')K=+e.target.value;
     if(id==='hs')H=+e.target.value;
     if(id==='ps')pow=+e.target.value;
-    draw;
+    draw();
   };
 });
 document.getElementById('sampleBtn').onclick=draw;
-draw;
+draw();
 </script>
 <script src="js/math.js"></script>
 </body>

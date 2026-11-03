@@ -15,9 +15,9 @@ canvas { display:block; max-width:100%; background:#fff; border:1px solid var(--
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
 <script>
-document.addEventListener('DOMContentLoaded', function{
-  function r{try{renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false});}catch(e){}}
-  if(document.readyState==='complete')r;else window.addEventListener('load',r);
+document.addEventListener('DOMContentLoaded', function(){
+  function r(){try{renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false});}catch(e){}}
+  if(document.readyState==='complete')r();else window.addEventListener('load',r());
   setTimeout(r,300);setTimeout(r,1000);
 });
 </script>
@@ -117,7 +117,7 @@ document.addEventListener('DOMContentLoaded', function{
 <footer class="site"><p>💬 agent-nlp-llm · 自然语言技术本体论研究站</p></footer>
 <script src="js/site.js"></script>
 <script>
-(function{
+(function(){
   var epsSlider=document.getElementById('epsSlider');
   var kSlider=document.getElementById('kSlider');
   var correctSel=document.getElementById('correctIdx');
@@ -154,7 +154,7 @@ document.addEventListener('DOMContentLoaded', function{
 
     // axes
     ctx.strokeStyle='#e2e8f0';ctx.lineWidth=1;
-    ctx.beginPath;ctx.moveTo(pad.l,pad.t);ctx.lineTo(pad.l,pad.t+ch);ctx.lineTo(pad.l+cw,pad.t+ch);ctx.stroke;
+    ctx.beginPath();ctx.moveTo(pad.l,pad.t);ctx.lineTo(pad.l,pad.t+ch);ctx.lineTo(pad.l+cw,pad.t+ch);ctx.stroke();
 
     // find min/max loss
     var minL=Infinity,maxL=-Infinity;
@@ -171,37 +171,37 @@ document.addEventListener('DOMContentLoaded', function{
     ctx.strokeStyle='#f1f5f9';ctx.fillStyle='#94a3b8';ctx.font='11px sans-serif';ctx.textAlign='right';
     for(var g=0;g<=5;g++){
       var gy=pad.t+ch-ch*g/5;
-      ctx.beginPath;ctx.moveTo(pad.l,gy);ctx.lineTo(pad.l+cw,gy);ctx.stroke;
+      ctx.beginPath();ctx.moveTo(pad.l,gy);ctx.lineTo(pad.l+cw,gy);ctx.stroke();
       ctx.fillText((minL+(maxL-minL)*(1-g/5)).toFixed(2),pad.l-6,gy+4);
     }
     ctx.textAlign='center';
     for(var gx=0;gx<=10;gx++){
       var gxp=pad.l+cw*gx/10;
-      ctx.beginPath;ctx.moveTo(gxp,pad.t);ctx.lineTo(gxp,pad.t+ch);ctx.stroke;
+      ctx.beginPath();ctx.moveTo(gxp,pad.t);ctx.lineTo(gxp,pad.t+ch);ctx.stroke();
       ctx.fillText((gx/10).toFixed(1),gxp,pad.t+ch+18);
     }
 
     // loss curve
-    ctx.strokeStyle='#3b6fe0';ctx.lineWidth=2.5;ctx.beginPath;
+    ctx.strokeStyle='#3b6fe0';ctx.lineWidth=2.5;ctx.beginPath();
     data.forEach(function(d,i){
       var x=pad.l+cw*(d.p);
       var y=pad.t+ch*(1-(d.l-minL)/(maxL-minL));
       if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);
     });
-    ctx.stroke;
+    ctx.stroke();
 
     // minimum point
     var minIdx=0,minV=data[0].l;
     data.forEach(function(d,i){if(d.l<minV){minV=d.l;minIdx=i;}});
     var mpx=pad.l+cw*data[minIdx].p;
     var mpy=pad.t+ch*(1-(minV-minL)/(maxL-minL));
-    ctx.fillStyle='#10a37f';ctx.beginPath;ctx.arc(mpx,mpy,7,0,Math.PI*2);ctx.fill;
+    ctx.fillStyle='#10a37f';ctx.beginPath();ctx.arc(mpx,mpy,7,0,Math.PI*2);ctx.fill();
     ctx.fillStyle='#10a37f';ctx.font='bold 12px sans-serif';ctx.textAlign='left';
     ctx.fillText('最优p='+data[minIdx].p.toFixed(3),mpx+12,mpy-8);
 
     // ε=0 reference line
     if(eps>0){
-      ctx.strokeStyle='#ef4444';ctx.lineWidth=1.5;ctx.setLineDash([4,4]);ctx.beginPath;
+      ctx.strokeStyle='#ef4444';ctx.lineWidth=1.5;ctx.setLineDash([4,4]);ctx.beginPath();
       var first=true;
       data.forEach(function(d){
         var l0=softmaxToProbs(d.p,K,0,0);
@@ -211,14 +211,14 @@ document.addEventListener('DOMContentLoaded', function{
           if(first){ctx.moveTo(x,y);first=false;}else ctx.lineTo(x,y);
         }
       });
-      ctx.stroke;ctx.setLineDash([]);
+      ctx.stroke();ctx.setLineDash([]);
     }
 
     ctx.fillStyle='#1e293b';ctx.font='bold 13px sans-serif';ctx.textAlign='left';
     ctx.fillText('交叉熵损失 vs 正确类概率 (ε='+eps.toFixed(2)+', K='+K+')',pad.l,20);
     ctx.fillStyle='#3b6fe0';ctx.fillRect(pad.l,pad.t+ch+34,14,3);ctx.fillStyle='#475569';ctx.font='11px sans-serif';ctx.fillText('ε='+eps.toFixed(2),pad.l+18,pad.t+ch+39);
     if(eps>0){ctx.fillStyle='#ef4444';ctx.fillRect(pad.l+100,pad.t+ch+34,14,3);ctx.fillText('ε=0 (无平滑)',pad.l+118,pad.t+ch+39);}
-    ctx.fillStyle='#10a37f';ctx.beginPath;ctx.arc(pad.l+220,pad.t+ch+36,4,0,Math.PI*2);ctx.fill;ctx.fillStyle='#475569';ctx.fillText('最小值点',pad.l+228,pad.t+ch+39);
+    ctx.fillStyle='#10a37f';ctx.beginPath();ctx.arc(pad.l+220,pad.t+ch+36,4,0,Math.PI*2);ctx.fill();ctx.fillStyle='#475569';ctx.fillText('最小值点',pad.l+228,pad.t+ch+39);
 
     ctx.fillStyle='#64748b';ctx.font='12px sans-serif';ctx.textAlign='center';
     ctx.fillText('模型给正确类的概率 p →',pad.l+cw/2,pad.t+ch+48);
@@ -264,7 +264,7 @@ document.addEventListener('DOMContentLoaded', function{
     }
   }
 
-  function update{
+  function update(){
     var eps=parseFloat(epsSlider.value);
     var K=parseInt(kSlider.value);
     document.getElementById('epsVal').textContent=eps.toFixed(2);
@@ -278,7 +278,7 @@ document.addEventListener('DOMContentLoaded', function{
   epsSlider.oninput=update;
   kSlider.oninput=update;
   correctSel.onchange=update;
-  update;
+  update();
 });
 </script>
 </body>

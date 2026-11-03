@@ -17,9 +17,9 @@ canvas { display:block; max-width:100%; background:#fff; border:1px solid var(--
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
 <script>
-document.addEventListener('DOMContentLoaded', function{
-  function r{try{renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false});}catch(e){}}
-  if(document.readyState==='complete')r;else window.addEventListener('load',r);
+document.addEventListener('DOMContentLoaded', function(){
+  function r(){try{renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}],ignoredTags:['script','noscript','style','textarea','pre','code'],throwOnError:false});}catch(e){}}
+  if(document.readyState==='complete')r();else window.addEventListener('load',r());
   setTimeout(r,300);setTimeout(r,1000);
 });
 </script>
@@ -124,13 +124,13 @@ document.addEventListener('DOMContentLoaded', function{
 <footer class="site"><p>💬 agent-nlp-llm · 自然语言技术本体论研究站</p></footer>
 <script src="js/site.js"></script>
 <script>
-(function{
+(function(){
   var initMethod='zeros';
   var canvas=document.getElementById('histCanvas');
   var ctx=canvas.getContext('2d');
 
   // Box-Muller for normal random
-  function randn{var u=0,v=0;while(u===0)u=Math.random;while(v===0)v=Math.random;return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);}
+  function randn(){var u=0,v=0;while(u===0)u=Math.random();while(v===0)v=Math.random();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);}
 
   function initWeights(fan_in,fan_out,method){
     var W=[];
@@ -141,7 +141,7 @@ document.addEventListener('DOMContentLoaded', function{
     else if(method==='he')std=Math.sqrt(2/fan_in);
     for(var i=0;i<fan_out;i++){
       var row=[];
-      for(var j=0;j<fan_in;j++){row.push(std*randn);}
+      for(var j=0;j<fan_in;j++){row.push(std*randn());}
       W.push(row);
     }
     return W;
@@ -210,7 +210,7 @@ document.addEventListener('DOMContentLoaded', function{
 
     // axes
     ctx.strokeStyle='#e2e8f0';ctx.lineWidth=1;
-    ctx.beginPath;ctx.moveTo(pad.l,pad.t);ctx.lineTo(pad.l,pad.t+ch);ctx.lineTo(pad.l+cw,pad.t+ch);ctx.stroke;
+    ctx.beginPath();ctx.moveTo(pad.l,pad.t);ctx.lineTo(pad.l,pad.t+ch);ctx.lineTo(pad.l+cw,pad.t+ch);ctx.stroke();
 
     // draw histograms layer by layer (layer 0 at bottom)
     for(var l=0;l<layers;l++){
@@ -288,7 +288,7 @@ document.addEventListener('DOMContentLoaded', function{
     hEl.innerHTML=hint;
   }
 
-  function run{
+  function run(){
     var layers=parseInt(document.getElementById('layerSlider').value);
     var hidden=parseInt(document.getElementById('hiddenSlider').value);
     var act=document.getElementById('actSelect').value;
@@ -301,18 +301,18 @@ document.addEventListener('DOMContentLoaded', function{
   }
 
   document.querySelectorAll('.init-btn').forEach(function(b){
-    b.onclick=function{
+    b.onclick=function(){
       document.querySelectorAll('.init-btn').forEach(function(x){x.classList.remove('active');});
       b.classList.add('active');
       initMethod=b.dataset.init;
-      run;
+      run();
     };
   });
   document.getElementById('layerSlider').oninput=run;
   document.getElementById('hiddenSlider').oninput=run;
   document.getElementById('actSelect').onchange=run;
   document.getElementById('rerunBtn').onclick=run;
-  run;
+  run();
 });
 </script>
 </body>
