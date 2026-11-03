@@ -726,16 +726,46 @@ pip install numpy torch
 
 <script>
 // 路由
+// 单页路由锚点跳转，所有新模块在首页内定位，不刷新页面
 function route() {
   const hash = location.hash || '#/';
-  if (hash === '#/nlp' || hash.startsWith('#/nlp')) {
-    if (!hash.includes('#')) location.href = 'nlp/index.html';
+  // NLP和LLM跳转到子页面，其他模块在首页锚点定位
+  if (hash === '#/nlp') {
+    location.href = 'nlp/index.html';
+    return;
   }
-  else if (hash === '#/llm' || hash.startsWith('#/llm')) {
-    if (!hash.includes('#')) location.href = 'llm/index.html';
+  if (hash === '#/llm') {
+    location.href = 'llm/index.html';
+    return;
   }
+  // 路由映射：其他锚点平滑滚动到对应区域
+  const routeMap = {
+    '#/': null,
+    '#/play': 'play',
+    '#/lab': 'lab',
+    '#/papers': 'kb',
+    '#/clinic': 'kb',
+    '#/pitfalls': 'kb',
+    '#/bench': 'kb',
+    '#/universe': 'kb'
+  };
+  const targetId = routeMap[hash] || hash.replace('#/', '');
+  const targetEl = document.getElementById(targetId);
+  if (targetEl) {
+    setTimeout(() => targetEl.scrollIntoView({behavior: 'smooth', block: 'start'}), 50);
+  }
+  // 更新导航高亮
+  document.querySelectorAll('.nav-links a').forEach(a => {
+    a.style.color = '#374151';
+    if(a.getAttribute('href') === hash) {
+      if(hash === '#/nlp') a.style.color = '#2563eb';
+      else if(hash === '#/llm') a.style.color = '#7c3aed';
+      else a.style.color = '#f97316';
+    }
+  });
 }
 window.addEventListener('hashchange', route);
+window.addEventListener('load', route);
 
 // 公式渲染
 document.addEventListener('DOMContentLoaded', function() {
