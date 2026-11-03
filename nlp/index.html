@@ -56,6 +56,8 @@ h4 { margin-top: 20px; margin-bottom: 12px; color: #1e40af; }
       <a href="../llm/index.html" class="nav-link">🤖 LLM</a>
       <a href="../bpe.html" class="nav-link">🔤 分词器</a>
       <a href="../embedding.html" class="nav-link">🧭 词向量</a>
+      <a href="../word2vec.html" class="nav-link">🧠 词向量从零</a>
+      <a href="../rnn.html" class="nav-link">🔁 RNN从零</a>
       <a href="../attention.html" class="nav-link">🎯 注意力</a>
       <a href="../papers.html" class="nav-link">📚 论文</a>
       <a href="../clinic.html" class="nav-link">🕵️ 诊所</a>
@@ -220,6 +222,24 @@ print(list(jieba.cut(text)))  # ['我', '爱', '自然语言', '处理']</code><
     </div>
     <p class="text-gray-600 mb-4">这种语义线性关系震惊了整个NLP社区，从此词向量成为NLP的标准输入。</p>
 
+    <div class="callout callout-info">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
+        <div>
+          <div style="font-weight:700;color:#1e40af;margin-bottom:4px">🧠 想真正搞懂词向量是怎么"学"出来的？</div>
+          <div style="font-size:14px;color:#4b5563">从共现矩阵 → PMI → SVD → CBOW → 负采样，全链路含公式推导、可跑代码和交互可视化。</div>
+        </div>
+        <a href="../word2vec.html" class="btn-primary" style="white-space:nowrap">进入 Word2Vec 从零 →</a>
+      </div>
+    </div>
+
+    <h4>📌 书2第2–4章的核心链条（一句话版）</h4>
+    <ul class="list-disc pl-6 text-gray-700 space-y-2 mb-4">
+      <li><b>共现矩阵</b>：统计每个词周围出现哪些词，把"上下文"变成可计算的数字。</li>
+      <li><b>PMI 点互信息</b>：<span class="mono">PMI = log₂(P(x,y)/P(x)P(y))</span>，把"the 到处共现"的高频噪音压下去，只留真正的语义关联。</li>
+      <li><b>SVD 降维</b>：把稀疏的高维矩阵压成稠密低维向量，语义相近的词自然聚在一起。</li>
+      <li><b>负采样</b>：把"从十万词里选一个"偷换成"判断真假"的二分类，计算量从 O(V) 降到 O(K+1)。</li>
+    </ul>
+
     <h4>两种训练方式</h4>
     <div class="grid grid-cols-2 gap-4 mb-4">
       <div class="card">
@@ -299,6 +319,17 @@ def most_similar(query_id, word_vecs, word_to_id, top=5):
   <!-- LSTM -->
   <section id="lstm">
     <h2 class="text-3xl font-bold">🧠 LSTM · 长短期记忆网络</h2>
+
+    <div class="callout callout-info">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
+        <div>
+          <div style="font-weight:700;color:#1e40af;margin-bottom:4px">🔁 想从零推导 RNN / LSTM / Attention？</div>
+          <div style="font-size:14px;color:#4b5563">BPTT 梯度消失数学根源 → LSTM 四个门逐个拆解 → seq2seq 翻译 → Attention 取代记忆，全含交互演示。</div>
+        </div>
+        <a href="../rnn.html" class="btn-primary" style="white-space:nowrap">进入 RNN 从零 →</a>
+      </div>
+    </div>
+
     <p class="text-gray-700 mb-4">RNN循环神经网络天然适合处理序列数据，但存在严重的<strong>梯度消失/梯度爆炸</strong>问题，无法捕捉长距离依赖。1997年提出的LSTM通过门控机制解决了这个问题，成为2013-2017年NLP的主力模型。</p>
     
     <h4>LSTM三个门的作用</h4>

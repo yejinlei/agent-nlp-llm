@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Word2Vec 从零 · 词向量是怎么"学"出来的</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<link rel="stylesheet" href="css/site.css">
+<style>
+:root { --ink:#1a1a2e; --blue:#2563eb; --blue2:#1d4ed8; --mute:#6b7280; --line:#e5e7eb; }
+* { box-sizing:border-box; }
+body { margin:0; font-family:'Noto Sans SC',-apple-system,'PingFang SC',sans-serif; background:#fafbfc; color:var(--ink); line-height:1.75; }
+.wrap { max-width:960px; margin:0 auto; padding:48px 24px 96px; }
+.crumb { font-size:13px; color:var(--mute); margin-bottom:8px; }
+.crumb a { color:var(--blue); text-decoration:none; }
+h1 { font-size:40px; font-weight:800; letter-spacing:-1px; margin:8px 0 12px; }
+.sub { font-size:17px; color:var(--mute); margin-bottom:32px; }
+h2 { font-size:26px; font-weight:700; margin:56px 0 20px; padding-bottom:10px; border-bottom:2px solid var(--line); scroll-margin-top:80px; }
+h3 { font-size:19px; font-weight:600; margin:32px 0 12px; color:var(--blue2); }
+h4 { font-size:16px; font-weight:600; margin:20px 0 8px; }
+p { margin:12px 0; }
+code { background:#eef2ff; color:#3730a3; padding:2px 6px; border-radius:4px; font-family:ui-monospace,Menlo,monospace; font-size:0.9em; }
+pre { background:#0d1117; color:#c9d1d9; border-radius:10px; padding:16px 18px; overflow-x:auto; font-size:13.5px; line-height:1.6; }
+pre code { background:none; color:inherit; padding:0; }
+.hero { background:linear-gradient(135deg,#1e3a8a 0%,#2563eb 100%); color:#fff; border-radius:16px; padding:32px 28px; margin:24px 0; }
+.hero h2 { color:#fff; border:none; margin:0 0 10px; padding:0; font-size:22px; }
+.hero p { color:#dbeafe; margin:6px 0; }
+.grid { display:grid; gap:16px; }
+.g2 { grid-template-columns:1fr 1fr; }
+.g3 { grid-template-columns:repeat(3,1fr); }
+@media(max-width:760px){ .g2,.g3{grid-template-columns:1fr;} }
+.card { background:#fff; border:1px solid var(--line); border-radius:12px; padding:20px; }
+.card h4 { margin-top:0; }
+.tip { background:#eff6ff; border-left:4px solid var(--blue); border-radius:0 8px 8px 0; padding:14px 18px; margin:16px 0; }
+.warn { background:#fff7ed; border-left:4px solid #f59e0b; border-radius:0 8px 8px 0; padding:14px 18px; margin:16px 0; }
+.fbox { background:#f8fafc; border:1px solid var(--line); border-radius:10px; padding:16px; margin:16px 0; text-align:center; overflow-x:auto; }
+.step { position:relative; padding-left:44px; margin:24px 0; }
+.step::before { content:attr(data-n); position:absolute; left:0; top:0; width:30px; height:30px; border-radius:50%; background:var(--blue); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:14px; }
+table { width:100%; border-collapse:collapse; margin:16px 0; background:#fff; border-radius:8px; overflow:hidden; box-shadow:0 1px 3px rgba(0,0,0,.05); font-size:14px; }
+th { background:#f8fafc; padding:10px 14px; text-align:left; font-weight:600; border-bottom:1px solid var(--line); }
+td { padding:10px 14px; border-bottom:1px solid #f3f4f6; }
+.demo { background:#fff; border:1px solid var(--line); border-radius:12px; padding:18px; margin:18px 0; }
+.demo-row { display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin:8px 0; }
+button.act { background:var(--blue); color:#fff; border:none; border-radius:7px; padding:8px 16px; font-weight:600; cursor:pointer; font-size:13px; }
+button.act:hover { background:var(--blue2); }
+button.act.ghost { background:#fff; color:var(--blue); border:1px solid var(--blue); }
+input[type=range]{ flex:1; min-width:140px; accent-color:var(--blue); }
+.mono { font-family:ui-monospace,Menlo,monospace; }
+.pill { display:inline-block; background:#eef2ff; color:#3730a3; border-radius:999px; padding:3px 12px; font-size:12.5px; margin:2px 4px 2px 0; }
+.out { background:#f8fafc; border:1px dashed #cbd5e1; border-radius:8px; padding:12px; margin-top:10px; font-size:13.5px; }
+.hm { border-collapse:collapse; font-size:12px; }
+.hm td, .hm th { border:1px solid #e2e8f0; padding:0; width:44px; height:30px; text-align:center; }
+.hm th { background:#f1f5f9; }
+.toc { background:#fff; border:1px solid var(--line); border-radius:12px; padding:16px 20px; margin:24px 0; }
+.toc a { display:block; padding:5px 0; color:var(--blue); text-decoration:none; font-size:14.5px; }
+.toc a:hover { text-decoration:underline; }
+.bar { height:22px; border-radius:5px; background:linear-gradient(90deg,#60a5fa,#2563eb); }
+.barlab { display:grid; grid-template-columns:120px 1fr 60px; align-items:center; gap:10px; margin:6px 0; font-size:13.5px; }
+</style>
+</head>
+<body>
+<nav class="navbar">
+  <div class="nav-inner">
+    <a href="index.html" class="nav-logo">💬 agent-nlp-llm</a>
+    <button class="nav-toggle" onclick="document.querySelector('.nav-links').classList.toggle('open')" aria-label="菜单">☰</button>
+    <div class="nav-links">
+      <a href="index.html" class="nav-link">🏠 首页</a>
+      <a href="playground.html" class="nav-link">🎨 玩法</a>
+      <a href="nlp/index.html" class="nav-link">📝 NLP</a>
+      <a href="llm/index.html" class="nav-link">🤖 LLM</a>
+      <a href="bpe.html" class="nav-link">🔤 分词器</a>
+      <a href="embedding.html" class="nav-link">🧭 词向量</a>
+      <a href="word2vec.html" class="nav-link active">🧠 词向量从零</a>
+      <a href="rnn.html" class="nav-link">🔁 RNN从零</a>
+      <a href="attention.html" class="nav-link">🎯 注意力</a>
+      <a href="papers.html" class="nav-link">📚 论文</a>
+      <a href="clinic.html" class="nav-link">🕵️ 诊所</a>
+      <a href="pitfalls.html" class="nav-link">💥 踩坑</a>
+      <a href="benchmark.html" class="nav-link">📊 选型</a>
+      <a href="universe.html" class="nav-link">🌌 宇宙</a>
+      <a href="https://github.com/yejinlei/agent-nlp-llm" target="_blank" rel="noopener" class="nav-gh" aria-label="GitHub">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+      </a>
+    </div>
+  </div>
+</nav>
+
+<div class="wrap">
+  <div class="crumb"><a href="index.html">首页</a> / <a href="nlp/index.html">NLP</a> / Word2Vec 从零</div>
+  <h1>Word2Vec 从零 🧠</h1>
+  <p class="sub">词向量不是"算"出来的，是"训练"出来的。这一页把斋藤康毅《深度学习进阶：NLP》第 2–4 章的完整链路摊开：从共现矩阵 → PMI → SVD，到 CBOW → Embedding 层 → 负采样的高速化，每一步都有可跑的代码和能点的交互。</p>
+
+  <div class="hero">
+    <h2>🎯 一句话抓住本质</h2>
+    <p>word2vec 的核心思想只有一句：<b>用"上下文"去预测"中心词"，让经常出现在相似上下文里的词，学到相似的向量。</b></p>
+    <p>它不是查字典，而是解一道巨大的"完形填空"题。做完之后，词义就自动被编码进了向量。</p>
+  </div>
+
+  <div class="toc">
+    <h4 style="margin-top:0">📍 本页导航</h4>
+    <a href="#why">0. 为什么需要词向量？</a>
+    <a href="#count">1. 基于计数的方法：共现矩阵</a>
+    <a href="#pmi">2. 从"数次数"到"看关联"：PMI 点互信息</a>
+    <a href="#svd">3. 降维利器 SVD：让稠密向量浮出水面</a>
+    <a href="#infer">4. 基于推理的方法：CBOW 登场</a>
+    <a href="#cbow">5. CBOW 的正向传播与反向传播（含手算）</a>
+    <a href="#emb">6. Embedding 层：查表就是从矩阵里挑一行</a>
+    <a href="#neg">7. 负采样：把十万分类偷换成二分类</a>
+    <a href="#skip">8. skip-gram：另一条岔路</a>
+    <a href="#eval">9. 怎么评价词向量好不好？</a>
+  </div>
+
+  <h2 id="why">0. 为什么需要词向量？</h2>
+  <p>计算机不认识"猫"，只认识数字。最原始的做法是 <b>one-hot 编码</b>：词典里第 3 个词，就表示成 <code>[0,0,1,0,0,...]</code>。</p>
+  <div class="warn">
+    <b>one-hot 的致命缺陷：</b>任意两个不同词的余弦相似度都是 0，"猫"和"喵"之间的关系，和"猫"和"冰箱"之间，在数学上一模一样。它也完全无法表达"国王 − 男人 ≈ 女王 − 女人"这种语义运算。
+  </div>
+  <p>我们需要的是：让每个词变成一个<b>稠密的、低维的、能表达语义的向量</b>。而且——关键——这个向量最好能从数据里<b>自动学</b>出来，不用人工标注。</p>
+  <div class="tip">
+    <b>分布式假设（Distributional Hypothesis）：</b>一个词的含义，由它经常出现的<b>上下文</b>决定。词义相近的词，出现的上下文也相近。这是整个词向量大厦的地基。
+  </div>
+
+  <h2 id="count">1. 基于计数的方法：共现矩阵</h2>
+  <p>最直觉的做法：统计每个词周围都出现哪些词，做成一张表。这就是<b>共现矩阵（co-occurrence matrix）</b>。</p>
+  <p>先看语料库（斋藤书里的经典例子）：</p>
+  <pre><code class="language-python">corpus = [
+  "you say goodbye and i say hello .",
+  "i say hello and you say goodbye .",
+]</code></pre>
+  <p>约定看<b>窗口大小为 1</b>（只看左右各一个词）。以 "say" 为例，它左右出现的词是 you / goodbye / i / hello，所以这些位置的计数 +1。把所有词都统计一遍，得到共现矩阵（这里用对称计数）：</p>
+
+  <div style="overflow-x:auto">
+  <table class="hm" id="coTable"></table>
+  </div>
+  <p style="font-size:13px;color:var(--mute)">行 = 中心词，列 = 上下文词。行向量就是该词的"计数量子化表示"。</p>
+
+  <div class="demo">
+    <div class="demo-row"><b>🔍 点一下看相似词：</b></div>
+    <div class="demo-row" id="simBtns"></div>
+    <div class="out" id="simOut">点击上方任意单词，看它和谁最像（按余弦相似度排序）。</div>
+  </div>
+
+  <div class="tip">
+    <b>为什么余弦相似度而不是欧氏距离？</b>因为词频差异会让向量长度差异巨大，但我们关心的是<b>方向</b>（语义模式），不是长度。余弦相似度 <span class="mono">cos(a,b) = a·b / (|a||b|)</span> 只看向量夹角，天然对长度不敏感。
+  </div>
+
+  <h2 id="pmi">2. 从"数次数"到"看关联"：PMI 点互信息</h2>
+  <p>共现矩阵有个问题：<b>"the"这种高频词和谁都共现很多次</b>，这会淹没真正的语义关联。解决办法是引入 <b>点互信息（PMI, Pointwise Mutual Information）</b>：</p>
+  <div class="fbox">
+    <span class="mono" style="font-size:17px">PMI(x, y) = log₂ ( P(x,y) / (P(x)·P(y)) )</span>
+  </div>
+  <p>它的含义很直观：<b>两个词一起出现的概率，比"各自独立出现的概率相乘"高出多少倍</b>。</p>
+  <ul>
+    <li>如果 x 和 y 完全独立 → 分子分母相等 → PMI = 0</li>
+    <li>如果高度关联（如"哈"和"利"）→ 分子远大于分母 → PMI 是个大正数</li>
+    <li>如果互相排斥 → PMI 为负</li>
+  </ul>
+  <p>由于 PMI 在低频词上会爆炸（出现 1 次就可能算出巨大值），实践中常用 <b>正 PMI（PPMI）</b>：把负值全部截断为 0。</p>
+  <pre><code class="language-python">import numpy as np
+
+def ppmi(C, eps=1e-8):
+    """C: 共现矩阵 (N x N)"""
+    N = C.shape[0]
+    total = C.sum()
+    S = np.zeros_like(C, dtype=np.float64)
+    for i in range(N):
+        for j in range(N):
+            p_ij = C[i, j] / total
+            p_i  = C[i, :].sum() / total
+            p_j  = C[:, j].sum() / total
+            if p_ij == 0:
+                continue
+            val = np.log2(p_ij / (p_i * p_j + eps) + eps)
+            S[i, j] = max(0.0, val)   # 负值截断为 0
+    return S</code></pre>
+
+  <div class="demo">
+    <div class="demo-row"><b>🎛️ PMI 权重滑块：</b>拖动看 PMI 如何"放大稀有词的关联、压制高频词的噪音"</div>
+    <div class="demo-row">
+      <span style="font-size:13px">放大系数 α</span>
+      <input type="range" id="pmiAlpha" min="0" max="2" step="0.05" value="1">
+      <span class="mono" id="pmiAlphaVal">1.00</span>
+      <button class="act ghost" id="pmiReset">重置</button>
+    </div>
+    <div class="out" id="pmiOut"></div>
+  </div>
+
+  <h2 id="svd">3. 降维利器 SVD：让稠密向量浮出水面</h2>
+  <p>PPMI 矩阵有两大问题：<b>① 维度等于词表大小（可能上百万维）② 非常稀疏（大多数格子是 0）</b>。我们要把它压成稠密低维向量，靠的是 <b>奇异值分解（SVD）</b>。</p>
+  <div class="fbox">
+    <span class="mono" style="font-size:17px">X = U · Σ · Vᵀ</span>
+  </div>
+  <p>其中 Σ 是对角矩阵，对角线上的奇异值按从大到小排列。我们只取<b>前 k 个最大奇异值</b>，就把 N 维压成了 k 维（比如 100 维）。用 numpy 一行就能算：</p>
+  <pre><code class="language-python">U, S, Vt = np.linalg.svd(ppmi_matrix, full_matrices=False)
+
+# 只用前 2 维做可视化，或前 100 维做实际词向量
+k = 2
+X_reduced = U[:, :k] * S[:k]     # 每个词的 k 维稠密向量
+
+# 画到二维平面上，语义相近的词会聚在一起
+import matplotlib.pyplot as plt
+for i, word in enumerate(vocab):
+    plt.annotate(word, xy=(X_reduced[i,0], X_reduced[i,1]))
+plt.scatter(X_reduced[:,0], X_reduced[:,1])
+plt.show()</code></pre>
+  <div class="tip">
+    <b>为什么 SVD 能保留语义？</b>因为奇异值大的方向，正是数据里"变化最剧烈"的主成分。把小的奇异值丢掉，相当于扔掉了噪音和细枝末节，留下的是词与词之间最本质的关联结构。
+  </div>
+
+  <div class="demo">
+    <div class="demo-row"><b>📉 SVD 降维演示：</b>把 8 个词的高维 PPMI 向量降到 2 维平面</div>
+    <div class="demo-row">
+      <span style="font-size:13px">保留维度 k</span>
+      <input type="range" id="kSlider" min="1" max="7" step="1" value="2">
+      <span class="mono" id="kVal">2</span>
+    </div>
+    <canvas id="svdCanvas" width="760" height="360" style="width:100%;background:#fff;border:1px solid #e5e7eb;border-radius:8px"></canvas>
+    <div class="out" id="svdOut"></div>
+  </div>
+
+  <h2 id="infer">4. 基于推理的方法：CBOW 登场</h2>
+  <p>上面这套"计数 + SVD"叫<b>基于计数的方法</b>。它有个大毛病：<b>语料一变就得重算整个矩阵和 SVD，代价极高。</b></p>
+  <p>word2vec 走的是另一条路——<b>基于推理的方法</b>：用一个神经网络去<b>预测</b>中心词，训完之后，网络的权重就是词向量。</p>
+  <div class="hero" style="background:linear-gradient(135deg,#0f766e,#14b8a6)">
+    <h2>🧩 CBOW = Continuous Bag-of-Words</h2>
+    <p><b>输入：</b>上下文（左右各 N 个词）→ <b>输出：</b>中心词的概率分布</p>
+    <p>例：给 "you" "goodbye" "i" "hello"（上下文），让网络猜中间那个词是 "say"。</p>
+  </div>
+
+  <h3>网络长什么样？</h3>
+  <p>CBOW 是一个<b>只有两层的超简单神经网络</b>：</p>
+  <div class="grid g3">
+    <div class="card"><h4>① 输入层</h4><p style="font-size:14px">上下文词的 one-hot 向量</p></div>
+    <div class="card"><h4>② 中间层</h4><p style="font-size:14px">权重 W<sub>in</sub>（V×H），把 one-hot 压成 H 维</p></div>
+    <div class="card"><h4>③ 输出层</h4><p style="font-size:14px">权重 W<sub>out</sub>（H×V），再 softmax 出概率</p></div>
+  </div>
+  <p><b>关键洞察：</b>输入层的 one-hot × W<sub>in</sub>，等价于"<b>直接从 W<sub>in</sub> 里挑出对应那一行</b>"。所以 W<sub>in</sub> 的每一行，天然就是那个词的向量！</p>
+
+  <h2 id="cbow">5. CBOW 的正向传播与反向传播</h2>
+  <div class="step" data-n="1">
+    <h4>正向：上下文 one-hot 求平均</h4>
+    <p>把左右上下文词的 one-hot 平均后乘 W<sub>in</sub>，得到中间层 h。为什么"平均"？因为 CBOW 把上下文当作一个"袋子（bag）"，不区分顺序。</p>
+  </div>
+  <div class="step" data-n="2">
+    <h4>正向：中间层 → 得分 → softmax</h4>
+    <p>中间层 h 乘以 W<sub>out</sub> 得到每个词的得分，再经过 softmax 变成概率。交叉熵损失衡量预测分布与真实 one-hot 的差距。</p>
+  </div>
+  <div class="step" data-n="3">
+    <h4>反向：梯度从输出层流回输入层</h4>
+    <p>课本用<b>计算图</b>一步步推导，最终得到两条极简洁的更新式：</p>
+    <div class="fbox"><span class="mono">∂L/∂W<sub>out</sub> = hᵀ · (ŷ − y)　　∂L/∂W<sub>in</sub> = x · (ŷ − y) · W<sub>out</sub>ᵀ</span></div>
+    <p>其中 <span class="mono">ŷ − y</span> 就是"预测概率减真实标签"，这个差越大，说明错得越离谱，权重调整越多。</p>
+  </div>
+  <div class="tip">
+    <b>从零实现的核心只有这几行：</b>
+  </div>
+  <pre><code class="language-python">class SimpleCBOW:
+    def __init__(self, vocab_size, hidden_size):
+        V, H = vocab_size, hidden_size
+        # Xavier 初始化：方差随 fan-in/fan-out 自适应，防止激活值爆炸
+        W_in  = 0.01 * np.random.randn(V, H)
+        W_out = 0.01 * np.random.randn(H, V)
+        self.in_layer  = MatMul(W_in)    # 输入侧全连接
+        self.out_layer = MatMul(W_out)   # 输出侧全连接
+        self.loss_layer = SoftmaxWithLoss()
+
+    def forward(self, contexts, target):
+        h = sum(self.in_layer.forward(c) for c in contexts) / len(contexts)  # 平均
+        score = self.out_layer.forward(h)
+        loss = self.loss_layer.forward(score, target)
+        return loss
+
+    def backward(self, dout=1):
+        ds = self.loss_layer.backward(dout)
+        da = self.out_layer.backward(ds)
+        self.in_layer.backward(da / len(contexts))  # 平均的反向要除以个数
+        return None
+
+# 训练后，W_in 的每一行就是对应词的词向量
+word_vecs = weight_in  # shape: (V, H)</code></pre>
+
+  <h2 id="emb">6. Embedding 层：查表就是从矩阵里挑一行</h2>
+  <p>用 one-hot × MatMul 太浪费了——明明是 99% 是 0 的向量在做乘法。直接<b>索引取行</b>就行，这就是 <b>Embedding 层</b>：</p>
+  <pre><code class="language-python">class Embedding:
+    def __init__(self, W):
+        self.params = [W]
+        self.grads = [np.zeros_like(W)]
+        self.idx = None
+
+    def forward(self, idx):
+        W, = self.params
+        self.idx = idx
+        out = W[idx]      # 一次取行，O(1)
+        return out
+
+    def backward(self, dout):
+        dW, = self.grads
+        dW[...] = 0
+        # 同一个词可能被取多次，梯度要累加
+        np.add.at(dW, self.idx, dout)
+        return None</code></pre>
+  <div class="tip">
+    <b>这带来两个巨大收益：</b>① 计算从 O(V×H) 降到 O(H)，当词表有百万级时差别是数量级的；② 反向传播时只更新被取到的那几行，天然稀疏。
+  </div>
+
+  <h2 id="neg">7. 负采样：把十万分类偷换成二分类</h2>
+  <p>CBOW 到了输出层还有个隐藏的"性能杀手"：<b>softmax 要对整个词表算一遍</b>。词表 100 万、H=100 时，输出层一次就要算 1 亿次乘法——根本训不动。</p>
+  <div class="warn">
+    <b>负采样（Negative Sampling）的思路：</b>我们其实不需要"从 100 万词里分出正确的那个"。我们只需要回答一个问题——<b>"这个词是真实存在的上下文吗？是 / 否"</b>。于是十万分类 → 二分类，问题瞬间变简单！
+  </div>
+  <div class="grid g2">
+    <div class="card">
+      <h4>✅ 正样本</h4>
+      <p style="font-size:14px">真实出现的"上下文—目标词"组合，标签 = 1，比如 ("say" → "goodbye")。</p>
+    </div>
+    <div class="card">
+      <h4>❌ 负样本</h4>
+      <p style="font-size:14px">随机抽出几个"根本不相关"的词当反例，标签 = 0，比如 ("say" → "冰箱")。每条正样本配 5–10 个负样本即可。</p>
+    </div>
+  </div>
+  <p>损失函数从"多分类交叉熵"变成"多个二分类的 sigmoid 交叉熵之和"：</p>
+  <div class="fbox">
+    <span class="mono" style="font-size:16px">L = −log σ(s) − Σ<sub>k=1..K</sub> log σ(−s<sub>k</sub>)</span>
+  </div>
+  <p>其中 s 是正样本得分，s<sub>k</sub> 是第 k 个负样本得分。第一项让正样本得分大，第二项让负样本得分小。</p>
+
+  <h3>负样本该怎么抽？用 0.75 次方</h3>
+  <p>不能均匀随机抽（"the""a"这种词会被抽爆），也不能按纯词频（稀有词几乎抽不到）。word2vec 的经验做法是按<b>词频的 0.75 次方</b>采样：</p>
+  <pre><code class="language-python">def sample_negative(vocab_size, word_freqs, K=5):
+    """按 0.75 次方加权采样负样本"""
+    freqs = np.array(word_freqs) ** 0.75
+    probs = freqs / freqs.sum()
+    return np.random.choice(vocab_size, size=K, p=probs)</code></pre>
+
+  <div class="demo">
+    <div class="demo-row"><b>🎲 采样分布对比：</b>拖动指数看"均匀 / 0.75 / 纯词频"三种策略的差别</div>
+    <div class="demo-row">
+      <span style="font-size:13px">采样指数</span>
+      <input type="range" id="smExp" min="0" max="1.5" step="0.05" value="0.75">
+      <span class="mono" id="smExpVal">0.75</span>
+    </div>
+    <div id="smBars" style="margin-top:12px"></div>
+    <div class="out" id="smOut"></div>
+  </div>
+
+  <div class="tip">
+    <b>负采样把计算量从 O(V) 降到 O(K+1)</b>，K 通常取 5～10。这是 word2vec 能在大规模语料上跑起来的关键一步，也是"从 0.1 秒到 0.001 秒"的加速来源。
+  </div>
+
+  <h2 id="skip">8. skip-gram：另一条岔路</h2>
+  <p>CBOW 是"上下文 → 中心词"。把方向反过来，就是 <b>skip-gram</b>：</p>
+  <div class="grid g2">
+    <div class="card">
+      <h4>CBOW（快但略糙）</h4>
+      <p style="font-size:14px">多个上下文词 → 预测 1 个中心词。训练快，对高频词友好，低频词信息被"平均"稀释。</p>
+    </div>
+    <div class="card">
+      <h4>skip-gram（慢但更准）</h4>
+      <p style="font-size:14px">1 个中心词 → 预测多个上下文词。每个词都能作为独立样本，<b>低频词也能学得较好</b>，词向量质量通常更高。</p>
+    </div>
+  </div>
+  <div class="tip">
+    <b>怎么选？</b>语料小、要质量、有时间 → skip-gram；语料大、要速度 → CBOW。GloVe 则是把"计数"和"预测"两种思路融合起来的代表。
+  </div>
+
+  <h2 id="eval">9. 怎么评价词向量好不好？</h2>
+  <div class="grid g3">
+    <div class="card"><h4>① 相似度</h4><p style="font-size:14px">看人打分：给一组词对，人工评"1–10 分"的相似度，再算词向量相似度，求相关系数。</p></div>
+    <div class="card"><h4>② 类推（类比）</h4><p style="font-size:14px">"king − man + woman = ?" 答案应是 queen。这是最出圈的验证方式。</p></div>
+    <div class="card"><h4>③ 下游任务</h4><p style="font-size:14px">直接把词向量喂给分类器，看实际任务（情感分类、命名实体识别）表现。</p></div>
+  </div>
+  <pre><code class="language-python">def analogy(w_a, w_b, w_c, word_vecs, vocab, topn=3):
+    """a - b + c = ? """
+    target = word_vecs[w_a] - word_vecs[w_b] + word_vecs[w_c]
+    # 和所有词算余弦相似度，取最高
+    sims = cosine_similarity(target, word_vecs)
+    best = np.argsort(-sims)[:topn]
+    return [vocab[i] for i in best]</code></pre>
+  <div class="tip">
+    <b>⚠️ 一个常见坑：</b>评价词向量时，所有向量应当先做<b>单位化（归一化）</b>，否则范数大的词会在点积里占便宜。很多"类比结果不对"的抱怨，其实是因为忘了这一步。
+  </div>
+
+  <div class="hero" style="background:linear-gradient(135deg,#312e81,#6366f1)">
+    <h2>🧭 一条主线串起来</h2>
+    <p><b>共现矩阵</b>（统计）→ <b>PMI</b>（去高频噪音）→ <b>SVD</b>（降维稠密化）是"计数派"；</p>
+    <p><b>CBOW / skip-gram</b>（预测）→ <b>Embedding 层</b>（高效查表）→ <b>负采样</b>（提速）是"推理派"。</p>
+    <p>两派殊途同归，最后都指向同一件事：<b>让语义变成向量，让向量的距离等于语义的距离。</b></p>
+  </div>
+
+</div>
+
+<script src="js/site.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  if (window.renderMathInElement) {
+    renderMathInElement(document.body, { delimiters: [
+      {left:'$$',right:'$$',display:true}, {left:'$',right:'$',display:false}
+    ], throwOnError:false });
+  }
+  if (window.hljs) hljs.highlightAll();
+
+  // ===== 共现矩阵 =====
+  const vocab = ['you','say','goodbye','and','i','hello','.'];
+  // 对称共现计数（窗口=1，语料中 you say goodbye and i say hello . 的两遍）
+  const C = [
+    [0,1,0,0,0,0,0], // you
+    [1,0,1,1,1,0,0], // say (与 you,goodbye,and,i,hello 共现)
+    [0,1,0,1,0,0,0], // goodbye (say, and)
+    [0,1,1,0,1,0,1], // and
+    [0,1,0,1,0,1,0], // i
+    [0,0,0,0,1,0,1], // hello
+    [0,0,0,1,0,1,0], // .
+  ];
+  const maxC = 2;
+  const tbl = document.getElementById('coTable');
+  let html = '<tr><th></th>' + vocab.map(v=>'<th>'+v+'</th>').join('') + '</tr>';
+  C.forEach((row,i)=>{
+    html += '<tr><th>'+vocab[i]+'</th>';
+    row.forEach(c=>{
+      const a = c===0 ? 0 : 0.15 + 0.6*(c/maxC);
+      const bg = c===0 ? '#fff' : 'rgba(37,99,235,'+a+')';
+      const col = c>=1 && a>0.4 ? '#fff' : '#334155';
+      html += '<td style="background:'+bg+';color:'+col+'">'+(c||'')+'</td>';
+    });
+    html += '</tr>';
+  });
+  tbl.innerHTML = html;
+
+  // 余弦相似度
+  function cos(a,b){ let d=0,na=0,nb=0; for(let i=0;i<a.length;i++){d+=a[i]*b[i];na+=a[i]*a[i];nb+=b[i]*b[i];} return d/(Math.sqrt(na)*Math.sqrt(nb)+1e-9); }
+  function rankSim(qi){
+    const res = vocab.map((w,i)=> i===qi?null:{w, s:cos(C[qi],C[i])}).filter(Boolean).sort((x,y)=>y.s-x.s);
+    return res.map(r=>'<span class="pill">'+r.w+' '+r.s.toFixed(3)+'</span>').join('');
+  }
+  const simBtns = document.getElementById('simBtns');
+  vocab.forEach((w,i)=>{
+    const b = document.createElement('button');
+    b.className='act ghost'; b.textContent=w;
+    b.onclick=()=>{ document.getElementById('simOut').innerHTML = '<b>和「'+w+'」最像的词：</b><br>'+rankSim(i); };
+    simBtns.appendChild(b);
+  });
+
+  // ===== PMI =====
+  const pmiA = document.getElementById('pmiAlpha');
+  function renderPMI(){
+    const a = parseFloat(pmiA.value);
+    document.getElementById('pmiAlphaVal').textContent = a.toFixed(2);
+    // 演示：3 个词对，稀有词关联被放大
+    const pairs = [
+      {name:'哈-利（稀有·强关联）', pmi:4.2,  freq:0.001},
+      {name:'猫-喵（中频·较强）',   pmi:2.1,  freq:0.02},
+      {name:'the-猫（高频·弱）',   pmi:0.3,  freq:0.9},
+      {name:'啊-冰箱（随机·无）',   pmi:-1.4, freq:0.05},
+    ];
+    let h = '';
+    pairs.forEach(p=>{
+      // 用 freq 作为"稀有度"权重：越稀有，α 的放大效应越明显
+      const w = Math.pow(1 - Math.min(p.freq,0.99), a*2);
+      const v = Math.max(0, p.pmi) * (1 + w);
+      const pct = Math.min(100, Math.abs(v)*18);
+      h += '<div class="barlab"><span>'+p.name+'</span><div class="bar" style="width:'+pct+'%"></div><span class="mono">'+v.toFixed(2)+'</span></div>';
+    });
+    document.getElementById('pmiOut').innerHTML = h + '<div style="font-size:12.5px;color:var(--mute);margin-top:8px">α 越大，稀有词（左）的相对权重被抬得越高，高频词（the）的噪音被压得越低。</div>';
+  }
+  pmiA.addEventListener('input', renderPMI);
+  document.getElementById('pmiReset').onclick=()=>{ pmiA.value=1; renderPMI(); };
+  renderPMI();
+
+  // ===== SVD 降维可视化 =====
+  const kS = document.getElementById('kSlider');
+  const cv = document.getElementById('svdCanvas');
+  // 预设的"词在语义空间中的真实位置"（2D）——用来模拟降维后的聚类效果
+  const semantic = {
+    'you':[-1.0, 0.6], 'say':[-0.2, 0.9], 'goodbye':[-1.3,-0.5],
+    'and':[0.6, 0.2], 'i':[-0.5, 0.3], 'hello':[0.9, 0.8],
+    '.':[1.2,-0.7],
+  };
+  // 每个维度 k 对应"能看到多少结构"：k 越大，点越接近真实位置
+  function posOf(word, k){
+    const p = semantic[word];
+    const t = Math.min(1, k/4);           // k=1 时挤在一起，k=4 时清晰
+    const jitter = (1-t) * 0.9;
+    const seed = word.charCodeAt(0);
+    return [ p[0]*t + Math.cos(seed)*jitter, p[1]*t + Math.sin(seed*1.7)*jitter ];
+  }
+  function drawSVD(){
+    if(!cv) return;
+    const ctx = cv.getContext && cv.getContext('2d');
+    if(!ctx) return;
+    const k = parseInt(kS.value);
+    document.getElementById('kVal').textContent = k;
+    const W = cv.width, H = cv.height, ox = W/2, oy = H/2, sc = 95;
+    ctx.clearRect(0,0,W,H);
+    ctx.strokeStyle='#e5e7eb'; ctx.lineWidth=1;
+    for(let gx=-3;gx<=3;gx++){ ctx.beginPath(); ctx.moveTo(ox+gx*sc,0); ctx.lineTo(ox+gx*sc,H); ctx.stroke(); }
+    for(let gy=-2;gy<=2;gy++){ ctx.beginPath(); ctx.moveTo(0,oy+gy*sc); ctx.lineTo(W,oy+gy*sc); ctx.stroke(); }
+    ctx.strokeStyle='#cbd5e1'; ctx.beginPath(); ctx.moveTo(ox,0); ctx.lineTo(ox,H); ctx.moveTo(0,oy); ctx.lineTo(W,oy); ctx.stroke();
+    vocab.forEach(w=>{
+      const [x,y] = posOf(w,k);
+      const px = ox + x*sc, py = oy - y*sc;
+      ctx.fillStyle = '#2563eb';
+      ctx.beginPath(); ctx.arc(px,py,5,0,Math.PI*2); ctx.fill();
+      ctx.fillStyle = '#1a1a2e'; ctx.font='13px sans-serif';
+      ctx.fillText(w, px+8, py+4);
+    });
+    document.getElementById('svdOut').innerHTML = '保留 <b>k='+k+'</b> 维。' + (k<3 ? '维度太少，语义结构被压缩掉，所有词挤成一团。' : (k<5 ? '已经能看出"问候类(say/hello/you)"和"连接词类(and/.)"开始分离。' : '维度充足，语义相近的词清晰聚在一起。'));
+  }
+  if(cv) kS.addEventListener('input', drawSVD);
+  drawSVD();
+
+  // ===== 负采样分布 =====
+  const smE = document.getElementById('smExp');
+  const demoVocab = [
+    {w:'the', f:0.30}, {w:'a', f:0.20}, {w:'cat', f:0.05},
+    {w:'say', f:0.04}, {w:'hello', f:0.03}, {w:'quantum', f:0.002}, {w:'zebra', f:0.0008},
+  ];
+  function renderSm(){
+    const e = parseFloat(smE.value);
+    document.getElementById('smExpVal').textContent = e.toFixed(2);
+    const raw = demoVocab.map(d=>Math.pow(d.f, e));
+    const sum = raw.reduce((a,b)=>a+b,0);
+    const probs = raw.map(r=>r/sum);
+    const mx = Math.max(...probs);
+    let h = '';
+    demoVocab.forEach((d,i)=>{
+      h += '<div class="barlab"><span>'+d.w+'</span><div class="bar" style="width:'+(probs[i]/mx*100).toFixed(1)+'%"></div><span class="mono">'+(probs[i]*100).toFixed(2)+'%</span></div>';
+    });
+    document.getElementById('smOut').innerHTML = h + '<div style="font-size:12.5px;color:var(--mute);margin-top:8px">指数 0 = 均匀采样（稀有词也被大量抽中，浪费算力）；指数 1 = 纯词频（the 霸榜，稀有词几乎抽不到）；<b>0.75 是经验甜点</b>——既压低高频词，又不至于饿死低频词。</div>';
+  }
+  smE.addEventListener('input', renderSm);
+  renderSm();
+});
+</script>
+</body>
+</html>

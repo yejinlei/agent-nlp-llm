@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RNN · LSTM · Attention 从零 · 让网络记住过去</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<link rel="stylesheet" href="css/site.css">
+<style>
+:root { --ink:#1a1a2e; --blue:#2563eb; --blue2:#1d4ed8; --mute:#6b7280; --line:#e5e7eb; }
+* { box-sizing:border-box; }
+body { margin:0; font-family:'Noto Sans SC',-apple-system,'PingFang SC',sans-serif; background:#fafbfc; color:var(--ink); line-height:1.75; }
+.wrap { max-width:960px; margin:0 auto; padding:48px 24px 96px; }
+.crumb { font-size:13px; color:var(--mute); margin-bottom:8px; }
+.crumb a { color:var(--blue); text-decoration:none; }
+h1 { font-size:40px; font-weight:800; letter-spacing:-1px; margin:8px 0 12px; }
+.sub { font-size:17px; color:var(--mute); margin-bottom:32px; }
+h2 { font-size:26px; font-weight:700; margin:56px 0 20px; padding-bottom:10px; border-bottom:2px solid var(--line); scroll-margin-top:80px; }
+h3 { font-size:19px; font-weight:600; margin:32px 0 12px; color:var(--blue2); }
+p { margin:12px 0; }
+code { background:#eef2ff; color:#3730a3; padding:2px 6px; border-radius:4px; font-family:ui-monospace,Menlo,monospace; font-size:0.9em; }
+pre { background:#0d1117; color:#c9d1d9; border-radius:10px; padding:16px 18px; overflow-x:auto; font-size:13.5px; line-height:1.6; }
+pre code { background:none; color:inherit; padding:0; }
+.hero { background:linear-gradient(135deg,#7c2d12 0%,#ea580c 100%); color:#fff; border-radius:16px; padding:32px 28px; margin:24px 0; }
+.hero h2 { color:#fff; border:none; margin:0 0 10px; padding:0; font-size:22px; }
+.hero p { color:#ffedd5; margin:6px 0; }
+.grid { display:grid; gap:16px; }
+.g2 { grid-template-columns:1fr 1fr; }
+.g3 { grid-template-columns:repeat(3,1fr); }
+@media(max-width:760px){ .g2,.g3{grid-template-columns:1fr;} }
+.card { background:#fff; border:1px solid var(--line); border-radius:12px; padding:20px; }
+.tip { background:#eff6ff; border-left:4px solid var(--blue); border-radius:0 8px 8px 0; padding:14px 18px; margin:16px 0; }
+.warn { background:#fff7ed; border-left:4px solid #f59e0b; border-radius:0 8px 8px 0; padding:14px 18px; margin:16px 0; }
+.fbox { background:#f8fafc; border:1px solid var(--line); border-radius:10px; padding:16px; margin:16px 0; text-align:center; overflow-x:auto; }
+table { width:100%; border-collapse:collapse; margin:16px 0; background:#fff; border-radius:8px; overflow:hidden; box-shadow:0 1px 3px rgba(0,0,0,.05); font-size:14px; }
+th { background:#f8fafc; padding:10px 14px; text-align:left; font-weight:600; border-bottom:1px solid var(--line); }
+td { padding:10px 14px; border-bottom:1px solid #f3f4f6; }
+.demo { background:#fff; border:1px solid var(--line); border-radius:12px; padding:18px; margin:18px 0; }
+.demo-row { display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin:8px 0; }
+button.act { background:var(--blue); color:#fff; border:none; border-radius:7px; padding:8px 16px; font-weight:600; cursor:pointer; font-size:13px; }
+button.act:hover { background:var(--blue2); }
+button.act.ghost { background:#fff; color:var(--blue); border:1px solid var(--blue); }
+input[type=range]{ flex:1; min-width:140px; accent-color:var(--blue); }
+.out { background:#f8fafc; border:1px dashed #cbd5e1; border-radius:8px; padding:12px; margin-top:10px; font-size:13.5px; }
+.toc { background:#fff; border:1px solid var(--line); border-radius:12px; padding:16px 20px; margin:24px 0; }
+.toc a { display:block; padding:5px 0; color:var(--blue); text-decoration:none; font-size:14.5px; }
+.toc a:hover { text-decoration:underline; }
+.gate { background:#fff; border:1px solid var(--line); border-radius:12px; padding:18px; }
+.gate h4 { margin:0 0 8px; }
+.bar { height:20px; border-radius:5px; background:linear-gradient(90deg,#fbbf24,#ea580c); transition:width .3s; }
+.hm { border-collapse:collapse; font-size:12px; }
+.hm td, .hm th { border:1px solid #e2e8f0; padding:6px; text-align:center; }
+.hm th { background:#f1f5f9; }
+</style>
+</head>
+<body>
+<nav class="navbar">
+  <div class="nav-inner">
+    <a href="index.html" class="nav-logo">💬 agent-nlp-llm</a>
+    <button class="nav-toggle" onclick="document.querySelector('.nav-links').classList.toggle('open')" aria-label="菜单">☰</button>
+    <div class="nav-links">
+      <a href="index.html" class="nav-link">🏠 首页</a>
+      <a href="playground.html" class="nav-link">🎨 玩法</a>
+      <a href="nlp/index.html" class="nav-link">📝 NLP</a>
+      <a href="llm/index.html" class="nav-link">🤖 LLM</a>
+      <a href="bpe.html" class="nav-link">🔤 分词器</a>
+      <a href="embedding.html" class="nav-link">🧭 词向量</a>
+      <a href="word2vec.html" class="nav-link">🧠 词向量从零</a>
+      <a href="rnn.html" class="nav-link active">🔁 RNN从零</a>
+      <a href="attention.html" class="nav-link">🎯 注意力</a>
+      <a href="papers.html" class="nav-link">📚 论文</a>
+      <a href="clinic.html" class="nav-link">🕵️ 诊所</a>
+      <a href="pitfalls.html" class="nav-link">💥 踩坑</a>
+      <a href="benchmark.html" class="nav-link">📊 选型</a>
+      <a href="universe.html" class="nav-link">🌌 宇宙</a>
+      <a href="https://github.com/yejinlei/agent-nlp-llm" target="_blank" rel="noopener" class="nav-gh" aria-label="GitHub">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+      </a>
+    </div>
+  </div>
+</nav>
+
+<div class="wrap">
+  <div class="crumb"><a href="index.html">首页</a> / <a href="nlp/index.html">NLP</a> / RNN · LSTM · Attention</div>
+  <h1>RNN · LSTM · Attention 从零 🔁</h1>
+  <p class="sub">语言是有顺序的——"猫吃鱼"和"鱼吃猫"意思完全相反。这一页把斋藤康毅《深度学习进阶：NLP》第 5–8 章的主线走完：为什么 RNN 会健忘 → LSTM 四个门如何救场 → seq2seq 怎么翻译 → Attention 如何取代记忆。</p>
+
+  <div class="hero">
+    <h2>🎯 一句话抓住本质</h2>
+    <p>RNN 的野心是<b>记住过去</b>：每读一个词，就把它和"以前的记忆"揉在一起。但它有个天生的毛病——<b>记性越远越模糊</b>。LSTM 用"门"来解决；Attention 则干脆说：<b>别硬记了，用到时回去查！</b></p>
+  </div>
+
+  <div class="toc">
+    <h4 style="margin-top:0">📍 本页导航</h4>
+    <a href="#lm">1. 语言模型：给一句话打分</a>
+    <a href="#rnn">2. RNN：带"记忆"的神经网络</a>
+    <a href="#bptt">3. BPTT 与梯度消失（数学根源）</a>
+    <a href="#trunc">4. Truncated BPTT：工程上的取舍</a>
+    <a href="#lstm">5. LSTM：四个门逐个拆解</a>
+    <a href="#clip">6. 梯度爆炸与梯度裁剪</a>
+    <a href="#seq2seq">7. seq2seq：Encoder-Decoder 翻译</a>
+    <a href="#attn">8. Attention：记忆不够，注意力来凑</a>
+  </div>
+
+  <h2 id="lm">1. 语言模型：给一句话打分</h2>
+  <p><b>语言模型</b>的任务是算一句话出现的概率。用条件概率链式展开：</p>
+  <div class="fbox"><span class="mono" style="font-size:16px">P(w₁,w₂,…,wₜ) = ∏ᵗ P(wₜ | w₁,…,wₜ₋₁)</span></div>
+  <p>翻译成人话：<b>这句话说得通不通，等于"每个词在前面所有词的条件下出现得顺不顺"连乘起来。</b></p>
+  <p>怎么衡量好坏？用<b>困惑度（Perplexity）</b>：</p>
+  <div class="fbox"><span class="mono" style="font-size:16px">PPL = e<sup>L</sup>，L 是交叉熵损失</span></div>
+  <div class="tip">
+    <b>困惑度怎么读？</b>PPL = 10 可以理解为"模型每次预测时，在 10 个词里犹豫不定"。<b>越小越好</b>，1 表示每次都猜对。GPT-2 在 WikiText 上的 PPL 约为 20 左右。
+  </div>
+
+  <h2 id="rnn">2. RNN：带"记忆"的神经网络</h2>
+  <p>普通前馈网络是"一次性"的，喂完就忘。RNN 加了一条<span style="color:#ea580c;font-weight:600">循环回路</span>：把上一时刻的隐藏状态 h<sub>t−1</sub> 也作为本时刻的输入。</p>
+  <div class="fbox"><span class="mono" style="font-size:16px">h<sub>t</sub> = tanh( W<sub>h</sub> · h<sub>t−1</sub> + W<sub>x</sub> · x<sub>t</sub> + b )</span></div>
+  <p>直观理解：<b>h<sub>t</sub> 是一个"状态快照"，它浓缩了从句子开头到现在的所有信息。</b>每读一个新词，这个快照就更新一次。</p>
+
+  <div class="demo">
+    <div class="demo-row"><b>🔄 RNN 记忆流动演示：</b>拖动滑块看隐藏状态 h 如何一步步"记住"句子</div>
+    <div class="demo-row">
+      <span style="font-size:13px">时间步 t</span>
+      <input type="range" id="tSlider" min="0" max="6" step="1" value="0">
+      <span class="mono" id="tVal">0</span>
+    </div>
+    <div id="rnnFlow" style="display:flex;gap:8px;flex-wrap:wrap;margin:12px 0"></div>
+    <div class="out" id="rnnOut"></div>
+  </div>
+
+  <h2 id="bptt">3. BPTT 与梯度消失（数学根源）</h2>
+  <p>RNN 的反向传播要沿着时间<b>倒着走一遍</b>，叫 <b>BPTT（Backpropagation Through Time）</b>。</p>
+  <div class="warn">
+    <b>问题来了：</b>当序列很长时，梯度从最后一步传回第一步，中间要<b>连乘</b>很多个雅可比矩阵。矩阵乘法的连乘，如果每个矩阵的"放大倍数"小于 1，最后结果就<b>指数级衰减到 0</b>——这就是梯度消失；反之则指数级爆炸。
+  </div>
+  <div class="fbox">
+    <span class="mono">∂L/∂h₁ = ∂L/∂h<sub>T</sub> · ∏<sub>t=2..T</sub> ∂h<sub>t</sub>/∂h<sub>t−1</sub></span>
+  </div>
+
+  <div class="demo">
+    <div class="demo-row"><b>📉 梯度消失可视化：</b>拖动"长期依赖距离"看梯度衰减到什么程度</div>
+    <div class="demo-row">
+      <span style="font-size:13px">距离 T</span>
+      <input type="range" id="distSlider" min="1" max="40" step="1" value="10">
+      <span class="mono" id="distVal">10</span>
+    </div>
+    <div class="demo-row">
+      <span style="font-size:13px">单步衰减因子</span>
+      <input type="range" id="decaySlider" min="0.3" max="1.1" step="0.01" value="0.7">
+      <span class="mono" id="decayVal">0.70</span>
+    </div>
+    <div class="out" id="gradOut"></div>
+  </div>
+
+  <h2 id="trunc">4. Truncated BPTT：工程上的取舍</h2>
+  <p>既然整条链太长，那就<b>砍成一截一截</b>：每次只反向传播固定长度（比如 20 步），但隐藏状态要接着传下去。这叫<b>截断 BPTT</b>。</p>
+  <div class="grid g2">
+    <div class="card"><h4>✅ 好处</h4><p style="font-size:14px">计算量可控、能处理任意长度文本、可以 mini-batch 并行。</p></div>
+    <div class="card"><h4>⚠️ 代价</h4><p style="font-size:14px">超过截断长度的依赖关系学不到。这为后来的 LSTM 和 Attention 埋下伏笔。</p></div>
+  </div>
+  <pre><code class="language-python">class RNN:
+    def __init__(self, Wx, Wh, b):
+        self.params = [Wx, Wh, b]
+        self.grads = [np.zeros_like(Wx), np.zeros_like(Wh), np.zeros_like(b)]
+        self.cache = None
+
+    def forward(self, x, h_prev):
+        Wx, Wh, b = self.params
+        t = np.dot(h_prev, Wh) + np.dot(x, Wx) + b
+        h_next = np.tanh(t)
+        self.cache = (x, h_prev, h_next)
+        return h_next
+    # backward 省略：需按时间步逆序累积 dh</code></pre>
+
+  <h2 id="lstm">5. LSTM：四个门逐个拆解</h2>
+  <p>LSTM 的关键创新是引入了一条独立的<b>记忆单元 c（cell）</b>通路，并用三个"门"来控制信息流。门就是 <b>sigmoid 函数</b>——输出 0～1 之间的数，<b>0 表示"完全关闭"，1 表示"完全放行"</b>。</p>
+
+  <div class="grid g2">
+    <div class="gate">
+      <h4>🚪 遗忘门 f</h4>
+      <p style="font-size:14px"><b>决定忘掉多少旧记忆。</b></p>
+      <div class="fbox" style="margin:8px 0;text-align:left"><span class="mono" style="font-size:13px">f = σ(x·W<sub>xf</sub> + h·W<sub>hf</sub> + b<sub>f</sub>)</span></div>
+      <p style="font-size:13.5px;color:var(--mute)">为什么重要？读到新主语时，得先清掉旧主语的记忆。</p>
+    </div>
+    <div class="gate">
+      <h4>🚪 输入门 i</h4>
+      <p style="font-size:14px"><b>决定写入多少新信息。</b></p>
+      <div class="fbox" style="margin:8px 0;text-align:left"><span class="mono" style="font-size:13px">i = σ(x·W<sub>xi</sub> + h·W<sub>hi</sub> + b<sub>i</sub>)</span></div>
+      <p style="font-size:13.5px;color:var(--mute)">新记忆 g = tanh(...)，最终 c = f⊙c_old + i⊙g。</p>
+    </div>
+    <div class="gate">
+      <h4>🚪 输出门 o</h4>
+      <p style="font-size:14px"><b>决定暴露多少记忆给外部。</b></p>
+      <div class="fbox" style="margin:8px 0;text-align:left"><span class="mono" style="font-size:13px">o = σ(...)，h = o ⊙ tanh(c)</span></div>
+      <p style="font-size:13.5px;color:var(--mute)">记忆 c 是内部的，h 才是给下一层/下一时刻看的。</p>
+    </div>
+    <div class="gate" style="background:linear-gradient(135deg,#fff7ed,#ffedd5)">
+      <h4>🧠 记忆单元 c</h4>
+      <p style="font-size:14px"><b>信息的"高速公路"。</b></p>
+      <div class="fbox" style="margin:8px 0;text-align:left"><span class="mono" style="font-size:13px">c<sub>t</sub> = f ⊙ c<sub>t−1</sub> + i ⊙ g</span></div>
+      <p style="font-size:13.5px;color:var(--mute)">⊙ 是逐元素乘。加法路径让梯度能"无损"回传，天然缓解梯度消失。</p>
+    </div>
+  </div>
+
+  <div class="tip">
+    <b>LSTM 为什么能缓解梯度消失？</b>关键在 <span class="mono">c<sub>t</sub> = f⊙c<sub>t−1</sub> + i⊙g</span> 里的<b>加号</b>。反向传播时，加法节点的梯度是"原样传递"的，不会被反复乘小。只要遗忘门 f 接近 1，记忆就能沿着这条高速路走很远。
+  </div>
+
+  <div class="demo">
+    <div class="demo-row"><b>🎛️ LSTM 门控交互：</b>手动拖三个门的值，看记忆单元 c 如何更新</div>
+    <div class="demo-row"><span style="font-size:13px;width:80px">遗忘门 f</span><input type="range" id="gf" min="0" max="1" step="0.01" value="0.7"><span class="mono" id="gvF">0.70</span></div>
+    <div class="demo-row"><span style="font-size:13px;width:80px">输入门 i</span><input type="range" id="gi" min="0" max="1" step="0.01" value="0.5"><span class="mono" id="gvI">0.50</span></div>
+    <div class="demo-row"><span style="font-size:13px;width:80px">输出门 o</span><input type="range" id="go" min="0" max="1" step="0.01" value="0.6"><span class="mono" id="gvO">0.60</span></div>
+    <div class="out" id="gateOut"></div>
+  </div>
+
+  <h2 id="clip">6. 梯度爆炸与梯度裁剪</h2>
+  <p>梯度消失的对策是 LSTM；梯度爆炸的对策就简单粗暴多了——<b>梯度裁剪（Gradient Clipping）</b>：算完梯度后，如果它的范数超过阈值，就等比缩回来。</p>
+  <pre><code class="language-python">def clip_grads(grads, max_norm):
+    total_norm = 0
+    for grad in grads:
+        total_norm += np.sum(grad ** 2)
+    total_norm = np.sqrt(total_norm)
+
+    rate = max_norm / (total_norm + 1e-6)
+    if rate < 1:              # 只在超阈值时才裁剪
+        for grad in grads:
+            grad *= rate
+    return total_norm</code></pre>
+  <div class="tip">
+    一行直觉：<b>"你可以走，但一步不许迈太大。"</b>防止某个异常样本把参数一步带崩。
+  </div>
+
+  <h2 id="seq2seq">7. seq2seq：Encoder-Decoder 翻译</h2>
+  <p>光有 RNN 还只会"接龙"。要让它做翻译（输入一句话，输出另一句话），得把两个 RNN 接起来：</p>
+  <div class="grid g2">
+    <div class="card"><h4>📥 Encoder（编码器）</h4><p style="font-size:14px">把输入序列压成一个隐藏状态 h——这就是<b>整句话的"语义摘要"</b>。</p></div>
+    <div class="card"><h4>📤 Decoder（解码器）</h4><p style="font-size:14px">拿着这个 h 当起点，一个词一个词地生成目标语言。</p></div>
+  </div>
+  <p>用 RNN 生成文本时，采用<b>"贪心接龙"</b>：每次取概率最高的词，再把它喂回去当下一个输入。</p>
+  <pre><code class="language-python">def generate(decoder, start_id, sample_size=20):
+    text = ''
+    h = None
+    sampled_ids = [start_id]
+    idx = start_id
+    for _ in range(sample_size):
+        h = decoder.forward(idx, h)          # 一步步喂回去
+        idx = h.argmax()                     # 贪心：取概率最高的
+        sampled_ids.append(idx)
+    return sampled_ids</code></pre>
+  <div class="warn">
+    <b>seq2seq 的软肋：</b>不管输入多长，Encoder 都只吐出<b>一个</b>固定长度的 h。输入 50 个词和 5 个词，都被压成同一个尺寸的向量——长句子必然丢信息。这就是 <b>Attention 要解决的核心问题</b>。
+  </div>
+
+  <h2 id="attn">8. Attention：记忆不够，注意力来凑</h2>
+  <p>Attention 的洞见极其漂亮：<b>与其把所有信息压进一个 h，不如让 Decoder 每次生成词时，动态地从 Encoder 的每一步输出里"挑重点"。</b></p>
+  <div class="grid g3">
+    <div class="card"><h4>① 算相似度</h4><p style="font-size:14px">解码器当前状态和编码器每个时刻状态算内积 → 得到"关注分数"。</p></div>
+    <div class="card"><h4>② softmax 归一化</h4><p style="font-size:14px">分数变成权重（和为 1），代表"该看多少"。</p></div>
+    <div class="card"><h4>③ 加权求和</h4><p style="font-size:14px">把编码器各时刻状态按权重加权 → 得到"上下文向量"。</p></div>
+  </div>
+  <div class="fbox">
+    <span class="mono" style="font-size:15px">权重 a = softmax(相似度)　　context = Σ aᵢ · hᵢ</span>
+  </div>
+  <div class="demo">
+    <div class="demo-row"><b>🎯 Attention 权重实时计算：</b>点一个解码位置，看它把注意力分给了输入句子的哪些词</div>
+    <div class="demo-row" id="attnBtns"></div>
+    <div style="overflow-x:auto"><table class="hm" id="attnTable"></table></div>
+    <div class="out" id="attnOut">点击上方按钮，观察注意力权重的分布。</div>
+  </div>
+  <div class="tip">
+    <b>从 RNN 到 Transformer 的关键一步：</b>Attention 证明了一件事——<b>要捕捉长距离依赖，不一定要靠循环，靠"直接查询"反而更好、更快、还能并行。</b>于是有了那篇《Attention Is All You Need》，也就有了今天所有的大模型。
+  </div>
+
+  <div class="hero" style="background:linear-gradient(135deg,#1e1b4b,#7c3aed)">
+    <h2>🧭 一条主线串起来</h2>
+    <p><b>语言模型</b>（给句子打分）→ <b>RNN</b>（记住过去）→ <b>BPTT 梯度消失</b>（记性变差的数学根源）→ <b>LSTM 四个门</b>（加一条记忆高速路）→ <b>seq2seq</b>（翻译）→ <b>Attention</b>（不硬记，按需查）→ <b>Transformer</b>（丢开循环，全程注意力）。</p>
+    <p>每一步都是"发现上一个方法的毛病 → 想新招解决"——这正是斋藤康毅在书里反复强调的<b>"从零开始"的思考方式</b>。</p>
+  </div>
+</div>
+
+<script src="js/site.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  if (window.hljs) hljs.highlightAll();
+
+  // ===== RNN 记忆流动 =====
+  const words = ['我','昨天','在','公园','看见','一只','猫'];
+  const tS = document.getElementById('tSlider');
+  function renderRNN(){
+    const t = parseInt(tS.value);
+    document.getElementById('tVal').textContent = t;
+    let h = '';
+    words.forEach((w,i)=>{
+      const active = i<=t;
+      const cur = i===t;
+      h += '<div style="padding:8px 12px;border-radius:8px;font-size:14px;'+
+        (cur?'background:#ea580c;color:#fff;font-weight:700':'')+
+        (active&&!cur?'background:#ffedd5;color:#9a3412':'')+
+        (!active?'background:#f1f5f9;color:#94a3b8':'')+
+        '">'+w+(cur?' ← h'+t:'')+'</div>';
+      if(i<words.length-1) h += '<div style="align-self:center;color:#cbd5e1">→</div>';
+    });
+    document.getElementById('rnnFlow').innerHTML = h;
+    document.getElementById('rnnOut').innerHTML = '到第 <b>'+t+'</b> 步，隐藏状态 h<sub>'+t+'</sub> 已经"读过" <b>'+(t+1)+'</b> 个词：<b>'+words.slice(0,t+1).join('')+'</b>。它把这句话到目前的信息压缩进了一个固定长度的向量。';
+  }
+  tS.addEventListener('input', renderRNN); renderRNN();
+
+  // ===== 梯度消失 =====
+  const dS = document.getElementById('distSlider');
+  const cS = document.getElementById('decaySlider');
+  function renderGrad(){
+    const T = parseInt(dS.value), d = parseFloat(cS.value);
+    document.getElementById('distVal').textContent = T;
+    document.getElementById('decayVal').textContent = d.toFixed(2);
+    const g = Math.pow(d, T);
+    let verdict;
+    if(g < 1e-6) verdict = '<b style="color:#dc2626">梯度彻底消失了</b>——网络根本学不到这么远的依赖。';
+    else if(g < 1e-3) verdict = '<b style="color:#ea580c">梯度非常微弱</b>，长期依赖很难学到。';
+    else if(g > 10) verdict = '<b style="color:#dc2626">梯度爆炸了！</b>需要用梯度裁剪压制。';
+    else verdict = '<b style="color:#16a34a">梯度健康</b>，信息能较好地传回去。';
+    document.getElementById('gradOut').innerHTML =
+      '经过 '+T+' 步回传后，梯度幅度 = '+d.toFixed(2)+'<sup>'+T+'</sup> ≈ <b>'+g.toExponential(3)+'</b><br>'+verdict;
+  }
+  dS.addEventListener('input', renderGrad); cS.addEventListener('input', renderGrad); renderGrad();
+
+  // ===== LSTM 门控 =====
+  const gf=document.getElementById('gf'), gi=document.getElementById('gi'), go=document.getElementById('go');
+  function renderGate(){
+    const f=parseFloat(gf.value), i=parseFloat(gi.value), o=parseFloat(go.value);
+    document.getElementById('gvF').textContent=f.toFixed(2);
+    document.getElementById('gvI').textContent=i.toFixed(2);
+    document.getElementById('gvO').textContent=o.toFixed(2);
+    const c_old = 0.8, g = 0.6;          // 演示用的旧记忆与候选新记忆
+    const c_new = f*c_old + i*g;
+    const h = o*Math.tanh(c_new);
+    document.getElementById('gateOut').innerHTML =
+      '<b>c<sub>新</sub> = f·c<sub>旧</sub> + i·g = </b>'+f.toFixed(2)+'×0.8 + '+i.toFixed(2)+'×0.6 = <b style="color:#ea580c">'+c_new.toFixed(3)+'</b>'+
+      '<br><b>h = o·tanh(c) = </b>'+o.toFixed(2)+'×'+Math.tanh(c_new).toFixed(3)+' = <b style="color:#ea580c">'+h.toFixed(3)+'</b>'+
+      '<br><span style="font-size:12.5px;color:var(--mute)">把 f 拉到 1：旧记忆几乎完整保留（长期记忆）。把 f 拉到 0：旧记忆被清空（重新开始）。</span>';
+  }
+  [gf,gi,go].forEach(s=>s.addEventListener('input',renderGate)); renderGate();
+
+  // ===== Attention 权重 =====
+  const src = ['I','love','natural','language','processing','.'];
+  // 模拟某个解码位置对各输入词的注意力权重
+  const attnMaps = [
+    {q:'我',  w:[0.55,0.15,0.05,0.05,0.15,0.05]},
+    {q:'爱',  w:[0.10,0.62,0.06,0.06,0.10,0.06]},
+    {q:'自然',w:[0.05,0.05,0.18,0.55,0.10,0.07]},
+    {q:'语言',w:[0.04,0.04,0.10,0.25,0.52,0.05]},
+    {q:'处理',w:[0.03,0.05,0.08,0.12,0.22,0.50]},
+  ];
+  const tbody = document.getElementById('attnTable');
+  const ab = document.getElementById('attnBtns');
+  attnMaps.forEach((m,idx)=>{
+    const b=document.createElement('button');
+    b.className='act ghost'; b.textContent='生成「'+m.q+'」';
+    b.onclick=()=>{
+      let h='<tr><th>输入词</th>'+src.map(s=>'<th>'+s+'</th>').join('')+'</tr>';
+      h+='<tr><th>权重</th>'+m.w.map(w=>{
+        const a=0.12+0.78*w;
+        return '<td style="background:rgba(234,88,12,'+a+');color:'+(w>0.4?'#fff':'#7c2d12')+'">'+w.toFixed(2)+'</td>';
+      }).join('')+'</tr>';
+      tbody.innerHTML=h;
+      const top = src[m.w.indexOf(Math.max(...m.w))];
+      document.getElementById('attnOut').innerHTML='生成「<b>'+m.q+'</b>」时，注意力最集中在输入词「<b style="color:#ea580c">'+top+'</b>」上（权重 '+Math.max(...m.w).toFixed(2)+'）。这就是"翻译时对齐原句相应位置"的机器版。';
+    };
+    ab.appendChild(b);
+  });
+});
+</script>
+</body>
+</html>

@@ -56,6 +56,8 @@ h4 { margin-top: 20px; margin-bottom: 12px; color: #6b21a8; }
       <a href="../llm/index.html" class="nav-link active">🤖 LLM</a>
       <a href="../bpe.html" class="nav-link">🔤 分词器</a>
       <a href="../embedding.html" class="nav-link">🧭 词向量</a>
+      <a href="../word2vec.html" class="nav-link">🧠 词向量从零</a>
+      <a href="../rnn.html" class="nav-link">🔁 RNN从零</a>
       <a href="../attention.html" class="nav-link">🎯 注意力</a>
       <a href="../papers.html" class="nav-link">📚 论文</a>
       <a href="../clinic.html" class="nav-link">🕵️ 诊所</a>
@@ -238,6 +240,40 @@ class FeedForward(nn.Module):
         )
     def forward(self, x):
         return self.layers(x)</code></pre>
+
+    <h4>📐 LayerNorm：为什么不是 BatchNorm？</h4>
+    <p class="text-gray-600 mb-3">GPT 在每个子层前用 <b>层归一化（LayerNorm）</b>，而不是 CNN 常用的 BatchNorm。区别在于<b>归一化的方向</b>：BatchNorm 是"跨样本、同一特征"归一化（沿 batch 维度），LayerNorm 是"同一样本、跨特征"归一化（沿 feature 维度）。</p>
+    <div class="callout callout-info">
+      <div class="callout-line">μ = (1/d)·Σxᵢ　　σ² = (1/d)·Σ(xᵢ−μ)²　　LN(x) = γ · (x−μ)/√(σ²+ε) + β</div>
+      <div class="callout-note">γ（缩放）和 β（平移）是<b>可学习</b>参数，让网络自己决定"要不要把归一化掰回来"。ε 是防止除零的小常数。</div>
+    </div>
+    <p class="text-gray-600 mb-3">为什么 NLP 偏爱 LayerNorm？因为文本序列长度不一、batch 里样本差异大，BatchNorm 的统计量会剧烈抖动；而 LayerNorm 对每个样本独立计算，<b>天然不受 batch 大小和序列长度影响</b>，训练和推理行为也一致（这点对在线生成至关重要）。</p>
+    <pre class="code"><code class="language-python">class LayerNorm(nn.Module):
+    """书1第4章：沿最后一维(feature)做归一化"""
+    def __init__(self, emb_dim, eps=1e-5):
+        super().__init__()
+        self.eps = eps
+        self.scale = nn.Parameter(torch.ones(emb_dim))   # γ
+        self.shift = nn.Parameter(torch.zeros(emb_dim))  # β
+
+    def forward(self, x):
+        mean = x.mean(dim=-1, keepdim=True)
+        var  = x.var(dim=-1, keepdim=True, unbiased=False)
+        norm = (x - mean) / torch.sqrt(var + self.eps)
+        return self.scale * norm + self.shift</code></pre>
+
+    <h4>🪟 滑动窗口采样：训练数据是怎么"切"出来的</h4>
+    <p class="text-gray-600 mb-3">语言模型训练时，输入和标签是<b>同一段文本错开一位</b>得到的。给定长文本，用一个长度为 <span class="mono">max_length</span> 的窗口滑动取样：</p>
+    <pre class="code"><code class="language-python">def create_dataloader(txt, max_length=4, stride=1):
+    """书1第2章：输入=当前窗口，标签=窗口向右错一位"""
+    input_ids = tokenizer.encode(txt)
+    for i in range(0, len(input_ids) - max_length, stride):
+        yield (input_ids[i : i + max_length],       # 输入
+               input_ids[i + 1 : i + max_length + 1]) # 标签(错一位)</code></pre>
+    <div class="callout callout-info">
+      <div class="callout-line">stride 的取舍：stride=1 样本最多、覆盖最全，但相邻样本高度重叠（冗余）；stride=max_length 无重叠、样本最少、冗余最低。</div>
+      <div class="callout-note">书1里默认 stride=1，一个长文档能切出成百上千个训练样本——这也是"无标签语料"能被充分利用的原因。</div>
+    </div>
   </section>
 
   <!-- 预训练 -->
@@ -315,6 +351,69 @@ print(f'Loss={loss}, PPL={torch.exp(torch.tensor(loss)).item():.1f}')  # PPL=24.
     <h2 class="text-3xl font-bold">🎯 第二阶段：SFT 监督微调</h2>
     <p class="text-gray-700 mb-4">SFT（Supervised Fine-Tuning）是让模型"听懂人话"的第一步：用高质量的"指令-回答"对微调模型，教它按照人类指令输出格式回答问题，而不是继续续写。</p>
     <p class="text-gray-600 mb-4">SFT数据不需要太多，几万到几十万条高质量指令数据就够了，质量远比数量重要。现在开源社区有大量高质量SFT数据集（Alpaca、ShareGPT、UltraChat等）。</p>
+
+    <h4>🍽️ 书1第6章实战：分类微调——让 GPT 识别垃圾短信</h4>
+    <p class="text-gray-600 mb-3">微调不止能"对话"，还能把 GPT 改造成一个<b>分类器</b>（比如判断短信是不是垃圾邮件）。做法只改两处：</p>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+      <div class="p-4 bg-blue-50 rounded-lg border border-blue-200">
+        <h5 class="font-bold text-blue-800 mb-2">① 换掉输出头</h5>
+        <p class="text-sm text-gray-700">把原来的"预测下一个词"的输出层，换成只有 <b>2 个输出</b>（垃圾/正常）的线性层。</p>
+      </div>
+      <div class="p-4 bg-purple-50 rounded-lg border border-purple-200">
+        <h5 class="font-bold text-purple-800 mb-2">② 只取最后一个 token</h5>
+        <p class="text-sm text-gray-700">一个句子只输出一个类别，所以用序列<b>最后一个位置</b>的隐藏状态去喂分类头。</p>
+      </div>
+    </div>
+    <pre class="code"><code class="language-python">class SpamClassifier(nn.Module):
+    """书1第6章：GPT 改造为二分类器"""
+    def __init__(self, cfg):
+        super().__init__()
+        self.gpt = GPTModel(cfg)                 # 预训练好的 GPT 主干
+        self.gpt.out_head = nn.Linear(cfg['emb_dim'], 2)  # 换成 2 类输出头
+
+    def forward(self, token_ids):
+        x = self.gpt(token_ids)
+        return x[:, -1, :]      # 只取最后一个 token 的表示 → 分类依据
+
+# 微调时通常冻结部分层、只训输出头和靠后几层
+for p in classifier.gpt.parameters():
+    p.requires_grad = False
+for p in classifier.gpt.out_head.parameters():
+    p.requires_grad = True   # 只训练新加的分类头</code></pre>
+    <div class="callout callout-info">
+      <div class="callout-line">在书1的垃圾短信数据集上，微调后准确率可达 97% 以上，而完全没微调的 GPT 只能瞎猜（约 50%）。</div>
+      <div class="callout-note">关键技巧：<b>微调时其实只需要训练最后几层</b>，前面的层已经学会了通用的语言特征，冻住它们既省算力又防过拟合。</div>
+    </div>
+
+    <h4>💬 书1第7章实战：指令微调——从"接话茬"到"听人话"</h4>
+    <p class="text-gray-600 mb-3">基座模型只会续写。要让它回答问题，得用"指令-回答"数据微调。数据格式有讲究，每个样本是一条结构化的对话：</p>
+    <pre class="code"><code class="language-python"># 书1第7章的指令数据格式（Alpaca 风格）
+data = {
+    "instruction": "把下面这句话翻译成英文",
+    "input": "今天天气真好",
+    "output": "The weather is really nice today."
+}
+
+# 训练时：只对"回答"部分计算损失，指令部分不监督！
+def instruction_loss(logits, target_ids, response_start):
+    # target 里指令部分的标签设为 -100（ignore_index），不参与 loss
+    logits = logits[..., :-1, :].flatten(0, 1)
+    target = target_ids[..., 1:].flatten()
+    return torch.nn.functional.cross_entropy(logits, target, ignore_index=-100)</code></pre>
+    <div class="callout callout-info">
+      <div class="callout-line">为什么要 mask 掉指令部分？因为我们要模型学会"看到指令→产出回答"的映射，而不是去背诵指令本身。</div>
+      <div class="callout-note">这一步做完，模型就正式从 <b>Base Model</b> 进化成 <b>Instruct Model</b>——也就是 ChatGPT 类产品的雏形。</div>
+    </div>
+
+    <h4>🧭 微调全景：三个阶段各干什么</h4>
+    <div class="table-wrap overflow-x-auto">
+      <table class="w-full">
+        <tr><th>阶段</th><th>数据</th><th>目标</th><th>书1对应章节</th></tr>
+        <tr><td>预训练</td><td>无标签互联网文本</td><td>学会语言与世界知识</td><td>第5章</td></tr>
+        <tr><td>分类微调</td><td>带标签的分类数据</td><td>学会特定判断任务</td><td>第6章</td></tr>
+        <tr><td>指令微调</td><td>指令-回答对</td><td>学会听懂并执行指令</td><td>第7章</td></tr>
+      </table>
+    </div>
   </section>
 
   <!-- RLHF/DPO -->
